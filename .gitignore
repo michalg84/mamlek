@@ -1,0 +1,11 @@
+# 10x toolkit — reinstall with: npx @przeprogramowani/10x-cli@latest get <lesson>
+.10x-cli.json
+skills-lock.json
+.agents/
+.claude/skills/10x-*/
+.claude/prompts/
+.claude/.10x-cli-manifest.json
+CLAUDE.md
+
+# Claude Code personal settings
+.claude/settings.local.json
