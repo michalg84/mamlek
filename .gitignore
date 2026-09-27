@@ -5,7 +5,6 @@ skills-lock.json
 .claude/skills/10x-*/
 .claude/prompts/
 .claude/.10x-cli-manifest.json
-CLAUDE.md
 
 # Claude Code personal settings
 .claude/settings.local.json
