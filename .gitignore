@@ -9,6 +9,10 @@ skills-lock.json
 # Claude Code personal settings
 .claude/settings.local.json
 
+# Supabase agent skills (npx skills add supabase/agent-skills) — local-only, symlinks into gitignored .agents/skills/
+.claude/skills/supabase/
+.claude/skills/supabase-postgres-best-practices/
+
 # from 10x-astro-starter
 # build output
 dist/
