@@ -80,7 +80,7 @@ A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`a
 
 ## Deployment
 
-The target is Cloudflare Pages with auto-deploy on merge to `main`. This is planned and not wired into CI yet. Until then, deploy manually:
+The target is Cloudflare Workers (a Worker with static assets, not Pages) with auto-deploy on merge to `main`. This is planned and not wired into CI yet. Until then, deploy manually:
 
 ```bash
 npx wrangler deploy
