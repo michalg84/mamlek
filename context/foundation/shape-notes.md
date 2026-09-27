@@ -2,12 +2,12 @@
 project: "MamLek"
 context_type: greenfield
 created: 2026-09-23
-updated: 2026-09-24
+updated: 2026-09-27
 product_type: web-app
 target_scale:
   users: small
   qps: low
-  data_volume: small          # apteczka jest mała; osobno pełna kopia rejestru ~70 MB
+  data_volume: small # apteczka jest mała; osobno pełna kopia rejestru ~70 MB
 timeline_budget:
   mvp_weeks: 3
   hard_deadline: null
@@ -50,6 +50,8 @@ checkpoint:
       decision: "wiersz z lekiem, który już jest w apteczce, oznaczony na ekranie zatwierdzenia jako „już masz”; użytkownik decyduje: osobne opakowanie albo usunięcie z importu"
     - topic: "dodatkowe user stories"
       decision: "dopisana US-02 (import CSV), bo tam kryteria akceptacji są nieoczywiste; pozostałe FR bez osobnych stories"
+    - topic: "źródło danych RPL"
+      decision: "własny codzienny import zrzutu RPL do bazy zostaje. Rozważone zastąpienie go samodzielnie hostowanym RPL.API (github.com/SaDa1337/RPL.API) — odrzucone, bo repozytorium nie ma licencji. Repozytorium służy wyłącznie jako materiał referencyjny (URL zrzutu, model pól)"
   frs_drafted: 14
   quality_check_status: accepted
 ---
@@ -193,6 +195,7 @@ odnosiły się do tych samych identyfikatorów.
 
 - FR-001: System korzysta z pełnego Rejestru Produktów Leczniczych i odświeża go okresowo. Priority: must-have
   > Socrates: Rozważone kontrargumenty — rejestr zawiera produkty wycofane, odświeżanie to zadanie w tle bez nadzoru, pełny rejestr to nadmiar wobec kilkuset leków realnie przewijających się przez dom. Rozstrzygnięcie: zostaje bez zmian — bez własnej kopii rejestru nie ma substancji czynnych, a bez nich nie ma zamienników.
+  > Socrates (rewizja 2026-09-27): rozważone zastąpienie własnego pobierania i parsowania rejestru gotowym REST API (RPL.API, hostowane samodzielnie), z motywacji „mniej kodu” i „lepsze wyszukiwanie”. Kontrargument „repozytorium nie ma licencji, więc nie ma prawa hostować jego kopii” — przyjęty. Rozstrzygnięcie: wymaganie bez zmian, własny import zostaje; RPL.API służy tylko jako materiał referencyjny.
 - FR-002: Użytkownik może znaleźć lek w rejestrze, wpisując pierwsze litery; wyszukiwanie obejmuje nazwę produktu, nazwę powszechnie stosowaną i substancje czynne, z pierwszeństwem nazwy produktu. Podpowiedzi pokazują nazwę wraz z mocą i postacią. Priority: must-have
   > Socrates: Kontrargument „recepta często ma nazwę międzynarodową, nie handlową" — unieważniony przez dane: rekord rejestru niesie nazwę powszechnie stosowaną (np. „Paracetamolum") obok nazwy produktu. Rozstrzygnięcie: wymaganie rozszerzone o wyszukiwanie po kilku polach nazwy z ustaloną kolejnością.
 
@@ -312,6 +315,17 @@ Notatki dla kroku wyboru stacku (nie wchodzą do PRD):
   drugiej aplikacji.
 - Przeglądarki: Chrome, Edge, przeglądarki oparte na Chromium, Firefox.
 - Backend pozostaje po stronie serwera — wynika z rozmiaru rejestru.
+- Rozważone i odrzucone 2026-09-27: nieoficjalne REST API RPL.API
+  (https://github.com/SaDa1337/RPL.API; .NET 9, indeks Lucene, Docker, codzienne
+  pobieranie zrzutu) jako samodzielnie hostowany serwis wyszukiwania. Powód
+  rozstrzygający: brak licencji w repozytorium. Pozostałe ustalenia z przeglądu kodu:
+  osobne środowisko uruchomieniowe poza stackiem, którego nie da się uruchomić na
+  Cloudflare Pages ani Workers; brak endpointu pobierającego rekord po ID; wyszukiwanie
+  bez rankingu (każde słowo dopasowywane jako `*fraza*` ze stałym wynikiem), więc bez
+  pierwszeństwa nazwy produktu wymaganego w FR-002; jeden commit, jedna gwiazdka.
+- Materiał referencyjny z RPL.API: adres zrzutu
+  `https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/public-pl-report/6.0.0/overall.xml`
+  (ten sam, który ma pobierać własny import).
 
 ## Forward: technical-roadmap
 
@@ -322,6 +336,12 @@ Notatki dla etapu implementacji (nie wchodzą do PRD):
   w rekordzie: `nazwaProduktu`, `nazwaPowszechnieStosowana`, `nazwaPoprzedniaProduktu`,
   `moc`, `nazwaPostaciFarmaceutycznej`, `podmiotOdpowiedzialny`, oraz substancje
   czynne, których może być kilka. Rekord niesie też link do ulotki.
+- Referencyjny model rekordu i parser XML: RPL.API
+  (`src/RPL.Api/Models/ProduktLeczniczy.cs`, `src/RPL.Api/Xml/XmlParser.cs`).
+  Model pokazuje m.in. `SubstancjeCzynne`, `KodyATC`, `DrogiPodania` i `Opakowania` jako
+  listy oraz pole `Status`. Wyłącznie do wglądu: repozytorium nie ma licencji, więc
+  kodu nie kopiujemy ani nie tłumaczymy linia po linii — własny parser piszemy
+  od zera, a z repozytorium bierzemy tylko wiedzę o strukturze danych.
 
 ## Non-Goals
 
