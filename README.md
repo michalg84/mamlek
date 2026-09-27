@@ -80,13 +80,15 @@ A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`a
 
 ## Deployment
 
-The target is Cloudflare Workers (a Worker with static assets, not Pages) with auto-deploy on merge to `main`. This is planned and not wired into CI yet. Until then, deploy manually:
+The target is Cloudflare Workers (a Worker with static assets, not Pages). `.github/workflows/ci.yml`'s `deploy` job auto-deploys on every push to `main` that passes the `ci` and `smoke` jobs, using `cloudflare/wrangler-action@v4` with a scoped `CLOUDFLARE_API_TOKEN` repository secret (Workers Scripts: Edit only — no DNS, no billing).
+
+To deploy manually (e.g. to test a change before merging):
 
 ```bash
 npx wrangler deploy
 ```
 
-This needs a Cloudflare account and `wrangler` auth. Set `SUPABASE_URL` and `SUPABASE_KEY` as Worker secrets.
+This needs a Cloudflare account and `wrangler` auth. `SUPABASE_URL` and `SUPABASE_KEY` are set as Worker secrets (`wrangler secret put`) and persist across deploys regardless of whether they're triggered by CI or manually.
 
 ## Working with AI agents
 
