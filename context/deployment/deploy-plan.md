@@ -28,8 +28,7 @@ platform decision in `context/foundation/infrastructure.md`.
      in `infrastructure.md`'s risk register; no manual namespace creation needed.
    - First deploy failed until a `workers.dev` subdomain was registered for the
      account (one-time, dashboard-only action — no `wrangler` subcommand for it).
-   - The account's default subdomain (`michalgalka84-800`) leaked the owner's
-     email local-part into the public Worker URL; changed via **Workers & Pages
+   - Changed the account's default `workers.dev` subdomain via **Workers & Pages
      → Overview → Your subdomain → Change** to `mig-app` before going further.
 6. Verified end-to-end:
    - `GET /` → 200
@@ -46,10 +45,21 @@ platform decision in `context/foundation/infrastructure.md`.
 | `SUPABASE_URL` | Cloudflare Worker secret (`mamlek`) |
 | `SUPABASE_KEY` | Cloudflare Worker secret (`mamlek`) |
 
+## Follow-up: CI auto-deploy-on-merge
+
+`ci.yml` now has a `deploy` job (gated on `ci` + `smoke` passing, triggered on
+every push to `main`) that runs `npm run build` then `cloudflare/wrangler-action@v4`
+with a scoped `CLOUDFLARE_API_TOKEN` repo secret. Manual `wrangler deploy` from a
+local machine remains available as a fallback.
+
+## Follow-up: wrangler upgrade
+
+`wrangler` bumped `4.131.1` → `4.142.0` (`package.json` + lockfile) to unblock
+Worker Previews. Lint, `astro check`, and build verified green after the bump;
+smoke test not re-run (local Supabase/Docker wasn't up, and the change doesn't
+touch auth/middleware/Supabase code).
+
 ## Explicitly not done in this pass
 
-- CI auto-deploy-on-merge (`ci.yml` still only lints/checks/builds/smoke-tests;
-  deploy remains manual `wrangler deploy` for now).
 - The daily registry-import GitHub Actions job (PRD FR-001) — no product code
   for it exists yet.
-- Upgrading `wrangler` past 4.131.1 for Worker Previews — not needed yet.
