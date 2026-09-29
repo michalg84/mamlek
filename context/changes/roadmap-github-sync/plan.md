@@ -281,28 +281,28 @@ None — GitHub starts empty. When a later milestone replaces M-1, the new miles
 
 #### Automated
 
-- [x] 1.1 `npm run roadmap:sync -- --dry-run` exits 0 and lists 9 items with IDs F-01, S-01…S-08, statuses matching the At a glance table, and streams F-01→A, S-04→B, S-05→C, S-07→D
-- [x] 1.2 `npm run lint` passes (warnings allowed, no errors)
-- [x] 1.3 `npx astro check` passes
+- [x] 1.1 `npm run roadmap:sync -- --dry-run` exits 0 and lists 9 items with IDs F-01, S-01…S-08, statuses matching the At a glance table, and streams F-01→A, S-04→B, S-05→C, S-07→D — 53ad3c6
+- [x] 1.2 `npm run lint` passes (warnings allowed, no errors) — 53ad3c6
+- [x] 1.3 `npx astro check` passes — 53ad3c6
 
 #### Manual
 
-- [x] 1.4 Temporarily changing one status in a scratch copy of the roadmap to `blocked` (or removing a Backlog Handoff row) makes the dry run fail with a message naming the item; the real `roadmap.md` is left untouched
+- [x] 1.4 Temporarily changing one status in a scratch copy of the roadmap to `blocked` (or removing a Backlog Handoff row) makes the dry run fail with a message naming the item; the real `roadmap.md` is left untouched — 53ad3c6
 
 ### Phase 2: Issues and milestone
 
 #### Automated
 
-- [ ] 2.1 `npm run roadmap:sync -- --dry-run` against the empty repo lists "would create" for the label, milestone and 9 issues, and performs no writes (`gh issue list --label roadmap --state all` still returns nothing)
-- [ ] 2.2 `npm run roadmap:sync` creates the label, milestone and 9 issues; `gh issue list --label roadmap --json title --jq length` returns 9
-- [ ] 2.3 A second `npm run roadmap:sync` reports no issue/milestone changes
-- [ ] 2.4 `npm run lint` passes
+- [x] 2.1 `npm run roadmap:sync -- --dry-run` against the empty repo lists "would create" for the label, milestone and 9 issues, and performs no writes (`gh issue list --label roadmap --state all` still returns nothing)
+- [x] 2.2 `npm run roadmap:sync` creates the label, milestone and 9 issues; `gh issue list --label roadmap --json title --jq length` returns 9
+- [x] 2.3 A second `npm run roadmap:sync` reports no issue/milestone changes
+- [x] 2.4 `npm run lint` passes
 
 #### Manual
 
-- [ ] 2.5 Issues on GitHub read well: Polish titles with ID prefix, body fields correct, milestone shows 0/9
-- [ ] 2.6 Editing an issue title by hand on GitHub and re-running the sync restores the roadmap title
-- [ ] 2.7 Closing one issue by hand and re-running prints a warning for it and does not reopen it (reopen it by hand afterwards)
+- [x] 2.5 Issues on GitHub read well: Polish titles with ID prefix, body fields correct, milestone shows 0/9
+- [x] 2.6 Editing an issue title by hand on GitHub and re-running the sync restores the roadmap title
+- [x] 2.7 Closing one issue by hand and re-running prints a warning for it and does not reopen it (reopen it by hand afterwards)
 
 ### Phase 3: Project board
 

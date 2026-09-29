@@ -1,7 +1,9 @@
-// Roadmap sync: parses context/foundation/roadmap.md into the desired backlog state (milestone + items).
-// Zero dependencies on purpose. Preview without touching GitHub: node scripts/roadmap-sync.mjs --dry-run
+// Roadmap sync: parses context/foundation/roadmap.md into the desired backlog state (milestone + items)
+// and mirrors it one way to GitHub (label, milestone, issues) through the `gh` CLI.
+// Zero dependencies on purpose. Preview (reads only, no writes): node scripts/roadmap-sync.mjs --dry-run
 // ROADMAP_PATH env overrides the roadmap file (e.g. a scratch copy): ROADMAP_PATH=/tmp/roadmap.md node scripts/roadmap-sync.mjs --dry-run
 
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -125,6 +127,203 @@ function printDesiredState({ milestone, items }) {
   console.log(`\n${items.length} item(s) parsed from ${ROADMAP_PATH}`);
 }
 
+// --- GitHub access: everything goes through the `gh` CLI, so auth is whatever `gh auth` holds. ---
+
+class GhError extends Error {}
+
+function gh(args, { input } = {}) {
+  try {
+    return execFileSync("gh", args, {
+      encoding: "utf8",
+      input,
+      stdio: ["pipe", "pipe", "pipe"],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch (error) {
+    const detail = (error.stderr || error.message || "").toString().trim();
+    throw new GhError(`gh ${args.slice(0, 3).join(" ")} failed: ${detail}`);
+  }
+}
+
+function ghJson(args, options) {
+  const out = gh(args, options).trim();
+  return out ? JSON.parse(out) : null;
+}
+
+// GET every page of a REST list endpoint (bodies/titles never go through argv, so no quoting issues).
+function ghList(endpoint) {
+  return (ghJson(["api", endpoint, "--paginate", "--slurp"]) ?? []).flat();
+}
+
+// Write request with a JSON body on stdin (UTF-8, backticks and newlines survive on Windows).
+function ghWrite(method, endpoint, payload) {
+  return ghJson(["api", "-X", method, endpoint, "--input", "-"], { input: JSON.stringify(payload) });
+}
+
+// --- Sync steps: each reads current GitHub state, diffs against the desired state, writes only differences. ---
+
+const LABEL = "roadmap";
+const MARKER = /<!--\s*roadmap-id:\s*(\S+)\s*-->/;
+
+function action(ctx, verb, text) {
+  ctx.changes++;
+  console.log(`${ctx.dryRun ? `would ${verb}` : verb.replace(/e?$/, "ed")}  ${text}`);
+}
+
+function normalizeBody(body) {
+  return (body ?? "").replace(/\r\n/g, "\n").trim();
+}
+
+function issueBody(item, repo) {
+  const roadmapUrl = `https://github.com/${repo.owner}/${repo.name}/blob/main/context/foundation/roadmap.md`;
+  return [
+    `<!-- roadmap-id: ${item.id} -->`,
+    `**Outcome:** ${item.outcome}`,
+    `**Change ID:** \`${item.changeId}\``,
+    `**PRD refs:** ${item.prdRefs}`,
+    `**Prerequisites:** ${item.prerequisites.join(", ") || "—"}`,
+    "",
+    `_Generated from [\`context/foundation/roadmap.md\`](${roadmapUrl}) by \`npm run roadmap:sync\` — edits made here are overwritten on the next sync._`,
+  ].join("\n");
+}
+
+function ensureLabel(ctx) {
+  const labels = ghList(`repos/${ctx.repo.owner}/${ctx.repo.name}/labels?per_page=100`);
+  if (labels.some((label) => label.name.toLowerCase() === LABEL)) return;
+  action(ctx, "create", `label ${LABEL}`);
+  if (!ctx.dryRun) {
+    gh([
+      "label",
+      "create",
+      LABEL,
+      "--repo",
+      `${ctx.repo.owner}/${ctx.repo.name}`,
+      "--color",
+      "0E8A16",
+      "--description",
+      "Mirrored from context/foundation/roadmap.md",
+    ]);
+  }
+}
+
+// Returns the milestone number, or null when it would be created in a dry run.
+function ensureMilestone(ctx, milestone) {
+  const repoPath = `repos/${ctx.repo.owner}/${ctx.repo.name}`;
+  const existing = ghList(`${repoPath}/milestones?state=all&per_page=100`).find((m) => m.title === milestone.title);
+  if (existing) {
+    if (existing.state === "closed" && milestone.status === "open") {
+      ctx.warnings.push(
+        `milestone "${milestone.title}" is closed on GitHub but open in roadmap.md — left closed; reopen it by hand if intended`,
+      );
+    }
+    return existing.number;
+  }
+  action(ctx, "create", `milestone ${milestone.title}`);
+  if (ctx.dryRun) return null;
+  return ghWrite("POST", `${repoPath}/milestones`, { title: milestone.title, state: "open" }).number;
+}
+
+// Fills ctx.issues: roadmap ID -> { number, id (database id), node_id, state }; number/id/node_id are null for
+// issues that would be created in a dry run. Later steps (board, dependencies) consume this map.
+function ensureIssues(ctx, { milestone, items }, milestoneNumber) {
+  const repoPath = `repos/${ctx.repo.owner}/${ctx.repo.name}`;
+  const byMarker = new Map();
+  // Unfiltered listing: the label-filtered one lags right after writes, which made a quick re-run miss fresh issues
+  // and create duplicates. The marker is the matching key; the label only drives the "no marker" warning.
+  const listed = ghList(`${repoPath}/issues?state=all&per_page=100`)
+    .filter((issue) => !issue.pull_request)
+    .sort((a, b) => a.number - b.number);
+  for (const issue of listed) {
+    const id = MARKER.exec(issue.body ?? "")?.[1];
+    if (!id) {
+      if (issue.labels.some((label) => label.name.toLowerCase() === LABEL)) {
+        ctx.warnings.push(`#${issue.number} has the "${LABEL}" label but no roadmap-id marker — left alone`);
+      }
+    } else if (byMarker.has(id)) {
+      ctx.warnings.push(`#${issue.number} duplicates roadmap-id ${id} (kept #${byMarker.get(id).number}) — left alone`);
+    } else byMarker.set(id, issue);
+  }
+  const knownIds = new Set(items.map((item) => item.id));
+  for (const [id, issue] of byMarker) {
+    if (!knownIds.has(id)) ctx.warnings.push(`#${issue.number} (${id}) is not in roadmap.md — left alone`);
+  }
+
+  const milestoneNote = milestoneNumber === null ? ` (in new milestone ${milestone.id})` : "";
+  for (const item of items) {
+    const body = issueBody(item, ctx.repo);
+    const issue = byMarker.get(item.id);
+
+    if (!issue) {
+      action(ctx, "create", `issue ${item.title}${milestoneNote}`);
+      if (ctx.dryRun) {
+        ctx.issues.set(item.id, { number: null, id: null, node_id: null, state: "open" });
+        continue;
+      }
+      const created = ghWrite("POST", `${repoPath}/issues`, {
+        title: item.title,
+        body,
+        labels: [LABEL],
+        ...(milestoneNumber === null ? {} : { milestone: milestoneNumber }),
+      });
+      ctx.issues.set(item.id, {
+        number: created.number,
+        id: created.id,
+        node_id: created.node_id,
+        state: created.state,
+      });
+      continue;
+    }
+
+    ctx.issues.set(item.id, { number: issue.number, id: issue.id, node_id: issue.node_id, state: issue.state });
+    const patch = {};
+    if (issue.title !== item.title) patch.title = item.title;
+    if (normalizeBody(issue.body) !== normalizeBody(body)) patch.body = body;
+    if ((issue.milestone?.number ?? null) !== milestoneNumber) patch.milestone = milestoneNumber;
+    const labelNames = issue.labels.map((label) => label.name);
+    if (!labelNames.some((name) => name.toLowerCase() === LABEL)) patch.labels = [...labelNames, LABEL];
+    if (Object.keys(patch).length) {
+      const fields = Object.keys(patch).join(", ");
+      action(
+        ctx,
+        "update",
+        `issue #${issue.number} ${item.title} (${fields}${"milestone" in patch ? milestoneNote : ""})`,
+      );
+      if (!ctx.dryRun) ghWrite("PATCH", `${repoPath}/issues/${issue.number}`, patch);
+    }
+    if (issue.state === "closed" && item.status !== "done") {
+      ctx.warnings.push(
+        `#${issue.number} (${item.id}) is closed on GitHub but "${item.status}" in roadmap.md — not reopened; run /10x-archive if the change is finished`,
+      );
+    }
+  }
+}
+
+function sync(desired, dryRun) {
+  const repoInfo = ghJson(["repo", "view", "--json", "owner,name"]);
+  const ctx = {
+    dryRun,
+    repo: { owner: repoInfo.owner.login, name: repoInfo.name },
+    changes: 0,
+    warnings: [],
+    issues: new Map(),
+  };
+  console.log(`${dryRun ? "Dry run — no writes. " : ""}Syncing roadmap to ${ctx.repo.owner}/${ctx.repo.name}\n`);
+
+  ensureLabel(ctx);
+  const milestoneNumber = ensureMilestone(ctx, desired.milestone);
+  ensureIssues(ctx, desired, milestoneNumber);
+
+  console.log(
+    ctx.changes
+      ? `\n${ctx.changes} change(s) ${dryRun ? "planned" : "applied"} (label, milestone, issues)`
+      : "\nLabel, milestone & issues: no changes",
+  );
+  if (ctx.warnings.length) {
+    console.log(`\nWarnings (${ctx.warnings.length}):`);
+    for (const warning of ctx.warnings) console.log(`  - ${warning}`);
+  }
+}
+
 const args = process.argv.slice(2);
 const unknown = args.filter((arg) => arg !== "--dry-run");
 if (unknown.length) {
@@ -141,9 +340,15 @@ try {
   process.exit(1);
 }
 
-if (args.includes("--dry-run")) {
+const dryRun = args.includes("--dry-run");
+if (dryRun) {
   printDesiredState(desired);
-} else {
-  console.error("GitHub sync not implemented yet. Run with --dry-run to preview the parsed roadmap.");
+  console.log("");
+}
+try {
+  sync(desired, dryRun);
+} catch (error) {
+  if (!(error instanceof GhError)) throw error;
+  console.error(`\nGitHub sync failed:\n  ${error.message}`);
   process.exit(1);
 }
