@@ -323,12 +323,12 @@ None — GitHub starts empty. When a later milestone replaces M-1, the new miles
 
 #### Automated
 
-- [x] 4.1 `npm run roadmap:sync` adds blocked-by links; `gh api repos/michalg84/mamlek/issues/<S-03 number>/dependencies/blocked_by --jq '[.[].title]'` lists the S-01 and S-02 issues
-- [x] 4.2 A second `npm run roadmap:sync` reports no changes at all (issues, milestone, board, dependencies)
-- [x] 4.3 `npm run lint` passes
-- [x] 4.4 `npx astro check` passes
+- [x] 4.1 `npm run roadmap:sync` adds blocked-by links; `gh api repos/michalg84/mamlek/issues/<S-03 number>/dependencies/blocked_by --jq '[.[].title]'` lists the S-01 and S-02 issues — b6ca820
+- [x] 4.2 A second `npm run roadmap:sync` reports no changes at all (issues, milestone, board, dependencies) — b6ca820
+- [x] 4.3 `npm run lint` passes — b6ca820
+- [x] 4.4 `npx astro check` passes — b6ca820
 
 #### Manual
 
-- [x] 4.5 S-03 and S-08 show "Blocked by" relationships in the GitHub issue sidebar; F-01 shows none
-- [x] 4.6 AGENTS.md and README entries read correctly
+- [x] 4.5 S-03 and S-08 show "Blocked by" relationships in the GitHub issue sidebar; F-01 shows none — b6ca820
+- [x] 4.6 AGENTS.md and README entries read correctly — b6ca820
