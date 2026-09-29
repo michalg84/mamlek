@@ -57,15 +57,16 @@ Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Sett
 
 ## Scripts
 
-| Command           | What it does                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `npm run dev`     | Dev server on the Cloudflare workerd runtime                                                |
-| `npm run build`   | Production build                                                                            |
-| `npm run preview` | Serve the production build                                                                  |
-| `npm run lint`    | ESLint with type-checked rules (`lint:fix` to auto-fix)                                     |
-| `npm run format`  | Prettier                                                                                    |
-| `npx astro check` | Type-check `.astro` and `.ts` files                                                         |
-| `npm run smoke`   | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`) |
+| Command                | What it does                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Dev server on the Cloudflare workerd runtime                                                                        |
+| `npm run build`        | Production build                                                                                                    |
+| `npm run preview`      | Serve the production build                                                                                          |
+| `npm run lint`         | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                             |
+| `npm run format`       | Prettier                                                                                                            |
+| `npx astro check`      | Type-check `.astro` and `.ts` files                                                                                 |
+| `npm run smoke`        | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`)                         |
+| `npm run roadmap:sync` | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope) |
 
 The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off.
 

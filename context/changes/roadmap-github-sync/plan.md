@@ -308,27 +308,27 @@ None — GitHub starts empty. When a later milestone replaces M-1, the new miles
 
 #### Automated
 
-- [x] 3.1 `npm run roadmap:sync` creates the project; `gh project list --owner michalg84 --format json` contains "MamLek Roadmap"
-- [x] 3.2 `gh project field-list <n> --owner michalg84 --format json` shows Status with exactly Proposed, Ready, Planning, In progress, Done and the three text fields
-- [x] 3.3 `gh project item-list <n> --owner michalg84 --format json` returns 9 items with F-01 = Ready and the rest = Proposed
-- [x] 3.4 A second run reports no board changes
-- [x] 3.5 `npm run lint` passes
+- [x] 3.1 `npm run roadmap:sync` creates the project; `gh project list --owner michalg84 --format json` contains "MamLek Roadmap" — e9cbd32
+- [x] 3.2 `gh project field-list <n> --owner michalg84 --format json` shows Status with exactly Proposed, Ready, Planning, In progress, Done and the three text fields — e9cbd32
+- [x] 3.3 `gh project item-list <n> --owner michalg84 --format json` returns 9 items with F-01 = Ready and the rest = Proposed — e9cbd32
+- [x] 3.4 A second run reports no board changes — e9cbd32
+- [x] 3.5 `npm run lint` passes — e9cbd32
 
 #### Manual
 
-- [x] 3.6 The board is visible from the repo's Projects tab and a Board view grouped by Status shows the five columns in roadmap order
-- [x] 3.7 Grouping or filtering by Stream / Change ID works in the GitHub UI
+- [x] 3.6 The board is visible from the repo's Projects tab and a Board view grouped by Status shows the five columns in roadmap order — e9cbd32
+- [x] 3.7 Grouping or filtering by Stream / Change ID works in the GitHub UI — e9cbd32
 
 ### Phase 4: Blocked-by dependencies and docs
 
 #### Automated
 
-- [ ] 4.1 `npm run roadmap:sync` adds blocked-by links; `gh api repos/michalg84/mamlek/issues/<S-03 number>/dependencies/blocked_by --jq '[.[].title]'` lists the S-01 and S-02 issues
-- [ ] 4.2 A second `npm run roadmap:sync` reports no changes at all (issues, milestone, board, dependencies)
-- [ ] 4.3 `npm run lint` passes
-- [ ] 4.4 `npx astro check` passes
+- [x] 4.1 `npm run roadmap:sync` adds blocked-by links; `gh api repos/michalg84/mamlek/issues/<S-03 number>/dependencies/blocked_by --jq '[.[].title]'` lists the S-01 and S-02 issues
+- [x] 4.2 A second `npm run roadmap:sync` reports no changes at all (issues, milestone, board, dependencies)
+- [x] 4.3 `npm run lint` passes
+- [x] 4.4 `npx astro check` passes
 
 #### Manual
 
-- [ ] 4.5 S-03 and S-08 show "Blocked by" relationships in the GitHub issue sidebar; F-01 shows none
-- [ ] 4.6 AGENTS.md and README entries read correctly
+- [x] 4.5 S-03 and S-08 show "Blocked by" relationships in the GitHub issue sidebar; F-01 shows none
+- [x] 4.6 AGENTS.md and README entries read correctly

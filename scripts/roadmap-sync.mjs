@@ -1,5 +1,5 @@
 // Roadmap sync: parses context/foundation/roadmap.md into the desired backlog state (milestone + items)
-// and mirrors it one way to GitHub (label, milestone, issues) through the `gh` CLI.
+// and mirrors it one way to GitHub (label, milestone, issues, project board, blocked-by dependencies) through `gh`.
 // Zero dependencies on purpose. Preview (reads only, no writes): node scripts/roadmap-sync.mjs --dry-run
 // ROADMAP_PATH env overrides the roadmap file (e.g. a scratch copy): ROADMAP_PATH=/tmp/roadmap.md node scripts/roadmap-sync.mjs --dry-run
 
@@ -554,7 +554,7 @@ function ensureBoard(ctx, { items }) {
 
   for (const item of items) {
     const issue = ctx.issues.get(item.id);
-    const label = issue.number === null ? `${item.id} (new issue)` : `#${issue.number} ${item.id}`;
+    const label = issueLabel(ctx, item.id);
     let boardItem = issue.number === null ? undefined : state.items.get(issue.number);
     if (!boardItem) {
       action(ctx, "add", `${label} to board`);
@@ -613,6 +613,52 @@ function ensureBoard(ctx, { items }) {
   }
 }
 
+function issueLabel(ctx, id) {
+  const number = ctx.issues.get(id).number;
+  return number === null ? `${id} (new issue)` : `#${number} ${id}`;
+}
+
+// Makes each roadmap issue's blocked-by set among roadmap issues equal its Prerequisites. Blockers are recognised as
+// roadmap issues by database id, so links to non-roadmap issues are left alone. Writes are sequential (secondary
+// rate limits). A write that fails is re-checked against a fresh listing: if the link is already in the desired
+// state (e.g. added by a previous run the listing had not caught up with), it counts as done instead of failing.
+function ensureDependencies(ctx, { items }) {
+  const repoPath = `repos/${ctx.repo.owner}/${ctx.repo.name}`;
+  const roadmapIdByDbId = new Map([...ctx.issues].filter(([, i]) => i.id !== null).map(([id, i]) => [i.id, id]));
+  const listBlockers = (number) =>
+    new Set(ghList(`${repoPath}/issues/${number}/dependencies/blocked_by?per_page=100`).map((issue) => issue.id));
+
+  for (const item of items) {
+    const issue = ctx.issues.get(item.id);
+    const current = issue.number === null ? new Set() : listBlockers(issue.number);
+    const endpoint = `${repoPath}/issues/${issue.number}/dependencies/blocked_by`;
+
+    for (const prerequisite of item.prerequisites) {
+      const blocker = ctx.issues.get(prerequisite);
+      if (blocker.id !== null && current.has(blocker.id)) continue;
+      action(ctx, "add", `dependency ${issueLabel(ctx, item.id)} blocked by ${issueLabel(ctx, prerequisite)}`);
+      if (ctx.dryRun) continue;
+      try {
+        ghWrite("POST", endpoint, { issue_id: blocker.id });
+      } catch (error) {
+        if (!(error instanceof GhError) || !listBlockers(issue.number).has(blocker.id)) throw error;
+      }
+    }
+
+    for (const blockerDbId of current) {
+      const blockerId = roadmapIdByDbId.get(blockerDbId);
+      if (!blockerId || item.prerequisites.includes(blockerId)) continue;
+      action(ctx, "remove", `dependency ${issueLabel(ctx, item.id)} blocked by ${issueLabel(ctx, blockerId)}`);
+      if (ctx.dryRun) continue;
+      try {
+        gh(["api", "-X", "DELETE", `${endpoint}/${blockerDbId}`]);
+      } catch (error) {
+        if (!(error instanceof GhError) || listBlockers(issue.number).has(blockerDbId)) throw error;
+      }
+    }
+  }
+}
+
 function sync(desired, dryRun) {
   const repoInfo = ghJson(["repo", "view", "--json", "owner,name"]);
   const ctx = {
@@ -631,6 +677,8 @@ function sync(desired, dryRun) {
   ensureIssues(ctx, desired, milestoneNumber);
   startStep(ctx, "Board");
   ensureBoard(ctx, desired);
+  startStep(ctx, "Dependencies");
+  ensureDependencies(ctx, desired);
 
   console.log("");
   for (const [step, count] of Object.entries(ctx.changes)) {
