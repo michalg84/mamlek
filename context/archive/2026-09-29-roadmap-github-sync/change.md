@@ -1,10 +1,10 @@
 ---
 change_id: roadmap-github-sync
 title: Sync roadmap.md items to GitHub Issues and a GitHub Project board
-status: implemented
+status: archived
 created: 2026-09-29
 updated: 2026-09-29
-archived_at: null
+archived_at: 2026-09-29T20:32:40Z
 ---
 
 ## Notes
