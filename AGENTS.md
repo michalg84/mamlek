@@ -25,6 +25,7 @@ Setup, scripts, CI and deployment: see @README.md.
 
 - `npx astro check` — type-check `.astro`/`.ts` files (not in `package.json` scripts; CI runs it after `npx astro sync`)
 - `npm run smoke` — dependency-free auth-flow smoke test (`scripts/smoke.mjs`) against a running server, `BASE_URL` env (default `http://localhost:4321`). Run after dependency upgrades; CI runs it against the production preview with a local Supabase. It signs in right after sign-up, so it only passes when email confirmation is off — true for local Supabase (`enable_confirmations = false` in `supabase/config.toml`), usually not for a cloud project.
+- `npm run roadmap:sync` — mirrors `context/foundation/roadmap.md` to GitHub Issues + the "MamLek Roadmap" project (one-way; GitHub edits to synced fields get overwritten). Run it after any roadmap status/item change (e.g. after `/10x-plan`, `/10x-implement`, `/10x-archive`, `/10x-roadmap`). Needs `gh` with the `project` scope (`gh auth refresh -h github.com -s project`, from a real terminal); `npm run roadmap:sync -- --dry-run` previews.
 
 There is no unit test runner yet — `smoke` is the only automated test.
 
