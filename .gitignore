@@ -1,4 +1,7 @@
 # 10x toolkit — reinstall with: npx @przeprogramowani/10x-cli@latest get <lesson>
+.claude/**/10x-*
+.github/**/10x-*
+.agents/**/10x-*
 .10x-cli.json
 skills-lock.json
 .agents/
