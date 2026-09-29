@@ -293,31 +293,31 @@ None — GitHub starts empty. When a later milestone replaces M-1, the new miles
 
 #### Automated
 
-- [x] 2.1 `npm run roadmap:sync -- --dry-run` against the empty repo lists "would create" for the label, milestone and 9 issues, and performs no writes (`gh issue list --label roadmap --state all` still returns nothing)
-- [x] 2.2 `npm run roadmap:sync` creates the label, milestone and 9 issues; `gh issue list --label roadmap --json title --jq length` returns 9
-- [x] 2.3 A second `npm run roadmap:sync` reports no issue/milestone changes
-- [x] 2.4 `npm run lint` passes
+- [x] 2.1 `npm run roadmap:sync -- --dry-run` against the empty repo lists "would create" for the label, milestone and 9 issues, and performs no writes (`gh issue list --label roadmap --state all` still returns nothing) — 9b06b97
+- [x] 2.2 `npm run roadmap:sync` creates the label, milestone and 9 issues; `gh issue list --label roadmap --json title --jq length` returns 9 — 9b06b97
+- [x] 2.3 A second `npm run roadmap:sync` reports no issue/milestone changes — 9b06b97
+- [x] 2.4 `npm run lint` passes — 9b06b97
 
 #### Manual
 
-- [x] 2.5 Issues on GitHub read well: Polish titles with ID prefix, body fields correct, milestone shows 0/9
-- [x] 2.6 Editing an issue title by hand on GitHub and re-running the sync restores the roadmap title
-- [x] 2.7 Closing one issue by hand and re-running prints a warning for it and does not reopen it (reopen it by hand afterwards)
+- [x] 2.5 Issues on GitHub read well: Polish titles with ID prefix, body fields correct, milestone shows 0/9 — 9b06b97
+- [x] 2.6 Editing an issue title by hand on GitHub and re-running the sync restores the roadmap title — 9b06b97
+- [x] 2.7 Closing one issue by hand and re-running prints a warning for it and does not reopen it (reopen it by hand afterwards) — 9b06b97
 
 ### Phase 3: Project board
 
 #### Automated
 
-- [ ] 3.1 `npm run roadmap:sync` creates the project; `gh project list --owner michalg84 --format json` contains "MamLek Roadmap"
-- [ ] 3.2 `gh project field-list <n> --owner michalg84 --format json` shows Status with exactly Proposed, Ready, Planning, In progress, Done and the three text fields
-- [ ] 3.3 `gh project item-list <n> --owner michalg84 --format json` returns 9 items with F-01 = Ready and the rest = Proposed
-- [ ] 3.4 A second run reports no board changes
-- [ ] 3.5 `npm run lint` passes
+- [x] 3.1 `npm run roadmap:sync` creates the project; `gh project list --owner michalg84 --format json` contains "MamLek Roadmap"
+- [x] 3.2 `gh project field-list <n> --owner michalg84 --format json` shows Status with exactly Proposed, Ready, Planning, In progress, Done and the three text fields
+- [x] 3.3 `gh project item-list <n> --owner michalg84 --format json` returns 9 items with F-01 = Ready and the rest = Proposed
+- [x] 3.4 A second run reports no board changes
+- [x] 3.5 `npm run lint` passes
 
 #### Manual
 
-- [ ] 3.6 The board is visible from the repo's Projects tab and a Board view grouped by Status shows the five columns in roadmap order
-- [ ] 3.7 Grouping or filtering by Stream / Change ID works in the GitHub UI
+- [x] 3.6 The board is visible from the repo's Projects tab and a Board view grouped by Status shows the five columns in roadmap order
+- [x] 3.7 Grouping or filtering by Stream / Change ID works in the GitHub UI
 
 ### Phase 4: Blocked-by dependencies and docs
 

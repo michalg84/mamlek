@@ -160,13 +160,24 @@ function ghWrite(method, endpoint, payload) {
   return ghJson(["api", "-X", method, endpoint, "--input", "-"], { input: JSON.stringify(payload) });
 }
 
+// GraphQL query/mutation with {query, variables} on stdin; gh exits non-zero (-> GhError) on GraphQL errors.
+function graphql(query, variables) {
+  return ghJson(["api", "graphql", "--input", "-"], { input: JSON.stringify({ query, variables }) }).data;
+}
+
 // --- Sync steps: each reads current GitHub state, diffs against the desired state, writes only differences. ---
 
 const LABEL = "roadmap";
 const MARKER = /<!--\s*roadmap-id:\s*(\S+)\s*-->/;
 
+// Change counts are kept per step (see startStep) so the summary says which parts changed.
+function startStep(ctx, name) {
+  ctx.step = name;
+  ctx.changes[name] = 0;
+}
+
 function action(ctx, verb, text) {
-  ctx.changes++;
+  ctx.changes[ctx.step]++;
   console.log(`${ctx.dryRun ? `would ${verb}` : verb.replace(/e?$/, "ed")}  ${text}`);
 }
 
@@ -298,26 +309,333 @@ function ensureIssues(ctx, { milestone, items }, milestoneNumber) {
   }
 }
 
+const PROJECT_TITLE = "MamLek Roadmap";
+// Board Status options, in column order; `status` is the roadmap.md value each one mirrors.
+const STATUS_OPTIONS = [
+  { status: "proposed", name: "Proposed", color: "GRAY", description: "In the roadmap, not yet ready to plan" },
+  { status: "ready", name: "Ready", color: "BLUE", description: "Prerequisites met; ready for /10x-plan" },
+  { status: "planning", name: "Planning", color: "PURPLE", description: "Implementation plan in progress" },
+  { status: "in-progress", name: "In progress", color: "YELLOW", description: "Being implemented" },
+  { status: "done", name: "Done", color: "GREEN", description: "Change archived" },
+];
+const TEXT_FIELDS = {
+  "Roadmap ID": (item) => item.id,
+  "Change ID": (item) => item.changeId,
+  Stream: (item) => item.stream,
+};
+
+// Lists every project with the board title. The GraphQL owner listing (not a search) is used so a project created
+// by a previous run is found; duplicates are warned about and the lowest number wins.
+function findProject(ctx) {
+  const data = graphql(
+    `
+      query ($login: String!) {
+        repositoryOwner(login: $login) {
+          ... on ProjectV2Owner {
+            projectsV2(first: 100) {
+              nodes {
+                id
+                number
+                title
+                closed
+              }
+            }
+          }
+        }
+      }
+    `,
+    { login: ctx.repo.owner },
+  );
+  const matches = (data.repositoryOwner?.projectsV2?.nodes ?? [])
+    .filter((project) => project?.title === PROJECT_TITLE)
+    .sort((a, b) => a.number - b.number);
+  if (matches.length > 1) {
+    ctx.warnings.push(
+      `${matches.length} projects titled "${PROJECT_TITLE}" (${matches.map((p) => `#${p.number}`).join(", ")}) — syncing #${matches[0].number}; delete the others by hand`,
+    );
+  }
+  if (matches[0]?.closed) ctx.warnings.push(`project #${matches[0].number} "${PROJECT_TITLE}" is closed`);
+  return matches[0] ?? null;
+}
+
+// Reads linked repos, fields (with Status option IDs) and this repo's issue items with their current values
+// (Status as option ID, text fields as text).
+function readProject(ctx, projectId) {
+  const repoFullName = `${ctx.repo.owner}/${ctx.repo.name}`;
+  const state = { repos: new Set(), fields: new Map(), items: new Map() };
+  let after = null;
+  do {
+    const project = graphql(
+      `
+        query ($id: ID!, $after: String) {
+          node(id: $id) {
+            ... on ProjectV2 {
+              repositories(first: 100) {
+                nodes {
+                  nameWithOwner
+                }
+              }
+              fields(first: 50) {
+                nodes {
+                  ... on ProjectV2FieldCommon {
+                    id
+                    name
+                    dataType
+                  }
+                  ... on ProjectV2SingleSelectField {
+                    options {
+                      id
+                      name
+                    }
+                  }
+                }
+              }
+              items(first: 100, after: $after) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  id
+                  content {
+                    ... on Issue {
+                      number
+                      repository {
+                        nameWithOwner
+                      }
+                    }
+                  }
+                  fieldValues(first: 50) {
+                    nodes {
+                      ... on ProjectV2ItemFieldTextValue {
+                        text
+                        field {
+                          ... on ProjectV2FieldCommon {
+                            name
+                          }
+                        }
+                      }
+                      ... on ProjectV2ItemFieldSingleSelectValue {
+                        optionId
+                        field {
+                          ... on ProjectV2FieldCommon {
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `,
+      { id: projectId, after },
+    ).node;
+    for (const repo of project.repositories.nodes) state.repos.add(repo.nameWithOwner);
+    for (const field of project.fields.nodes) {
+      if (field?.name) state.fields.set(field.name, { id: field.id, dataType: field.dataType, options: field.options });
+    }
+    for (const node of project.items.nodes) {
+      if (node.content?.repository?.nameWithOwner !== repoFullName) continue;
+      const values = new Map();
+      for (const value of node.fieldValues.nodes) {
+        const name = value?.field?.name;
+        if (!name) continue;
+        if ("optionId" in value) values.set(name, value.optionId);
+        else if ("text" in value) values.set(name, value.text);
+      }
+      state.items.set(node.content.number, { id: node.id, values });
+    }
+    after = project.items.pageInfo.hasNextPage ? project.items.pageInfo.endCursor : null;
+  } while (after);
+  return state;
+}
+
+// Status options are replaced only when names/order differ: the replacement regenerates option IDs and clears every
+// item's Status, so it runs before any item is touched and the cleared values are dropped from the read state.
+// Returns option name -> ID, or null when the IDs are unknown (dry run that would replace the options).
+function ensureStatusOptions(ctx, project, state) {
+  const field = state.fields.get("Status");
+  if (project && field?.dataType !== "SINGLE_SELECT") {
+    throw new GhError(`project #${project.number} "${PROJECT_TITLE}" has no single-select Status field`);
+  }
+  const desiredNames = STATUS_OPTIONS.map((option) => option.name);
+  const currentNames = field?.options.map((option) => option.name) ?? [];
+  if (currentNames.join("\n") === desiredNames.join("\n")) {
+    return new Map(field.options.map((option) => [option.name, option.id]));
+  }
+  action(ctx, "update", `board Status options → ${desiredNames.join(", ")}`);
+  if (ctx.dryRun) return null;
+  const options = graphql(
+    `
+      mutation ($fieldId: ID!, $options: [ProjectV2SingleSelectFieldOptionInput!]) {
+        updateProjectV2Field(input: { fieldId: $fieldId, singleSelectOptions: $options }) {
+          projectV2Field {
+            ... on ProjectV2SingleSelectField {
+              options {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    `,
+    {
+      fieldId: field.id,
+      options: STATUS_OPTIONS.map(({ name, color, description }) => ({ name, color, description })),
+    },
+  ).updateProjectV2Field.projectV2Field.options;
+  for (const item of state.items.values()) item.values.delete("Status");
+  return new Map(options.map((option) => [option.name, option.id]));
+}
+
+// Returns text field name -> field ID (null when it would be created in a dry run); fields of the wrong type are
+// warned about and left out.
+function ensureTextFields(ctx, project, state) {
+  const fieldIds = new Map();
+  for (const name of Object.keys(TEXT_FIELDS)) {
+    const field = state.fields.get(name);
+    if (field && field.dataType !== "TEXT") {
+      ctx.warnings.push(
+        `board field "${name}" is ${field.dataType}, not TEXT — not synced; delete it to let the sync recreate it`,
+      );
+      continue;
+    }
+    if (field) {
+      fieldIds.set(name, field.id);
+      continue;
+    }
+    action(ctx, "create", `board field ${name}`);
+    if (ctx.dryRun) fieldIds.set(name, null);
+    else {
+      const created = ghJson([
+        "project",
+        "field-create",
+        String(project.number),
+        "--owner",
+        ctx.repo.owner,
+        "--name",
+        name,
+        "--data-type",
+        "TEXT",
+        "--format",
+        "json",
+      ]);
+      fieldIds.set(name, created.id);
+    }
+  }
+  return fieldIds;
+}
+
+// Mirrors the roadmap onto the user project: project + repo link, Status options, text fields, one item per roadmap
+// issue with Status (not for closed issues) and text values. Only differing values are written.
+function ensureBoard(ctx, { items }) {
+  const repoFullName = `${ctx.repo.owner}/${ctx.repo.name}`;
+  let project = findProject(ctx);
+  if (!project) {
+    action(ctx, "create", `project ${PROJECT_TITLE}`);
+    if (!ctx.dryRun) {
+      // The returned id/number are used for the rest of the run, so a lagging listing cannot cause a second create.
+      project = ghJson(["project", "create", "--owner", ctx.repo.owner, "--title", PROJECT_TITLE, "--format", "json"]);
+    }
+  }
+  const state = project ? readProject(ctx, project.id) : { repos: new Set(), fields: new Map(), items: new Map() };
+
+  if (!state.repos.has(repoFullName)) {
+    action(ctx, "link", `project ${PROJECT_TITLE} to ${repoFullName}`);
+    if (!ctx.dryRun) gh(["project", "link", String(project.number), "--owner", ctx.repo.owner, "--repo", repoFullName]);
+  }
+
+  const optionIds = ensureStatusOptions(ctx, project, state);
+  const fieldIds = ensureTextFields(ctx, project, state);
+
+  for (const item of items) {
+    const issue = ctx.issues.get(item.id);
+    const label = issue.number === null ? `${item.id} (new issue)` : `#${issue.number} ${item.id}`;
+    let boardItem = issue.number === null ? undefined : state.items.get(issue.number);
+    if (!boardItem) {
+      action(ctx, "add", `${label} to board`);
+      if (ctx.dryRun) boardItem = { id: null, values: new Map() };
+      else {
+        // item-add is idempotent: for an item the listing missed it returns the existing one (values then rewritten).
+        const added = ghJson([
+          "project",
+          "item-add",
+          String(project.number),
+          "--owner",
+          ctx.repo.owner,
+          "--url",
+          `https://github.com/${repoFullName}/issues/${issue.number}`,
+          "--format",
+          "json",
+        ]);
+        boardItem = { id: added.id, values: new Map() };
+      }
+    }
+
+    const edits = [];
+    if (issue.state !== "closed") {
+      const statusName = STATUS_OPTIONS.find((option) => option.status === item.status).name;
+      const optionId = optionIds?.get(statusName) ?? null;
+      if (optionIds === null || boardItem.values.get("Status") !== optionId) {
+        edits.push({
+          text: `Status → ${statusName}`,
+          fieldId: state.fields.get("Status")?.id,
+          args: ["--single-select-option-id", optionId],
+        });
+      }
+    }
+    for (const [name, fieldId] of fieldIds) {
+      const value = TEXT_FIELDS[name](item) ?? "";
+      if ((boardItem.values.get(name) ?? "") === value) continue;
+      edits.push({ text: `${name} → ${value || "(empty)"}`, fieldId, args: value ? ["--text", value] : ["--clear"] });
+    }
+    if (!edits.length) continue;
+
+    action(ctx, "update", `board item ${label} (${edits.map((edit) => edit.text).join(", ")})`);
+    if (ctx.dryRun) continue;
+    for (const edit of edits) {
+      gh([
+        "project",
+        "item-edit",
+        "--id",
+        boardItem.id,
+        "--project-id",
+        project.id,
+        "--field-id",
+        edit.fieldId,
+        ...edit.args,
+      ]);
+    }
+  }
+}
+
 function sync(desired, dryRun) {
   const repoInfo = ghJson(["repo", "view", "--json", "owner,name"]);
   const ctx = {
     dryRun,
     repo: { owner: repoInfo.owner.login, name: repoInfo.name },
-    changes: 0,
+    step: null,
+    changes: {},
     warnings: [],
     issues: new Map(),
   };
   console.log(`${dryRun ? "Dry run — no writes. " : ""}Syncing roadmap to ${ctx.repo.owner}/${ctx.repo.name}\n`);
 
+  startStep(ctx, "Label, milestone & issues");
   ensureLabel(ctx);
   const milestoneNumber = ensureMilestone(ctx, desired.milestone);
   ensureIssues(ctx, desired, milestoneNumber);
+  startStep(ctx, "Board");
+  ensureBoard(ctx, desired);
 
-  console.log(
-    ctx.changes
-      ? `\n${ctx.changes} change(s) ${dryRun ? "planned" : "applied"} (label, milestone, issues)`
-      : "\nLabel, milestone & issues: no changes",
-  );
+  console.log("");
+  for (const [step, count] of Object.entries(ctx.changes)) {
+    console.log(`${step}: ${count ? `${count} change(s) ${dryRun ? "planned" : "applied"}` : "no changes"}`);
+  }
   if (ctx.warnings.length) {
     console.log(`\nWarnings (${ctx.warnings.length}):`);
     for (const warning of ctx.warnings) console.log(`  - ${warning}`);
