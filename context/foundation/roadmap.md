@@ -39,17 +39,17 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status      |
-| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | ----------- |
-| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | in-progress |
-| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | proposed    |
-| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | proposed    |
-| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | proposed    |
-| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed    |
-| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed    |
-| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed    |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | proposed    |
-| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed    |
+| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status   |
+| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
+| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done     |
+| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | proposed |
+| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | proposed |
+| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | proposed |
+| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
+| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
+| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
+| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | proposed |
+| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
 
 ## Streams
 
@@ -89,7 +89,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Które pola rekordu rejestru tworzą indeks wyszukiwania — do rozstrzygnięcia na realnym pliku (shape-notes, Forward: technical-roadmap). — Owner: autor. Block: no.
   - Czy produkty wycofane (pole statusu w rekordzie) wchodzą do kopii — patrz Open Roadmap Question 5. — Owner: autor. Block: no.
 - **Risk:** Stoi pierwsza, bo bez własnej kopii rejestru nie ma substancji czynnych, a bez nich żadnego wyniku sprawdzenia; zakres celowo tylko jednorazowy, powtarzalny import — harmonogram i widoczność daty dochodzą w S-07. Parser powstaje od zera (repozytorium referencyjne bez licencji służy tylko do wglądu).
-- **Status:** in-progress
+- **Status:** done
 
 ## Slices
 
@@ -240,3 +240,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Milestone History
 
 ## Done
+
+- **F-01: (foundation) kopia Rejestru Produktów Leczniczych — produkty z nazwą, nazwą powszechnie stosowaną, mocą, postacią i listą substancji czynnych — jest wczytana do bazy importem, który można uruchomić ponownie bez ręcznego sprzątania, a podmiana danych jest atomowa.** — Archived 2026-10-01 → `context/archive/2026-10-01-registry-copy-load/`. Lesson: —.
