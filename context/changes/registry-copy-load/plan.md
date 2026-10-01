@@ -321,26 +321,26 @@ Każda niezgodność kończy skrypt kodem ≠ 0 z czytelnym komunikatem.
 
 #### Automated
 
-- [x] 2.1 `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` wypisuje liczności zgodne z zawartością fixture'u, a produkt weterynaryjny jest pominięty
-- [x] 2.2 Pełny zrzut lokalnie do lokalnego Supabase kończy się stanem: 20 258 aktywnych produktów, 25 515 substancji, 71 432 aktywne opakowania
-- [x] 2.3 Drugie uruchomienie na tym samym pliku kończy się tymi samymi licznościami i 0 produktów oznaczonych jako usunięte
-- [x] 2.4 Import pliku z obciętym końcem kończy się kodem ≠ 0, a liczności w bazie się nie zmieniają
-- [x] 2.5 `npm run lint` przechodzi
+- [x] 2.1 `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` wypisuje liczności zgodne z zawartością fixture'u, a produkt weterynaryjny jest pominięty — 0a17ba7
+- [x] 2.2 Pełny zrzut lokalnie do lokalnego Supabase kończy się stanem: 20 258 aktywnych produktów, 25 515 substancji, 71 432 aktywne opakowania — 0a17ba7
+- [x] 2.3 Drugie uruchomienie na tym samym pliku kończy się tymi samymi licznościami i 0 produktów oznaczonych jako usunięte — 0a17ba7
+- [x] 2.4 Import pliku z obciętym końcem kończy się kodem ≠ 0, a liczności w bazie się nie zmieniają — 0a17ba7
+- [x] 2.5 `npm run lint` przechodzi — 0a17ba7
 
 #### Manual
 
-- [x] 2.6 W Studio rekord Smecty (`id 100016564`) ma `common_name = 'Diosmectitum'` i 0 substancji, a produkt z encją ma zdekodowany tekst
-- [x] 2.7 Import bez `--file` pobiera bieżący zrzut z RPL i kończy się sukcesem
-- [x] 2.8 Czas pełnego importu lokalnie jest akceptowalny
+- [x] 2.6 W Studio rekord Smecty (`id 100016564`) ma `common_name = 'Diosmectitum'` i 0 substancji, a produkt z encją ma zdekodowany tekst — 0a17ba7
+- [x] 2.7 Import bez `--file` pobiera bieżący zrzut z RPL i kończy się sukcesem — 0a17ba7
+- [x] 2.8 Czas pełnego importu lokalnie jest akceptowalny — 0a17ba7
 
 ### Phase 3: CI, workflow produkcyjny i dokumentacja
 
 #### Automated
 
-- [ ] 3.1 Lokalnie: sekwencja v1, v1, v2 i `node scripts/registry-import-check.mjs` kończy się kodem 0 na świeżym `npx supabase db reset`
-- [ ] 3.2 `npm run lint` przechodzi
-- [ ] 3.3 `npx astro check` przechodzi
-- [ ] 3.4 `npm run build` przechodzi
+- [x] 3.1 Lokalnie: sekwencja v1, v1, v2 i `node scripts/registry-import-check.mjs` kończy się kodem 0 na świeżym `npx supabase db reset`
+- [x] 3.2 `npm run lint` przechodzi
+- [x] 3.3 `npx astro check` przechodzi
+- [x] 3.4 `npm run build` przechodzi
 - [ ] 3.5 Job `smoke` w CI na PR przechodzi razem z nowymi krokami importu
 
 #### Manual

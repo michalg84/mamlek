@@ -1,0 +1,30 @@
+name: Registry import
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: registry-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # GitHub runners have no IPv6 and the direct Supabase database host is IPv6-only, so the secret must be
+      # the Supavisor pooler connection string in session mode (port 5432).
+      - name: Import RPL export into the production database
+        env:
+          DATABASE_URL: ${{ secrets.REGISTRY_DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Repository secret REGISTRY_DATABASE_URL is not set"
+            exit 1
+          fi
+          npm run registry:import

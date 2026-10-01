@@ -39,7 +39,15 @@ jobs:
       - name: Start local Supabase
         run: |
           supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
-          supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+          supabase status -o env | grep -E '^(API_URL|ANON_KEY|DB_URL)=' > supabase.env
+      - name: Import registry fixtures (v1, v1, v2) and check the result
+        run: |
+          source supabase.env
+          export DATABASE_URL="$DB_URL"
+          npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml
+          npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml
+          npm run registry:import -- --file scripts/fixtures/rpl-sample-v2.xml
+          node scripts/registry-import-check.mjs
       - name: Configure secrets for build and preview
         run: |
           source supabase.env
