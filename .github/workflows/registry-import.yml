@@ -7,11 +7,20 @@ concurrency:
   group: registry-import
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   import:
+    # The secret holds production owner credentials: only main's version of the import may use it.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # A full import takes well under a minute; a stalled RPL download must not hold a production transaction for hours.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 22

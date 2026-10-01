@@ -91,9 +91,12 @@ export async function parseRpl(source) {
       }
       case "substancjaCzynna":
         if (product) {
+          const name = value(a, "nazwaSubstancji");
+          if (name === null)
+            throw new RplParseError(`product ${product.id} has a substance with an empty nazwaSubstancji`);
           product.substances.push({
             position: product.substances.length + 1,
-            name: value(a, "nazwaSubstancji"),
+            name,
             amount: value(a, "iloscSubstancji"),
             unit: value(a, "jednostkaMiaryIlosciSubstancji"),
             preparation_amount: value(a, "iloscPreparatu"),
