@@ -306,15 +306,15 @@ Każda niezgodność kończy skrypt kodem ≠ 0 z czytelnym komunikatem.
 
 #### Automated
 
-- [ ] 1.1 `npx supabase db reset` stosuje migrację bez błędów na lokalnym Supabase
-- [ ] 1.2 `npx supabase db lint --fail-on error` nie zgłasza błędów dla nowych tabel
-- [ ] 1.3 `npm run lint` przechodzi
-- [ ] 1.4 `npx astro check` przechodzi
+- [x] 1.1 `npx supabase db reset` stosuje migrację bez błędów na lokalnym Supabase
+- [x] 1.2 `npx supabase db lint --fail-on error` nie zgłasza błędów dla nowych tabel
+- [x] 1.3 `npm run lint` przechodzi
+- [x] 1.4 `npx astro check` przechodzi
 
 #### Manual
 
-- [ ] 1.5 W lokalnym Studio cztery tabele mają włączony RLS i po jednej polityce SELECT dla `authenticated`
-- [ ] 1.6 Zapytanie SQL do `pg_class.relrowsecurity` i `pg_policies` potwierdza RLS na czterech tabelach i jedną politykę SELECT dla `authenticated` na tabelę
+- [x] 1.5 W lokalnym Studio cztery tabele mają włączony RLS i po jednej polityce SELECT dla `authenticated`
+- [x] 1.6 Zapytanie SQL do `pg_class.relrowsecurity` i `pg_policies` potwierdza RLS na czterech tabelach i jedną politykę SELECT dla `authenticated` na tabelę
 
 ### Phase 2: Parser i skrypt importu
 
