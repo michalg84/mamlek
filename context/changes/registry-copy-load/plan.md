@@ -135,6 +135,7 @@ Skrypt, który strumieniowo czyta zrzut RPL i atomowo wgrywa go do bazy, oraz mi
 - Rzuca błąd, gdy namespace korzenia się nie zgadza albo brakuje `stanNaDzien`.
 - Produkty z `rodzajPreparatu` innym niż `ludzki` są pomijane.
 - Opakowania z `skasowane="TAK"` są pomijane. Brak atrybutu albo wartość `NIE` oznacza aktywne opakowanie.
+- `leaflet_url` to `ulotka`, a gdy jest puste, `ulotkaImportRownolegly` (produkty z importu równoległego mają ulotkę tylko w tym polu: 3 235 z 20 258 produktów ludzkich w zrzucie 2026-09-23).
 - Encje XML dekoduje `saxes`.
 - Kolejność substancji z XML wyznacza `position`.
 
@@ -306,31 +307,31 @@ Każda niezgodność kończy skrypt kodem ≠ 0 z czytelnym komunikatem.
 
 #### Automated
 
-- [x] 1.1 `npx supabase db reset` stosuje migrację bez błędów na lokalnym Supabase
-- [x] 1.2 `npx supabase db lint --fail-on error` nie zgłasza błędów dla nowych tabel
-- [x] 1.3 `npm run lint` przechodzi
-- [x] 1.4 `npx astro check` przechodzi
+- [x] 1.1 `npx supabase db reset` stosuje migrację bez błędów na lokalnym Supabase — 982fabf
+- [x] 1.2 `npx supabase db lint --fail-on error` nie zgłasza błędów dla nowych tabel — 982fabf
+- [x] 1.3 `npm run lint` przechodzi — 982fabf
+- [x] 1.4 `npx astro check` przechodzi — 982fabf
 
 #### Manual
 
-- [x] 1.5 W lokalnym Studio cztery tabele mają włączony RLS i po jednej polityce SELECT dla `authenticated`
-- [x] 1.6 Zapytanie SQL do `pg_class.relrowsecurity` i `pg_policies` potwierdza RLS na czterech tabelach i jedną politykę SELECT dla `authenticated` na tabelę
+- [x] 1.5 W lokalnym Studio cztery tabele mają włączony RLS i po jednej polityce SELECT dla `authenticated` — 982fabf
+- [x] 1.6 Zapytanie SQL do `pg_class.relrowsecurity` i `pg_policies` potwierdza RLS na czterech tabelach i jedną politykę SELECT dla `authenticated` na tabelę — 982fabf
 
 ### Phase 2: Parser i skrypt importu
 
 #### Automated
 
-- [ ] 2.1 `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` wypisuje liczności zgodne z zawartością fixture'u, a produkt weterynaryjny jest pominięty
-- [ ] 2.2 Pełny zrzut lokalnie do lokalnego Supabase kończy się stanem: 20 258 aktywnych produktów, 25 515 substancji, 71 432 aktywne opakowania
-- [ ] 2.3 Drugie uruchomienie na tym samym pliku kończy się tymi samymi licznościami i 0 produktów oznaczonych jako usunięte
-- [ ] 2.4 Import pliku z obciętym końcem kończy się kodem ≠ 0, a liczności w bazie się nie zmieniają
-- [ ] 2.5 `npm run lint` przechodzi
+- [x] 2.1 `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` wypisuje liczności zgodne z zawartością fixture'u, a produkt weterynaryjny jest pominięty
+- [x] 2.2 Pełny zrzut lokalnie do lokalnego Supabase kończy się stanem: 20 258 aktywnych produktów, 25 515 substancji, 71 432 aktywne opakowania
+- [x] 2.3 Drugie uruchomienie na tym samym pliku kończy się tymi samymi licznościami i 0 produktów oznaczonych jako usunięte
+- [x] 2.4 Import pliku z obciętym końcem kończy się kodem ≠ 0, a liczności w bazie się nie zmieniają
+- [x] 2.5 `npm run lint` przechodzi
 
 #### Manual
 
-- [ ] 2.6 W Studio rekord Smecty (`id 100016564`) ma `common_name = 'Diosmectitum'` i 0 substancji, a produkt z encją ma zdekodowany tekst
-- [ ] 2.7 Import bez `--file` pobiera bieżący zrzut z RPL i kończy się sukcesem
-- [ ] 2.8 Czas pełnego importu lokalnie jest akceptowalny
+- [x] 2.6 W Studio rekord Smecty (`id 100016564`) ma `common_name = 'Diosmectitum'` i 0 substancji, a produkt z encją ma zdekodowany tekst
+- [x] 2.7 Import bez `--file` pobiera bieżący zrzut z RPL i kończy się sukcesem
+- [x] 2.8 Czas pełnego importu lokalnie jest akceptowalny
 
 ### Phase 3: CI, workflow produkcyjny i dokumentacja
 

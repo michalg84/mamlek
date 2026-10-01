@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "smoke": "node scripts/smoke.mjs",
     "roadmap:sync": "node scripts/roadmap-sync.mjs",
+    "registry:import": "node scripts/registry-import.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -48,9 +49,11 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "9.1.7",
     "lint-staged": "^16.3.3",
+    "pg": "^8.23.1",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^1.0.0",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "saxes": "^6.0.0",
     "supabase": "^2.23.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",

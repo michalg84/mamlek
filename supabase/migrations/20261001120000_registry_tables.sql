@@ -52,7 +52,7 @@ comment on column public.registry_products.authorization_number is 'Marketing au
 comment on column public.registry_products.authorization_validity is 'Raw authorization validity: a date, "Bezterminowe", "Pozwolenie zawieszone" or NULL (XML waznoscPozwolenia). Not interpreted by the import.';
 comment on column public.registry_products.atc_codes is 'ATC codes in XML order (XML kodyATC/kodATC); empty array when none.';
 comment on column public.registry_products.routes is 'Routes of administration in XML order (XML drogiPodania/drogaPodania@drogaPodaniaNazwa); empty array when none.';
-comment on column public.registry_products.leaflet_url is 'Patient leaflet URL (XML ulotka).';
+comment on column public.registry_products.leaflet_url is 'Patient leaflet URL (XML ulotka; for parallel imports, where ulotka is empty, XML ulotkaImportRownolegly).';
 comment on column public.registry_products.characteristic_url is 'Summary of product characteristics URL (XML charakterystyka).';
 comment on column public.registry_products.created_at is 'When the row was first imported.';
 comment on column public.registry_products.updated_at is 'Last actual change of the row data or of removed_at (not the last import; see registry_imports).';
@@ -181,3 +181,13 @@ grant select on
   public.registry_packages,
   public.registry_imports
 to authenticated;
+
+-- Supabase default privileges grant API roles full DML on new public tables. RLS blocks
+-- row writes without policies, but not TRUNCATE, so write privileges are revoked
+-- explicitly. SELECT stays: anon still sees no rows because it has no policy.
+revoke insert, update, delete, truncate, references, trigger on
+  public.registry_products,
+  public.registry_product_substances,
+  public.registry_packages,
+  public.registry_imports
+from anon, authenticated;
