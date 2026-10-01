@@ -346,7 +346,7 @@ Każda niezgodność kończy skrypt kodem ≠ 0 z czytelnym komunikatem.
 #### Manual
 
 - [x] 3.6 Migracja zastosowana na produkcyjny Supabase (`npx supabase link` + `npx supabase db push`)
-- [ ] 3.7 Sekret `REGISTRY_DATABASE_URL` ustawiony w repo
-- [ ] 3.8 Ręczne uruchomienie `registry-import.yml` kończy się sukcesem, a produkcyjna tabela `registry_products` ma około 20 tys. aktywnych produktów
-- [ ] 3.9 Drugie ręczne uruchomienie tego samego dnia kończy się sukcesem bez oznaczania produktów jako usunięte
-- [ ] 3.10 README i AGENTS.md czytają się poprawnie
+- [x] 3.7 Sekret `REGISTRY_DATABASE_URL` ustawiony w repo
+- [x] 3.8 Ręczne uruchomienie `registry-import.yml` kończy się sukcesem, a produkcyjna tabela `registry_products` ma około 20 tys. aktywnych produktów
+- [x] 3.9 Drugie ręczne uruchomienie tego samego dnia kończy się sukcesem bez oznaczania produktów jako usunięte
+- [x] 3.10 README i AGENTS.md czytają się poprawnie

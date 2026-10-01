@@ -84,6 +84,8 @@ A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`a
 
 ## Registry import
 
+Source: the [Registry of Medicinal Products (RPL)](https://rejestrymedyczne.ezdrowie.gov.pl/rpl/search/public), full XML export version 6.0.0 at <https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/public-pl-report/6.0.0/overall.xml> (about 74 MB, generated for the current day). Without `--file` the import downloads it from that URL.
+
 `npm run registry:import` loads the RPL export into the `registry_*` tables in one transaction. Products and packages missing from the export get `removed_at` instead of being deleted, and every successful import adds a row to `registry_imports`. The import aborts (and changes nothing) when the export is older than the last imported one or has fewer than 90% of the currently active products. Locally:
 
 ```bash
