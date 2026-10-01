@@ -1,7 +1,7 @@
 ---
 change_id: registry-copy-load
 title: Wczytanie kopii Rejestru Produktów Leczniczych do bazy
-status: implemented
+status: impl_reviewed
 created: 2026-10-01
 updated: 2026-10-01
 ---

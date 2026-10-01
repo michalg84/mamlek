@@ -7,16 +7,25 @@
 //   DATABASE_URL=postgresql://... node scripts/registry-import.mjs --file dump.xml # local file
 //   node scripts/registry-import.mjs --file dump.xml --dry-run                      # parse only, no database
 
-import { createReadStream } from "node:fs";
+import { createReadStream, readFileSync } from "node:fs";
 import path from "node:path";
+import { URL, fileURLToPath } from "node:url";
 import { TextDecoder } from "node:util";
 import pg from "pg";
 import { parseRpl } from "./lib/rpl-parser.mjs";
 
 const RPL_URL = "https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/public-pl-report/6.0.0/overall.xml";
 const BATCH_SIZE = 1000;
-// A dump with fewer human products than this share of the active ones is treated as broken (truncated or empty).
-const MIN_PRODUCT_SHARE = 0.9;
+// A dump with fewer products, substances or packages than this share of the active ones is treated as broken
+// (truncated, empty, or with renamed elements).
+const MIN_SHARE = 0.9;
+// Supabase root certificate (Dashboard -> Project Settings -> Database -> SSL Configuration). Every non-local
+// connection must use TLS and present a server certificate signed by it, so the password never travels in clear
+// text and an impostor server is rejected.
+const SUPABASE_CA_FILE = fileURLToPath(new URL("../supabase/prod-ca-2021.crt", import.meta.url));
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+// pg_advisory_xact_lock key shared by all registry imports.
+const IMPORT_LOCK_KEY = 2026100101;
 
 class ImportError extends Error {}
 class UsageError extends Error {}
@@ -35,18 +44,23 @@ function parseArgs(argv) {
   return options;
 }
 
-async function* downloadText(url) {
-  const response = await fetch(url);
-  if (!response.ok || !response.body) throw new ImportError(`download failed: HTTP ${response.status} from ${url}`);
+// Invalid UTF-8 aborts the import instead of being replaced with U+FFFD.
+async function* decodeUtf8(chunks) {
   const decoder = new TextDecoder("utf-8", { fatal: true });
-  for await (const chunk of response.body) yield decoder.decode(chunk, { stream: true });
+  for await (const chunk of chunks) yield decoder.decode(chunk, { stream: true });
   const rest = decoder.decode();
   if (rest) yield rest;
 }
 
+async function* downloadText(url) {
+  const response = await fetch(url);
+  if (!response.ok || !response.body) throw new ImportError(`download failed: HTTP ${response.status} from ${url}`);
+  yield* decodeUtf8(response.body);
+}
+
 // Opened lazily on the first read, so a missing file surfaces as a normal error inside the import.
 async function* readText(file) {
-  yield* createReadStream(file, { encoding: "utf8" });
+  yield* decodeUtf8(createReadStream(file));
 }
 
 function openSource(file) {
@@ -135,12 +149,36 @@ async function loadBatch(client, products, counts) {
   counts.packages += packageRows.length;
 }
 
+// Local Supabase (dev, CI) has no TLS. Anything else gets a verified TLS connection; an sslmode in the URL would
+// override this, so it is rejected.
+function sslOptions(databaseUrl) {
+  const url = new URL(databaseUrl);
+  if (LOCAL_HOSTS.has(url.hostname)) return false;
+  if (url.searchParams.has("sslmode") || url.searchParams.has("ssl")) {
+    throw new UsageError("Remove sslmode/ssl from DATABASE_URL: the import always verifies TLS for remote hosts.");
+  }
+  return { ca: readFileSync(SUPABASE_CA_FILE, "utf8") };
+}
+
 async function importToDatabase(databaseUrl, source, startedAt) {
-  const client = new pg.Client({ connectionString: databaseUrl });
+  const client = new pg.Client({ connectionString: databaseUrl, ssl: sslOptions(databaseUrl) });
+  // A dropped connection (e.g. while the client idles during the download) is emitted, not thrown; keep it so the
+  // import fails with that cause instead of an uncaught exception.
+  let connectionError = null;
+  client.on("error", (error) => {
+    connectionError ??= error;
+  });
   await client.connect();
   try {
     await client.query("begin");
+    // One import at a time per database (the workflow's concurrency group does not cover local runs).
+    const {
+      rows: [lock],
+    } = await client.query("select pg_try_advisory_xact_lock($1) as acquired", [IMPORT_LOCK_KEY]);
+    if (!lock.acquired) throw new ImportError("another registry import is running on this database");
     await client.query("set local statement_timeout = 0");
+    // Readers never conflict with the import; waiting on a lock means another writer, so fail fast instead.
+    await client.query("set local lock_timeout = '30s'");
 
     // 1. Temporary tables (primary keys reject duplicate ids in the dump).
     await client.query(`create temp table tmp_registry_products (${columnDefs(PRODUCT_COLUMNS)}, primary key (id))
@@ -168,16 +206,22 @@ async function importToDatabase(databaseUrl, source, startedAt) {
       rows: [state],
     } = await client.query(`select
         (select max(snapshot_date)::text from registry_imports) as last_snapshot,
-        (select count(*)::int from registry_products where removed_at is null) as active`);
+        (select count(*)::int from registry_products where removed_at is null) as products,
+        (select count(*)::int from registry_product_substances s
+          join registry_products p on p.id = s.product_id where p.removed_at is null) as substances,
+        (select count(*)::int from registry_packages where removed_at is null) as packages`);
     if (state.last_snapshot && snapshotDate < state.last_snapshot) {
       throw new ImportError(
         `stanNaDzien ${snapshotDate} is older than the last imported snapshot ${state.last_snapshot}`,
       );
     }
-    if (state.active > 0 && dump.products < state.active * MIN_PRODUCT_SHARE) {
-      throw new ImportError(
-        `the dump has ${dump.products} human products, less than ${MIN_PRODUCT_SHARE * 100}% of ${state.active} active ones`,
-      );
+    // Skipped while the tables are empty (first import).
+    for (const kind of ["products", "substances", "packages"]) {
+      if (state[kind] > 0 && dump[kind] < state[kind] * MIN_SHARE) {
+        throw new ImportError(
+          `the dump has ${dump[kind]} ${kind}, less than ${MIN_SHARE * 100}% of ${state[kind]} active ones`,
+        );
+      }
     }
 
     // 4. Products: upsert (a returning product becomes active again), unchanged rows are not rewritten.
@@ -212,7 +256,7 @@ async function importToDatabase(databaseUrl, source, startedAt) {
     return { snapshotDate, dump, stats, logged };
   } catch (error) {
     await client.query("rollback").catch(() => undefined);
-    throw error;
+    throw connectionError ?? error;
   } finally {
     await client.end().catch(() => undefined);
   }
