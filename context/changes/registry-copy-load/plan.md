@@ -337,15 +337,15 @@ Każda niezgodność kończy skrypt kodem ≠ 0 z czytelnym komunikatem.
 
 #### Automated
 
-- [x] 3.1 Lokalnie: sekwencja v1, v1, v2 i `node scripts/registry-import-check.mjs` kończy się kodem 0 na świeżym `npx supabase db reset`
-- [x] 3.2 `npm run lint` przechodzi
-- [x] 3.3 `npx astro check` przechodzi
-- [x] 3.4 `npm run build` przechodzi
-- [ ] 3.5 Job `smoke` w CI na PR przechodzi razem z nowymi krokami importu
+- [x] 3.1 Lokalnie: sekwencja v1, v1, v2 i `node scripts/registry-import-check.mjs` kończy się kodem 0 na świeżym `npx supabase db reset` — 05ae24e
+- [x] 3.2 `npm run lint` przechodzi — 05ae24e
+- [x] 3.3 `npx astro check` przechodzi — 05ae24e
+- [x] 3.4 `npm run build` przechodzi — 05ae24e
+- [x] 3.5 Job `smoke` w CI na PR przechodzi razem z nowymi krokami importu — 05ae24e
 
 #### Manual
 
-- [ ] 3.6 Migracja zastosowana na produkcyjny Supabase (`npx supabase link` + `npx supabase db push`)
+- [x] 3.6 Migracja zastosowana na produkcyjny Supabase (`npx supabase link` + `npx supabase db push`)
 - [ ] 3.7 Sekret `REGISTRY_DATABASE_URL` ustawiony w repo
 - [ ] 3.8 Ręczne uruchomienie `registry-import.yml` kończy się sukcesem, a produkcyjna tabela `registry_products` ma około 20 tys. aktywnych produktów
 - [ ] 3.9 Drugie ręczne uruchomienie tego samego dnia kończy się sukcesem bez oznaczania produktów jako usunięte
