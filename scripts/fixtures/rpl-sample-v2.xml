@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<produktyLecznicze stanNaDzien="2026-09-24" xmlns="http://rejestry.ezdrowie.gov.pl/rpl/eksport-danych-v6.0.0">
+    <produktLeczniczy nazwaProduktu="Zoledronic acid Fresenius Kabi" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Acidum zoledronicum" nazwaPoprzedniaProduktu="brak" moc="4 mg/5 ml" nazwaPostaciFarmaceutycznej="Koncentrat do sporządzania roztworu do infuzji" podmiotOdpowiedzialny="Fresenius Kabi Polska Sp. z o.o." typProcedury="DCP" numerPozwolenia="20708" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 1 pkt 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/1/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/1/characteristic" id="100000014">
+        <kodyATC>
+            <kodATC>M05BA08</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="dożylna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Acidum zoledronicum" iloscSubstancji="4" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="5" jednostkaMiaryIlosciPreparatu="ml" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991023652" kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="2">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="5" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991023669" kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="3">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="4" rodzajOpakowania="fiol." pojemnosc="5" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991023676" kategoriaDostepnosci="Rpz" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="4">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="10" rodzajOpakowania="fiol." pojemnosc="5" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Fresenius Kabi Austria GmbH" krajWytworcyImportera="Austria"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Smecta" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Diosmectitum" nazwaPoprzedniaProduktu="brak" moc="3 g" nazwaPostaciFarmaceutycznej="Proszek do sporządzania zawiesiny doustnej" podmiotOdpowiedzialny="InPharm Sp. z o.o." typProcedury="IR" numerPozwolenia="34/08" waznoscPozwolenia="2028-07-03" zakazStosowaniaUZwierzat="" ulotkaImportRownolegly="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/1656/parallel-import-files/LEAFLET/public" oznaczenieOpakowanImportRownolegly="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/1656/parallel-import-files/PACKAGE_MARKING/public" id="100016564">
+        <kodyATC>
+            <kodATC>A07BC05</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne/>
+        <opakowania>
+            <opakowanie kodGTIN="05909990503636" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="72840">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="10" rodzajOpakowania="sasz." pojemnosc="" jednostkaPojemnosci="" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990503643" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="72841">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="30" rodzajOpakowania="sasz." pojemnosc="" jednostkaPojemnosci="" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy podmiotOdpowiedzialnywKrajuEksportu="MAYOLY PHARMA FRANCE" krajEksportu="Francja"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Liść Pokrzywy" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Urticae folium" nazwaPoprzedniaProduktu="brak" nazwaPostaciFarmaceutycznej="Zioła do zaparzania w saszetkach" podmiotOdpowiedzialny="Zakład Konfekcjonowania Ziół &quot;FLOS&quot; Elżbieta i Jan Głąb spółka jawna" typProcedury="NAR" numerPozwolenia="02196" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 20 ust. 1 pkt. 4" zakazStosowaniaUZwierzat="" id="100039134">
+        <kodyATC/>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Urticae folium" iloscSubstancji="100" jednostkaMiaryIlosciSubstancji="g" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="OTC" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="6018">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="20" rodzajOpakowania="sasz." pojemnosc="2" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990219612" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="14791">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="30" rodzajOpakowania="sasz." pojemnosc="1,5" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Zakład Konfekcjonowania Ziół &quot;FLOS&quot; Elżbieta i Jan Głąb spółka jawna" krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Neo-Angin Spray" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Alcohol 2,4-dichlorobenzylicus + Amylmetacresolum + Levomentholum" nazwaPoprzedniaProduktu="brak" moc="(14,58 mg + 2,92 mg + 0,87 mg)/ml" nazwaPostaciFarmaceutycznej="Roztwór do stosowania na błonę śluzową jamy ustnej i gardła" podmiotOdpowiedzialny="M.C.M. Klosterfrau Healthcare Sp. z o.o." typProcedury="NAR" numerPozwolenia="02481" waznoscPozwolenia="2024-07-31" podstawaPrawna="art. 16 ust. 1" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/4666/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/4666/characteristic" id="100046660">
+        <kodyATC>
+            <kodATC>R02AA20</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="na śluzówkę jamy ustnej i gardła"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Alcohol dichlorobenzylicus" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="14,58 mg/ml"/>
+            <substancjaCzynna nazwaSubstancji="Amylmetacresolu" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="2,92 mg/ml"/>
+            <substancjaCzynna nazwaSubstancji="Mentholum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="0,87 mg/ml"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="6982">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fl." pojemnosc="7,5" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990248117" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="14412">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butelka" pojemnosc="15" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990569489" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="33623">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butelka" pojemnosc="30" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Divapharma GmbH" krajWytworcyImportera="Niemcy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Panadol Femina" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Paracetamolum + Hyoscini butylbromidum" nazwaPoprzedniaProduktu="Vegantalgin H" moc="500 mg + 10 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Haleon Poland Sp. z o.o." typProcedury="NAR" numerPozwolenia="09296" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 15 ust. 1 pkt 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10723/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10723/characteristic" id="100107232">
+        <kodyATC>
+            <kodATC>A03DB04</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Paracetamolum" iloscSubstancji="500" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+            <substancjaCzynna nazwaSubstancji="Hyoscini butylbromidum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="do 100,0 mg"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990929610" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="18703">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="10" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Delpharm Poznań S.A." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Vancomycin-MIP 500" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Vancomycinum" nazwaPoprzedniaProduktu="brak" moc="500 mg" nazwaPostaciFarmaceutycznej="Proszek do sporządzania roztworu do infuzji i roztworu doustnego" podmiotOdpowiedzialny="MIP Pharma Polska Sp. z o.o." typProcedury="NAR" numerPozwolenia="10213" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 16 ust. 1" zakazStosowaniaUZwierzat="TAK" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/11937/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/11937/characteristic" id="100119376">
+        <kodyATC>
+            <kodATC>J01XA01</kodATC>
+            <kodATC>A07AA09</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+            <drogaPodania drogaPodaniaNazwa="dożylna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Vancomycini hydrochloridum" iloscSubstancji="510" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991021320" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="22251">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="5" rodzajOpakowania="fiol." pojemnosc="500" jednostkaPojemnosci="mg" informacjeDodatkowe="proszku"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991021313" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="45611">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="500" jednostkaPojemnosci="mg" informacjeDodatkowe="proszku"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Chephasaar, Chemisch-pharmazeutische Fabrik GmbH" krajWytworcyImportera="Niemcy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Multimel N4-550E" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Preparat złożony" nazwaPoprzedniaProduktu="brak" moc="komora z 10% emulsją tłuszczową (co odpowiada 10 g/100 ml) (200 ml) - 20,00 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 4,56 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,53 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,27 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,06 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,32 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,61 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,60 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,88 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,23 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,50 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,10 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,92 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,40 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,09 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,28 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,98 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,14 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,19 g + komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,45 g + komora z 20% roztworem glukozy (co odpowiada 20 g/100 ml) (400 ml) - 88,00 g + komora z 20% roztworem glukozy (co odpowiada 20 g/100 ml) (400 ml)  - 0,30 g" nazwaPostaciFarmaceutycznej="Emulsja do infuzji" podmiotOdpowiedzialny="Baxter Polska Sp. z o.o." typProcedury="NAR" numerPozwolenia="14003" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 16 ust. 3" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/17770/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/17770/characteristic" id="100177706">
+        <kodyATC>
+            <kodATC>B05BA10</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="dożylna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Soiae oleum raffinatum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 10% emulsją tłuszczową (co odpowiada 10 g/100 ml) (200 ml) - 20,00 g"/>
+            <substancjaCzynna nazwaSubstancji="Alaninum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 4,56 g"/>
+            <substancjaCzynna nazwaSubstancji="Arginina" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,53 g"/>
+            <substancjaCzynna nazwaSubstancji="Glicyna" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,27 g"/>
+            <substancjaCzynna nazwaSubstancji="Histidinum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,06 g"/>
+            <substancjaCzynna nazwaSubstancji="izoleucyna" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,32 g"/>
+            <substancjaCzynna nazwaSubstancji="Leucinum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,61 g"/>
+            <substancjaCzynna nazwaSubstancji="Lysini hydrochloridum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,60 g"/>
+            <substancjaCzynna nazwaSubstancji="Methioninum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,88 g"/>
+            <substancjaCzynna nazwaSubstancji="Phenylalaninum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,23 g"/>
+            <substancjaCzynna nazwaSubstancji="prolina" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,50 g"/>
+            <substancjaCzynna nazwaSubstancji="Serinum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,10 g"/>
+            <substancjaCzynna nazwaSubstancji="Treoninum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,92 g"/>
+            <substancjaCzynna nazwaSubstancji="Tryptophanum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,40 g"/>
+            <substancjaCzynna nazwaSubstancji="Tyrosinum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,09 g"/>
+            <substancjaCzynna nazwaSubstancji="Valinum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,28 g"/>
+            <substancjaCzynna nazwaSubstancji="Natrii acetas trihydricus" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,98 g"/>
+            <substancjaCzynna nazwaSubstancji="Natrii glycerophosphas pentahydricus" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 2,14 g"/>
+            <substancjaCzynna nazwaSubstancji="Kalii chloridum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 1,19 g"/>
+            <substancjaCzynna nazwaSubstancji="Magnesii chloridum hexahydricum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 5,5% roztworem aminokwasów (co odpowiada 5,5 g/100 ml) (400 ml) - 0,45 g"/>
+            <substancjaCzynna nazwaSubstancji="Glucosum monohydratum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 20% roztworem glukozy (co odpowiada 20 g/100 ml) (400 ml) - 88,00 g"/>
+            <substancjaCzynna nazwaSubstancji="Calcii chloridum dihydricum" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="komora z 20% roztworem glukozy (co odpowiada 20 g/100 ml) (400 ml)  - 0,30 g"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990056224" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="36502">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="6" rodzajOpakowania="worków" pojemnosc="1000" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990056231" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="36503">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="4" rodzajOpakowania="worki" pojemnosc="1500" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990056248" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="36504">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="4" rodzajOpakowania="worki" pojemnosc="2000" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990056255" kategoriaDostepnosci="Lz" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="36505">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="2" rodzajOpakowania="worki" pojemnosc="2500" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Baxter S.A." krajWytworcyImportera="Belgia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Oralair 100 IR &amp; 300 IR" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Wyciąg alergenów z pyłków traw" nazwaPoprzedniaProduktu="brak" moc="100 IR; 300 IR" nazwaPostaciFarmaceutycznej="Tabletki podjęzykowe" podmiotOdpowiedzialny="Stallergenes" typProcedury="MRP" numerPozwolenia="16729" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 10 ust. 1 i 2" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/22681/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/22681/characteristic" id="100226818">
+        <kodyATC>
+            <kodATC>V01AA</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="podjęzykowa"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Wyciąg alergenów z pyłków traw (5 gatunków)" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="100 IR/ tabletkę lub 300 IR/tabletkę"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990779093" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="58128">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="31" jednostkaPojemnosci="tabl." informacjeDodatkowe="(3 tabl. 100 IR + 28 tabl. 300 IR)"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Stallergenes" krajWytworcyImportera="Francja"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Sinupret Zmieniony" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Produkt ziołowy" nazwaPoprzedniaProduktu="brak" moc="-" nazwaPostaciFarmaceutycznej="Tabletki drażowane" podmiotOdpowiedzialny="Forfarm Sp. z o.o." typProcedury="IR" numerPozwolenia="4/15" waznoscPozwolenia="2025-01-07" zakazStosowaniaUZwierzat="" id="100333603">
+        <kodyATC/>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Preparat złożony" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="-"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909991204471" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="106175">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="50" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909991204488" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="106176">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="100" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy podmiotOdpowiedzialnywKrajuEksportu="Bionorica SE" krajEksportu="Litwa"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Oxbryta" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Voxelotorum" nazwaPoprzedniaProduktu="brak" moc="500 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Pfizer Europe MA EEIG" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="Pozwolenie zawieszone" zakazStosowaniaUZwierzat="" id="100465932">
+        <kodyATC>
+            <kodATC>B06AX03</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Voxelotorum" iloscSubstancji="500" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/21/1622/001" dystrybutorRownolegly="" id="144172">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butelka" pojemnosc="90" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Global Blood Therapeutics Netherlands B.V." krajWytworcyImportera="Holandia"/>
+            <wytworcy nazwaWytworcyImportera="Pfizer Service Company BV" krajWytworcyImportera="Belgia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Andembry" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Garadacimabum" nazwaPoprzedniaProduktu="brak" moc="200 mg" nazwaPostaciFarmaceutycznej="Roztwór do wstrzykiwań w ampułko-strzykawce" podmiotOdpowiedzialny="CSL Behring GmbH" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100513590">
+        <kodyATC/>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="podskórna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Garadacimabum" iloscSubstancji="200" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/24/1885/001" dystrybutorRownolegly="" id="160527">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="amp.-strzyk." pojemnosc="1,2" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/24/1885/002" dystrybutorRownolegly="" id="160528">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="3" rodzajOpakowania="amp.-strzyk." pojemnosc="1,2" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="CSL Behring GmbH" krajWytworcyImportera="Niemcy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Varenzin" rodzajPreparatu="weterynaryjny" nazwaPowszechnieStosowana="Molidustat" nazwaPoprzedniaProduktu="brak" moc="23,3 mg/ml" nazwaPostaciFarmaceutycznej="Zawiesina doustna" podmiotOdpowiedzialny="Elanco GmbH" typProcedury="CEN" numerPozwolenia="EU/2/25/358" waznoscPozwolenia="Bezterminowe" zakazStosowaniaUZwierzat="" id="100538334">
+        <kodyATC>
+            <kodATC>QB03XA</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="podanie doustne">
+                <gatunki>
+                    <gatunek nazwaGatunku="kot"/>
+                </gatunki>
+            </drogaPodania>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Molidustat" iloscSubstancji="23,3" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="1" jednostkaMiaryIlosciPreparatu="ml" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="5420036964162" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/2/25/358/001" dystrybutorRownolegly="" id="167110">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butelka" pojemnosc="27" jednostkaPojemnosci="ml" informacjeDodatkowe="+ strzykawka"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy/>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+</produktyLecznicze>
