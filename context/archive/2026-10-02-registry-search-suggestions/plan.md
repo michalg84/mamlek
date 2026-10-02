@@ -328,7 +328,8 @@ Czysta funkcja dopasowania, hook pobierający listę, dostępny komponent podpow
 #### Manual
 
 - [x] 2.5 Po zalogowaniu endpoint zwraca listę, a ponowne wejście korzysta z cache przeglądarki — dd77dcd
-- [ ] 2.6 Rozmiar odpowiedzi po kompresji na pełnym imporcie zanotowany w Progress
+- [x] 2.6 Rozmiar odpowiedzi po kompresji na pełnym imporcie zanotowany w Progress
+  - Pomiar (produkcja `mamlek.mig-app.workers.dev` po wdrożeniu 1452cac, 2026-10-02, bez dławienia sieci): `GET /api/registry/search-list?v=…` 337 kB przesłane, `content-encoding: zstd`, 357 ms. Cloudflare kompresuje odpowiedź (2,0 MB surowo), rozmiar jak gzip (340 KB), powyżej brotli (209 KB) ok. 12% powyżej oczekiwanych 150–300 KB. Przy 357 ms ETag/304 (F4 przeglądu fazy 2) i usuwanie spacji z payloadu (F8) nie są potrzebne.
 
 ### Phase 3: Wyszukiwanie w przeglądarce i strona /szukaj
 
