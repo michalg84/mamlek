@@ -334,16 +334,17 @@ Czysta funkcja dopasowania, hook pobierający listę, dostępny komponent podpow
 
 #### Automated
 
-- [ ] 3.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 3.2 `npm run lint` przechodzi
-- [ ] 3.3 `npm run build` przechodzi
-- [ ] 3.4 `npm run smoke` przechodzi, łącznie z krokami `/szukaj`
+- [x] 3.1 `npx astro sync` i `npx astro check` bez błędów
+- [x] 3.2 `npm run lint` przechodzi
+- [x] 3.3 `npm run build` przechodzi
+- [x] 3.4 `npm run smoke` przechodzi, łącznie z krokami `/szukaj`
 
 #### Manual
 
-- [ ] 3.5 Przykłady dopasowania dają opisane wyniki na pełnym imporcie
-- [ ] 3.6 Sortis 20 jako jedna podpowiedź, karta wskazuje produkt nie-IR
-- [ ] 3.7 Obsługa klawiaturą, dotykiem i czytnikiem ekranu działa
-- [ ] 3.8 Pomiar w DevTools (Slow 4G, CPU 6x) zanotowany, wpisywanie płynne
-- [ ] 3.9 Na telefonie: podpowiedzi działają bez sieci po pobraniu listy, brak poziomego przewijania
-- [ ] 3.10 Komunikat o obciętej liście dla `ibu 400` znika po dopisaniu kolejnego słowa
+- [x] 3.5 Przykłady dopasowania dają opisane wyniki na pełnym imporcie
+- [x] 3.6 Sortis 20 jako jedna podpowiedź, karta wskazuje produkt nie-IR
+- [x] 3.7 Obsługa klawiaturą, dotykiem i czytnikiem ekranu działa
+- [x] 3.8 Pomiar w DevTools (Slow 4G, CPU 6x) zanotowany, wpisywanie płynne
+  - Pomiar (lokalny `astro preview`, pełny import, Slow 4G + CPU 6x): `GET /api/registry/search-list?v=…` 12,11 s; największe z pozostałych żądań `_astro/button.*.js` 972 ms, reszta do 600 ms. Nie zanotowano osobno opóźnienia podpowiedzi po znaku. 12 s nie jest rozmiarem produkcyjnym: lokalny preview prawdopodobnie nie kompresuje odpowiedzi (2 MB surowo), a Cloudflare tak — do potwierdzenia w 2.6 po wdrożeniu.
+- [x] 3.9 Na telefonie: podpowiedzi działają bez sieci po pobraniu listy, brak poziomego przewijania
+- [x] 3.10 Komunikat o obciętej liście dla `ibu 400` znika po dopisaniu kolejnego słowa

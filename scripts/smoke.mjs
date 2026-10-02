@@ -68,6 +68,7 @@ async function requestVersionedSearchList(offset = 0) {
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["search page redirects anonymous user", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],
   ["search list rejects anonymous user", () => request(SEARCH_LIST), { status: 401 }],
   [
     "signup creates account",
@@ -85,6 +86,7 @@ const steps = [
     { status: 302, location: "/" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["search page renders for signed-in user", () => request("/szukaj"), { status: 200 }],
   [
     "search list returns variants for signed-in user",
     () => request(SEARCH_LIST),
