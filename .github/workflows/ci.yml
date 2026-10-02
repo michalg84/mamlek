@@ -35,17 +35,10 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: latest
-      # Pulling the Supabase images is the slowest step (~1.5 min), so it runs in the background while npm installs.
-      - name: Start local Supabase (background)
-        run: |
-          (supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor \
-            > supabase-start.log 2>&1; echo $? > supabase-start.exit) &
       - run: npm ci
-      - name: Wait for local Supabase
+      - name: Start local Supabase
         run: |
-          for i in $(seq 1 300); do [ -f supabase-start.exit ] && break; sleep 1; done
-          cat supabase-start.log
-          [ "$(cat supabase-start.exit 2>/dev/null)" = "0" ] || { echo "supabase start failed or timed out"; exit 1; }
+          supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           supabase status -o env | grep -E '^(API_URL|ANON_KEY|DB_URL)=' > supabase.env
       - name: Import registry fixtures (v1, v1, v2) and check the result
         run: |
