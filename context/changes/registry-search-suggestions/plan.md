@@ -305,29 +305,29 @@ Czysta funkcja dopasowania, hook pobierający listę, dostępny komponent podpow
 
 #### Automated
 
-- [x] 1.1 `npx supabase db reset` stosuje obie migracje bez błędów
-- [x] 1.2 Import fixture'ów v1, v1, v2 kończy się sukcesem i wypisuje liczbę wariantów
-- [x] 1.3 `node scripts/registry-import-check.mjs` przechodzi, łącznie z nowymi sprawdzeniami listy
-- [x] 1.4 `npm run lint` przechodzi
+- [x] 1.1 `npx supabase db reset` stosuje obie migracje bez błędów — a700a52
+- [x] 1.2 Import fixture'ów v1, v1, v2 kończy się sukcesem i wypisuje liczbę wariantów — a700a52
+- [x] 1.3 `node scripts/registry-import-check.mjs` przechodzi, łącznie z nowymi sprawdzeniami listy — a700a52
+- [x] 1.4 `npm run lint` przechodzi — a700a52
 
 #### Manual
 
-- [x] 1.5 Pełny import aktualnego RPL lokalnie: `variant_count` około 16 tys., rozmiar `payload` zanotowany w Progress
+- [x] 1.5 Pełny import aktualnego RPL lokalnie: `variant_count` około 16 tys., rozmiar `payload` zanotowany w Progress — a700a52
   - Pomiar (zrzut 2026-10-02, import 23 s): `variant_count` 16 165 (= liczba różnych kluczy wariantu aktywnych produktów, 1 050 kluczy zwiniętych z duplikatów); `payload` 2 052 156 B (2,0 MB) surowo, 340 KB gzip -6, 209 KB brotli; 273 mocy przyciętych z „…". Brotli mieści się w oczekiwanych 150–300 KB, gzip ok. 13% powyżej — realny rozmiar odpowiedzi do zmierzenia w fazie 2 (2.6).
-- [x] 1.6 Po `npx supabase db push` na produkcji wiersz `registry_search_list` istnieje i wskazuje ostatni import
+- [x] 1.6 Po `npx supabase db push` na produkcji wiersz `registry_search_list` istnieje i wskazuje ostatni import — a700a52
 
 ### Phase 2: Endpoint i serwis listy
 
 #### Automated
 
-- [ ] 2.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 2.2 `npm run lint` przechodzi
-- [ ] 2.3 `npm run build` przechodzi
-- [ ] 2.4 `npm run smoke` przechodzi lokalnie, łącznie z nowymi krokami endpointu
+- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów
+- [x] 2.2 `npm run lint` przechodzi
+- [x] 2.3 `npm run build` przechodzi
+- [x] 2.4 `npm run smoke` przechodzi lokalnie, łącznie z nowymi krokami endpointu
 
 #### Manual
 
-- [ ] 2.5 Po zalogowaniu endpoint zwraca listę, a ponowne wejście korzysta z cache przeglądarki
+- [x] 2.5 Po zalogowaniu endpoint zwraca listę, a ponowne wejście korzysta z cache przeglądarki
 - [ ] 2.6 Rozmiar odpowiedzi po kompresji na pełnym imporcie zanotowany w Progress
 
 ### Phase 3: Wyszukiwanie w przeglądarce i strona /szukaj

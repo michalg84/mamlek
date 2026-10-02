@@ -32,12 +32,35 @@ async function request(path, { method = "GET", form } = {}) {
     body: form ? new URLSearchParams(form).toString() : undefined,
   });
   storeCookies(response);
-  return { status: response.status, location: response.headers.get("location") ?? "" };
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    headers: response.headers,
+    body: await response.text(),
+  };
+}
+
+const SEARCH_LIST = "/api/registry/search-list";
+
+function parseVariantCount(body) {
+  try {
+    const { variants } = JSON.parse(body);
+    return Array.isArray(variants) ? variants.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// Fetches the list, then asks for it again with its own version in `v` (what the browser does).
+async function requestVersionedSearchList() {
+  const { body } = await request(SEARCH_LIST);
+  return request(`${SEARCH_LIST}?v=${JSON.parse(body).version}`);
 }
 
 const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["search list rejects anonymous user", () => request(SEARCH_LIST), { status: 401 }],
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -54,6 +77,17 @@ const steps = [
     { status: 302, location: "/" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  [
+    "search list returns variants for signed-in user",
+    () => request(SEARCH_LIST),
+    { status: 200, check: (actual) => parseVariantCount(actual.body) > 0 },
+  ],
+  ["search list rejects invalid version", () => request(`${SEARCH_LIST}?v=abc`), { status: 400 }],
+  [
+    "search list is immutable for its own version",
+    requestVersionedSearchList,
+    { status: 200, check: (actual) => /immutable/.test(actual.headers.get("cache-control") ?? "") },
+  ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
 ];
@@ -63,7 +97,8 @@ for (const [name, run, expected] of steps) {
   const actual = await run();
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined || actual.location.startsWith(expected.location));
+    (expected.location === undefined || actual.location.startsWith(expected.location)) &&
+    (expected.check === undefined || expected.check(actual));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
