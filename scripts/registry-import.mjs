@@ -1,6 +1,8 @@
 // Registry import: loads the RPL XML export (v6.0.0) into the registry_* tables in one transaction.
 // Streams the XML into temporary tables, runs the safety checks, then upserts products and packages
 // (rows missing from the export get removed_at, never DELETE) and replaces substances per product.
+// Finally it rebuilds the search suggestions list (registry_refresh_search_list(), one row of variants for the
+// browser) in the same transaction, after the import log entry.
 // Any error rolls the whole import back and exits with a non-zero code.
 //
 //   DATABASE_URL=postgresql://... node scripts/registry-import.mjs                 # download from RPL
@@ -252,8 +254,14 @@ async function importToDatabase(databaseUrl, source, startedAt) {
       returning products_active, products_removed, substances, packages_active`,
       [snapshotDate, source.label, startedAt, removed.rowCount ?? 0],
     );
+
+    // 9. Search suggestions list, built from the data above so it never drifts from it; a failure rolls everything back.
+    await client.query("select public.registry_refresh_search_list()");
+    const {
+      rows: [list],
+    } = await client.query("select variant_count from registry_search_list");
     await client.query("commit");
-    return { snapshotDate, dump, stats, logged };
+    return { snapshotDate, dump, stats, logged: { ...logged, variant_count: list?.variant_count ?? 0 } };
   } catch (error) {
     await client.query("rollback").catch(() => undefined);
     throw connectionError ?? error;
@@ -292,11 +300,12 @@ try {
     `Skipped:            ${result.stats.skippedProducts} non-human products, ${result.stats.skippedPackages} deleted packages (skasowane=TAK)`,
   );
   if (result.logged) {
-    const { products_active, products_removed, substances, packages_active } = result.logged;
+    const { products_active, products_removed, substances, packages_active, variant_count } = result.logged;
     console.log(`Products active:    ${products_active}`);
     console.log(`Products removed:   ${products_removed} (marked in this import)`);
     console.log(`Substances:         ${substances}`);
     console.log(`Packages active:    ${packages_active}`);
+    console.log(`Search variants:    ${variant_count}`);
   }
   console.log(`Duration:           ${seconds} s`);
 } catch (error) {

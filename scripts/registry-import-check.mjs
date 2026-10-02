@@ -24,12 +24,58 @@ async function value(sql, params = []) {
   return rows[0]?.value ?? null;
 }
 
-// Counts registry_products as the given API role; RLS applies because the role is not the table owner.
-async function countAs(role) {
+// Counts rows of a registry table as the given API role; RLS applies because the role is not the table owner.
+async function countAs(role, table = "registry_products") {
   await client.query("begin");
   try {
     await client.query(`set local role ${role}`);
-    return await value("select count(*)::int as value from registry_products");
+    return await value(`select count(*)::int as value from ${table}`);
+  } finally {
+    await client.query("rollback");
+  }
+}
+
+// Calls registry_refresh_search_list() as the given API role; returns "ok" or the Postgres error code.
+async function refreshAs(role) {
+  await client.query("begin");
+  try {
+    await client.query(`set local role ${role}`);
+    await client.query("select public.registry_refresh_search_list()");
+    return "ok";
+  } catch (error) {
+    return error?.code ?? String(error);
+  } finally {
+    await client.query("rollback");
+  }
+}
+
+// Variant collapse on synthetic rows (the fixtures have no duplicate variants). Runs in a transaction that is
+// always rolled back, so nothing is left behind. Ids start high to stay clear of the fixtures.
+//   900000001  removed, NAR, lowest id    -> must be ignored (removed_at is set)
+//   900000002  active, IR                 -> loses to the non-IR product
+//   900000003  active, NAR                -> the representative
+// All three differ only by letter case, so they form one variant.
+async function syntheticCollapse() {
+  await client.query("begin");
+  try {
+    const before = await value(
+      "select jsonb_build_object('version', version, 'variants', variant_count) as value from registry_search_list",
+    );
+    await client.query(`insert into registry_products (id, name, strength, pharmaceutical_form, procedure_type, removed_at)
+      values
+        (900000001, 'Synthetic Variant', '10 mg', 'tabletki', 'NAR', now()),
+        (900000002, 'SYNTHETIC VARIANT', '10 MG', 'Tabletki', 'IR', null),
+        (900000003, 'Synthetic variant', '10 Mg', 'TABLETKI', 'NAR', null)`);
+    await client.query("select public.registry_refresh_search_list()");
+    const after = await value(`select jsonb_build_object(
+        'version', l.version,
+        'variants', l.variant_count,
+        'listed', jsonb_array_length(l.payload::jsonb -> 'variants'),
+        'ids', (select coalesce(jsonb_agg(v -> 0), '[]'::jsonb)
+                from jsonb_array_elements(l.payload::jsonb -> 'variants') v
+                where lower(v ->> 1) = 'synthetic variant')
+      ) as value from registry_search_list l`);
+    return { before, after };
   } finally {
     await client.query("rollback");
   }
@@ -94,6 +140,83 @@ const checks = [
   ],
   ["RLS hides products from anon", () => countAs("anon"), (v) => v === 0, "0"],
   ["RLS shows products to authenticated", () => countAs("authenticated"), (v) => v > 0, "> 0"],
+  [
+    "search list is current",
+    () =>
+      value(
+        `select (select count(*) from registry_search_list) = 1
+           and exists (
+             select 1 from registry_search_list l
+             where l.import_id = (select max(id) from registry_imports)
+               and l.snapshot_date = (select snapshot_date from registry_imports order by id desc limit 1)
+           ) as value`,
+      ),
+    (v) => v === true,
+    "one row, import_id = latest import, snapshot_date = date of the latest import",
+  ],
+  [
+    "search list variant count",
+    () =>
+      value(
+        `select jsonb_build_object(
+          'count', l.variant_count,
+          'distinct', (select count(*) from (
+            select distinct lower(name), lower(coalesce(strength, '')), lower(coalesce(pharmaceutical_form, ''))
+            from registry_products where removed_at is null
+          ) keys),
+          'listed', jsonb_array_length(l.payload::jsonb -> 'variants')
+        ) as value from registry_search_list l`,
+      ),
+    (v) => v !== null && v.count > 0 && v.count === v.distinct && v.count === v.listed,
+    "variant_count = distinct variant keys of active products = payload.variants length (> 0)",
+  ],
+  [
+    "search list version",
+    () =>
+      value(
+        "select jsonb_build_object('version', version, 'payload', (payload::jsonb ->> 'version')::bigint) as value from registry_search_list",
+      ),
+    (v) => v !== null && v.version >= 1 && v.version === v.payload,
+    "payload.version = version (>= 1)",
+  ],
+  [
+    "search list content",
+    () =>
+      value(
+        `select jsonb_build_object(
+          'crestor', exists (select 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $1),
+          'varenzin', exists (select 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $2),
+          'sinupret', (select v ->> 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $3)
+        ) as value from registry_search_list l`,
+        [CRESTOR, VARENZIN, SINUPRET],
+      ),
+    (v) => v !== null && v.crestor === false && v.varenzin === false && v.sinupret === "Sinupret Zmieniony",
+    `no Crestor, no Varenzin, Sinupret named "Sinupret Zmieniony"`,
+  ],
+  ["RLS hides search list from anon", () => countAs("anon", "registry_search_list"), (v) => v === 0, "0"],
+  [
+    "RLS shows search list to authenticated",
+    () => countAs("authenticated", "registry_search_list"),
+    (v) => v === 1,
+    "1",
+  ],
+  [
+    "authenticated cannot refresh search list",
+    () => refreshAs("authenticated"),
+    (v) => v === "42501",
+    "42501 (insufficient_privilege)",
+  ],
+  [
+    "variant collapse (synthetic rows, rolled back)",
+    syntheticCollapse,
+    ({ before, after }) =>
+      after.ids.length === 1 &&
+      after.ids[0] === 900000003 &&
+      after.variants === before.variants + 1 &&
+      after.listed === after.variants &&
+      after.version === before.version + 1,
+    "one variant with the active non-IR product (900000003), variants +1, version +1",
+  ],
 ];
 
 let failed = 0;
