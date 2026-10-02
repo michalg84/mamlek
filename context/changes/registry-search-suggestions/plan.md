@@ -345,6 +345,6 @@ Czysta funkcja dopasowania, hook pobierający listę, dostępny komponent podpow
 - [x] 3.6 Sortis 20 jako jedna podpowiedź, karta wskazuje produkt nie-IR — c435109
 - [x] 3.7 Obsługa klawiaturą, dotykiem i czytnikiem ekranu działa — c435109
 - [x] 3.8 Pomiar w DevTools (Slow 4G, CPU 6x) zanotowany, wpisywanie płynne — c435109
-  - Pomiar (lokalny `astro preview`, pełny import, Slow 4G + CPU 6x): `GET /api/registry/search-list?v=…` 12,11 s; największe z pozostałych żądań `_astro/button.*.js` 972 ms, reszta do 600 ms. Nie zanotowano osobno opóźnienia podpowiedzi po znaku. 12 s nie jest rozmiarem produkcyjnym: lokalny preview prawdopodobnie nie kompresuje odpowiedzi (2 MB surowo), a Cloudflare tak — do potwierdzenia w 2.6 po wdrożeniu.
+  - Pomiar (lokalny `astro preview`, pełny import, Slow 4G + CPU 6x): `GET /api/registry/search-list?v=…` 12,11 s; największe z pozostałych żądań `_astro/button.*.js` 972 ms, reszta do 600 ms. Opóźnienie podpowiedzi po znaku (DevTools Performance, CPU 6x, wpisywanie `ibu 400`): najdłuższa interakcja 336 ms (dopisane po przeglądzie implementacji, F3). 12 s nie jest rozmiarem produkcyjnym: lokalny preview prawdopodobnie nie kompresuje odpowiedzi (2 MB surowo), a Cloudflare tak — do potwierdzenia w 2.6 po wdrożeniu.
 - [x] 3.9 Na telefonie: podpowiedzi działają bez sieci po pobraniu listy, brak poziomego przewijania — c435109
 - [x] 3.10 Komunikat o obciętej liście dla `ibu 400` znika po dopisaniu kolejnego słowa — c435109

@@ -43,7 +43,11 @@ export default function RegistrySearch({ version }: Props) {
   return (
     <div className="min-w-0 space-y-6">
       <MedicineSuggest version={version} onSelect={setSelected} />
-      <div aria-live="polite">{selected && <VariantCard variant={selected} />}</div>
+      {/* Only the name is announced; the card itself is read when the user moves to it. */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {selected ? `Wybrano: ${selected.name}` : ""}
+      </p>
+      {selected && <VariantCard variant={selected} />}
     </div>
   );
 }

@@ -13,6 +13,8 @@ interface MedicineSuggestProps {
 }
 
 const NO_RESULTS: RegistryVariant[] = [];
+/** Pause after the last change before the status text is announced to screen readers. */
+const ANNOUNCE_DELAY_MS = 700;
 
 function countText(count: number) {
   return `${count} ${count === 1 ? "podpowiedź" : "podpowiedzi"}`;
@@ -23,10 +25,11 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [focused, setFocused] = useState(false);
 
   const inputId = useId();
   const listboxId = useId();
-  const statusId = useId();
+  const messageId = useId();
 
   const longEnough = isQueryLongEnough(query);
   const search = useMemo(
@@ -98,7 +101,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     }
   }
 
-  // One polite live region; its text is replaced as the state changes.
+  // Status text under the field; screen readers get it from a separate live region (below).
   let message = "";
   let messageVisible = true;
   let action: ReactNode = null;
@@ -140,6 +143,24 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     }
   }
 
+  // Announced after typing pauses, so a changing count is not read on every key. Hints are announced only while the
+  // field has focus (not when the list finishes loading in the background); problems are announced at once.
+  const announcement = problem || focused ? message : "";
+  const [announced, setAnnounced] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => {
+        setAnnounced(announcement);
+      },
+      problem ? 0 : ANNOUNCE_DELAY_MS,
+    );
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [announcement, problem]);
+
+  const describedBy = message && messageVisible ? messageId : undefined;
+
   return (
     <div className="min-w-0">
       <label htmlFor={inputId} className="mb-1 block text-sm text-blue-100/80">
@@ -153,7 +174,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
         aria-expanded={expanded}
         aria-controls={expanded ? listboxId : undefined}
         aria-activedescendant={activeOptionId}
-        aria-describedby={statusId}
+        aria-describedby={describedBy}
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="none"
@@ -161,7 +182,11 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => {
+          setFocused(true);
+        }}
         onBlur={() => {
+          setFocused(false);
           setOpen(false);
           setActiveIndex(-1);
         }}
@@ -172,6 +197,10 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
           id={listboxId}
           role="listbox"
           aria-label={label}
+          // Keeps focus in the input, so a tap, a click or a scrollbar drag does not blur it and close the list.
+          onMouseDown={(event) => {
+            event.preventDefault();
+          }}
           className="mt-1 max-h-[min(24rem,50vh)] divide-y divide-white/10 overflow-x-hidden overflow-y-auto rounded-lg border border-white/20 bg-slate-900"
         >
           {results.map((variant, position) => {
@@ -182,10 +211,6 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
                 id={`${listboxId}-${position}`}
                 role="option"
                 aria-selected={position === active}
-                // Keeps focus in the input, so a tap or click selects before the blur closes the list.
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                }}
                 onClick={() => {
                   select(variant);
                 }}
@@ -201,19 +226,16 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
           })}
         </ul>
       )}
-      <div id={statusId} role="status" aria-live="polite" className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-        {message && (
-          <p
-            className={cn(
-              "text-sm break-words",
-              problem ? "text-red-300" : "text-blue-100/70",
-              !messageVisible && "sr-only",
-            )}
-          >
+      <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+        {message && messageVisible && (
+          <p id={messageId} className={cn("text-sm break-words", problem ? "text-red-300" : "text-blue-100/70")}>
             {message}
           </p>
         )}
         {action}
+      </div>
+      <div role="status" aria-live="polite" className="sr-only">
+        {announced}
       </div>
     </div>
   );

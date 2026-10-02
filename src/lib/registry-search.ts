@@ -37,7 +37,11 @@ export interface RegistrySearchResult {
 
 /** Lowercase, strip diacritics (NFD + combining marks) and map `ł` to `l`. */
 export function normalizeText(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g, "l");
 }
 
 /** Words = runs of [a-z0-9] after normalization. */
