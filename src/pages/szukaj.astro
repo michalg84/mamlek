@@ -1,0 +1,44 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import RegistrySearch from "@/components/registry/RegistrySearch";
+import { createClient } from "@/lib/supabase";
+import { getSearchListVersion } from "@/lib/services/registry-search-list";
+import type { RegistrySearchListVersion } from "@/types";
+
+let list: RegistrySearchListVersion | null = null;
+let failed = false;
+try {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    list = await getSearchListVersion(supabase);
+  } else {
+    failed = true;
+  }
+} catch (error) {
+  // Typically the app deployed before the migration reached the database; show a message instead of a 500 page.
+  failed = true;
+  // eslint-disable-next-line no-console -- the only trace of the failure; the page shows a generic message
+  console.error(error);
+}
+---
+
+<Layout title="Szukaj leku">
+  <div class="bg-cosmic min-h-screen p-4">
+    <div class="mx-auto w-full max-w-xl min-w-0">
+      <Topbar />
+      <main class="min-w-0 rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur-xl sm:p-6">
+        <h1 class="mb-4 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+          Szukaj leku
+        </h1>
+        {failed ? (
+          <p class="text-sm text-blue-100/80">Nie udało się wczytać rejestru leków, spróbuj później</p>
+        ) : list ? (
+          <RegistrySearch version={list.version} client:load />
+        ) : (
+          <p class="text-sm text-blue-100/80">Rejestr leków nie jest jeszcze wczytany</p>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>
