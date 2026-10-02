@@ -101,7 +101,7 @@ npx supabase db push
 
 ## Deployment
 
-The target is Cloudflare Workers (a Worker with static assets, not Pages). `.github/workflows/ci.yml`'s `deploy` job auto-deploys on every push to `main` that passes the `ci` and `smoke` jobs, using `cloudflare/wrangler-action@v4` with a scoped `CLOUDFLARE_API_TOKEN` repository secret (Workers Scripts: Edit only — no DNS, no billing).
+The target is Cloudflare Workers (a Worker with static assets, not Pages). `.github/workflows/ci.yml`'s `deploy` job auto-deploys on every push to `main` that passes the `ci` job (the `smoke` job runs only on pull requests — code reaches `main` through a PR that already passed it), using `cloudflare/wrangler-action@v4` with a scoped `CLOUDFLARE_API_TOKEN` repository secret (Workers Scripts: Edit only — no DNS, no billing).
 
 To deploy manually (e.g. to test a change before merging):
 

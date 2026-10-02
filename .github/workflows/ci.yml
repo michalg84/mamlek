@@ -24,7 +24,10 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
+  # Only on pull requests: code reaches main through a PR that already passed smoke, and production is used as a dev
+  # environment, so a deploy does not wait for a second run (~2.5 min).
   smoke:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -63,7 +66,7 @@ jobs:
         run: supabase stop --no-backup
 
   deploy:
-    needs: [ci, smoke]
+    needs: [ci]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
