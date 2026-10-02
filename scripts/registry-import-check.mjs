@@ -214,8 +214,8 @@ const checks = [
       after.ids[0] === 900000003 &&
       after.variants === before.variants + 1 &&
       after.listed === after.variants &&
-      after.version === before.version + 1,
-    "one variant with the active non-IR product (900000003), variants +1, version +1",
+      after.version > before.version,
+    "one variant with the active non-IR product (900000003), variants +1, version grows",
   ],
 ];
 

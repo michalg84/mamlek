@@ -320,14 +320,14 @@ Czysta funkcja dopasowania, hook pobierający listę, dostępny komponent podpow
 
 #### Automated
 
-- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów
-- [x] 2.2 `npm run lint` przechodzi
-- [x] 2.3 `npm run build` przechodzi
-- [x] 2.4 `npm run smoke` przechodzi lokalnie, łącznie z nowymi krokami endpointu
+- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów — dd77dcd
+- [x] 2.2 `npm run lint` przechodzi — dd77dcd
+- [x] 2.3 `npm run build` przechodzi — dd77dcd
+- [x] 2.4 `npm run smoke` przechodzi lokalnie, łącznie z nowymi krokami endpointu — dd77dcd
 
 #### Manual
 
-- [x] 2.5 Po zalogowaniu endpoint zwraca listę, a ponowne wejście korzysta z cache przeglądarki
+- [x] 2.5 Po zalogowaniu endpoint zwraca listę, a ponowne wejście korzysta z cache przeglądarki — dd77dcd
 - [ ] 2.6 Rozmiar odpowiedzi po kompresji na pełnym imporcie zanotowany w Progress
 
 ### Phase 3: Wyszukiwanie w przeglądarce i strona /szukaj

@@ -51,10 +51,18 @@ function parseVariantCount(body) {
   }
 }
 
-// Fetches the list, then asks for it again with its own version in `v` (what the browser does).
-async function requestVersionedSearchList() {
-  const { body } = await request(SEARCH_LIST);
-  return request(`${SEARCH_LIST}?v=${JSON.parse(body).version}`);
+// Fetches the list, then asks for it again with `v` = its version + `offset` (0 = what the browser does).
+// When the first request is not a usable list it is returned as is, so the step fails with that status.
+async function requestVersionedSearchList(offset = 0) {
+  const first = await request(SEARCH_LIST);
+  if (first.status !== 200) {
+    return first;
+  }
+  try {
+    return request(`${SEARCH_LIST}?v=${JSON.parse(first.body).version + offset}`);
+  } catch {
+    return { ...first, status: -1 };
+  }
 }
 
 const steps = [
@@ -85,8 +93,19 @@ const steps = [
   ["search list rejects invalid version", () => request(`${SEARCH_LIST}?v=abc`), { status: 400 }],
   [
     "search list is immutable for its own version",
-    requestVersionedSearchList,
-    { status: 200, check: (actual) => /immutable/.test(actual.headers.get("cache-control") ?? "") },
+    () => requestVersionedSearchList(),
+    { status: 200, check: (actual) => /^private,.*\bimmutable\b/.test(actual.headers.get("cache-control") ?? "") },
+  ],
+  [
+    "search list is not immutable for another version",
+    () => requestVersionedSearchList(1),
+    {
+      status: 200,
+      check: (actual) => {
+        const cacheControl = actual.headers.get("cache-control") ?? "";
+        return /^private,.*\bno-cache\b/.test(cacheControl) && !/immutable/.test(cacheControl);
+      },
+    },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
