@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-02
+updated: 2026-10-06
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -39,18 +39,18 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status   |
-| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
-| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done     |
-| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done     |
-| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | proposed |
-| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | proposed |
-| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
-| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
-| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | proposed |
-| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
-| S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | ready    |
+| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status      |
+| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | ----------- |
+| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done        |
+| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done        |
+| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | proposed    |
+| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | proposed    |
+| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed    |
+| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed    |
+| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed    |
+| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | proposed    |
+| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed    |
+| S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | in-progress |
 
 ## Streams
 
@@ -212,7 +212,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Ile z ok. 6 s „reszty” to wtyczki przeglądarki — pomiar trzeba powtórzyć w czystym środowisku (okno prywatne albo pusty profil, bez wtyczek; w Brave wyłączone Shields; Chrome jako przeglądarka referencyjna). — Owner: autor. Block: no.
 - **Approach (do potwierdzenia w planie):** najpierw powtarzalny pomiar — znacznik `performance.mark` po zbudowaniu indeksu i skrypt (Playwright/Lighthouse: czysta przeglądarka, logowanie, czas do gotowości listy, INP przy wpisywaniu `ibu 400`); potem kolejno: `<link rel="preload">` listy w `szukaj.astro` (pobieranie równolegle z JS strony), parsowanie i budowa indeksu w Web Workerze, szybsza budowa indeksu i lżejsze renderowanie wyników, analiza rozmiaru JavaScriptu strony. Po każdym kroku pomiar tym samym skryptem.
 - **Risk:** Komponent podpowiedzi obsłuży S-02, S-03 i S-04, więc jego opóźnienia przejdą na trzy ekrany; zmiany w hooku i indeksie muszą zachować regułę dopasowania z S-01 (brak testów jednostkowych — dlatego najpierw skrypt pomiarowy, a reguła sprawdzana na przykładach z planu S-01).
-- **Status:** ready
+- **Status:** in-progress
 
 ## Backlog Handoff
 

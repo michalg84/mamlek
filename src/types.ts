@@ -30,3 +30,13 @@ export interface RegistryVariant {
   commonName: string | null;
   substances: string[];
 }
+
+/** Page -> search worker: the raw list bytes (transferred, not copied), then queries. */
+export type RegistrySearchWorkerRequest =
+  { type: "load"; buffer: ArrayBuffer } | { type: "search"; id: number; query: string };
+
+/** Search worker -> page. `results` echo the `id` and `query` of the request they answer. */
+export type RegistrySearchWorkerResponse =
+  | { type: "ready"; variantCount: number; buildMs: number }
+  | { type: "error" }
+  | { type: "results"; id: number; query: string; results: RegistryVariant[]; total: number };

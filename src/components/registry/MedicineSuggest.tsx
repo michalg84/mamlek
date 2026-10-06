@@ -1,8 +1,8 @@
-import { useEffect, useId, useMemo, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
-import { useRegistrySearchList } from "@/components/hooks/useRegistrySearchList";
+import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
+import { useRegistrySearch } from "@/components/hooks/useRegistrySearch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { isQueryLongEnough, MAX_RESULTS, MIN_QUERY_LENGTH, searchVariants } from "@/lib/registry-search";
+import { isQueryLongEnough, MIN_QUERY_LENGTH } from "@/lib/registry-search";
 import type { RegistryVariant } from "@/types";
 
 interface MedicineSuggestProps {
@@ -12,7 +12,6 @@ interface MedicineSuggestProps {
   label?: string;
 }
 
-const NO_RESULTS: RegistryVariant[] = [];
 /** Pause after the last change before the status text is announced to screen readers. */
 const ANNOUNCE_DELAY_MS = 700;
 
@@ -21,8 +20,8 @@ function countText(count: number) {
 }
 
 export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: MedicineSuggestProps) {
-  const { status, index, retry } = useRegistrySearchList(version);
   const [query, setQuery] = useState("");
+  const { status, results, total, resultsQuery, retry } = useRegistrySearch(version, query);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [focused, setFocused] = useState(false);
@@ -32,12 +31,9 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
   const messageId = useId();
 
   const longEnough = isQueryLongEnough(query);
-  const search = useMemo(
-    () => (status === "ready" && index && longEnough ? searchVariants(index, query, MAX_RESULTS) : null),
-    [status, index, longEnough, query],
-  );
-  const results = search?.results ?? NO_RESULTS;
-  const total = search?.total ?? 0;
+  // The worker answers asynchronously: until the answer for the current query arrives, the list keeps the previous
+  // results and the messages below that depend on the answer stay empty.
+  const answered = resultsQuery === query;
 
   const expanded = open && results.length > 0;
   const active = expanded && activeIndex < results.length ? activeIndex : -1;
@@ -132,6 +128,8 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     );
   } else if (!longEnough) {
     message = `Wpisz co najmniej ${MIN_QUERY_LENGTH} litery`;
+  } else if (!answered) {
+    message = "";
   } else if (total === 0) {
     message = "Brak leku o takiej nazwie w rejestrze";
   } else if (open) {

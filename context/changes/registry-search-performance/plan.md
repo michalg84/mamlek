@@ -509,34 +509,38 @@ Wykonywana tylko wtedy, gdy bramka z fazy 4 wskaże czas gotowości listy. Celem
 
 #### Automated
 
-- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów
-- [x] 2.2 `npm run lint` przechodzi
-- [x] 2.3 `npm run build` przechodzi
-- [x] 2.4 `npm run smoke` przechodzi
+- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów — 9539a46
+- [x] 2.2 `npm run lint` przechodzi — 9539a46
+- [x] 2.3 `npm run build` przechodzi — 9539a46
+- [x] 2.4 `npm run smoke` przechodzi — 9539a46
 
 #### Manual
 
-- [x] 2.5 Lista pobierana raz i przed chunkiem JS wyspy, brak ostrzeżenia o nieużytym preloadzie
+- [x] 2.5 Lista pobierana raz i przed chunkiem JS wyspy, brak ostrzeżenia o nieużytym preloadzie — 9539a46
   - Lokalnie (`wrangler dev`, 2026-10-06): jedno żądanie listy, inicjator `link`, start 87 ms, przed chunkami JS wyspy (95–117 ms); `<link rel="preload" as="fetch" crossorigin="anonymous">` w `<head>`; konsola pusta po 6 s.
-- [x] 2.6 `npm run perf` lokalnie zanotowany i porównany z baseline'em lokalnym
+- [x] 2.6 `npm run perf` lokalnie zanotowany i porównany z baseline'em lokalnym — 9539a46
   - Lokalnie (`wrangler dev`, 2026-10-06, mediana z 5), lista gotowa / pisanie `ibu 400` w trakcie wczytywania (interakcja, zadanie) / po gotowości (interakcja, zadanie): zwykły (Fast 4G, CPU 4x) 1787 ms (max 1929; baseline 2128) / 224 ms, 196 ms (max 432) / 96 ms, 82 ms; słaby (Slow 4G, CPU 6x) 4454 ms (max 4607; baseline 5802) / 48 ms, 301 ms (max 1148) / 144 ms, 122 ms. Słaby profil spełnia lokalnie cel ≤ 5 s. Pisanie w trakcie wczytywania wypada gorzej niż w baseline (zadanie 301 ms wobec 0 ms), bo lista jest gotowa wcześniej i budowa indeksu nakłada się na pisanie; to praca głównego wątku, którą faza 3 przenosi do workera.
 
 ### Phase 3: Indeks w Web Workerze
 
 #### Automated
 
-- [ ] 3.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 3.2 `npm run lint` przechodzi
-- [ ] 3.3 `npm run build` przechodzi, w `dist/` jest chunk workera
-- [ ] 3.4 `npm run smoke` przechodzi
-- [ ] 3.5 `npm run search:check` kończy się kodem 0
+- [x] 3.1 `npx astro sync` i `npx astro check` bez błędów
+- [x] 3.2 `npm run lint` przechodzi
+- [x] 3.3 `npm run build` przechodzi, w `dist/` jest chunk workera
+- [x] 3.4 `npm run smoke` przechodzi
+- [x] 3.5 `npm run search:check` kończy się kodem 0
 
 #### Manual
 
 - [ ] 3.6 `npm run perf` lokalnie zanotowany; na profilu słabym brak zadań > 200 ms podczas pisania w trakcie wczytywania
+  - Wyniki z sesji agenta (2026-10-06, `wrangler dev`, mediana z 5), NIEPOTWIERDZONE przez użytkownika. Lista gotowa / pisanie w trakcie wczytywania (interakcja, zadanie, max zadania) / po gotowości (interakcja, zadanie, max zadania): zwykły 1376 ms (max 1469; baseline 2128) / 48 ms, 0 ms, 56 ms / 40 ms, 0 ms, 0 ms; słaby 3966 ms (max 4032; baseline 5802) / 40 ms, 0 ms, 109 ms / 56 ms, 0 ms, 112 ms. Na profilu słabym żadne zadanie > 200 ms.
 - [ ] 3.7 Dławienie workera potwierdzone (`buildMs` przy CPU 6x ≥ ok. 4x) albo ostrzeżenie zanotowane
+  - Ostrzeżenie skryptu `perf` w 10 z 10 przebiegów: „CPU throttling could not be applied to the search worker (Operation is only supported for pages, not workers)”. Czas w workerze jest więc zaniżony, a liczby z 3.6 optymistyczne. NIEPOTWIERDZONE przez użytkownika.
 - [ ] 3.8 Tekst wpisany przed gotowością daje wyniki po gotowości; brak migania „Brak leku…”
+  - Sprawdzone przez agenta w DevTools (Slow 4G + CPU 6x): wpisane `ibu 400` zostało, po gotowości 20 opcji, „Brak leku” niewidziane. Lista była już gotowa w chwili pierwszego odczytu, więc ścieżka „przed gotowością” potwierdzona tylko częściowo (lepiej pokrywają ją metryki early typing z `perf`). NIEPOTWIERDZONE przez użytkownika.
 - [ ] 3.9 `ibu 400` → 20 i „Pokazano 20 z 53…”, po `max` komunikat znika; `żel` = `zel`
+  - Sprawdzone przez agenta w DevTools: `ibu 400` → 20 opcji i „Pokazano 20 z 53 — dopisz kolejne słowo…”; po ` max` 14 opcji i brak komunikatu; `żel` i `zel` → te same 19 opcji w tej samej kolejności. NIEPOTWIERDZONE przez użytkownika.
 - [ ] 3.10 Klawiatura, dotyk, czytnik ekranu i „Spróbuj ponownie” działają
 - [ ] 3.11 Na telefonie podpowiedzi działają, także bez sieci po pobraniu listy
 
