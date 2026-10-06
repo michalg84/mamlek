@@ -525,11 +525,11 @@ Wykonywana tylko wtedy, gdy bramka z fazy 4 wskaże czas gotowości listy. Celem
 
 #### Automated
 
-- [x] 3.1 `npx astro sync` i `npx astro check` bez błędów
-- [x] 3.2 `npm run lint` przechodzi
-- [x] 3.3 `npm run build` przechodzi, w `dist/` jest chunk workera
-- [x] 3.4 `npm run smoke` przechodzi
-- [x] 3.5 `npm run search:check` kończy się kodem 0
+- [x] 3.1 `npx astro sync` i `npx astro check` bez błędów — ccd7876
+- [x] 3.2 `npm run lint` przechodzi — ccd7876
+- [x] 3.3 `npm run build` przechodzi, w `dist/` jest chunk workera — ccd7876
+- [x] 3.4 `npm run smoke` przechodzi — ccd7876
+- [x] 3.5 `npm run search:check` kończy się kodem 0 — ccd7876
 
 #### Manual
 
