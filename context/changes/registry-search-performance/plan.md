@@ -488,31 +488,38 @@ Wykonywana tylko wtedy, gdy bramka z fazy 4 wskaże czas gotowości listy. Celem
 
 #### Automated
 
-- [x] 1.1 `npx astro sync` i `npx astro check` bez błędów
-- [x] 1.2 `npm run lint` przechodzi
-- [x] 1.3 `npm run build` przechodzi
-- [x] 1.4 `npm run search:check -- --save` zapisuje wzorzec, kolejne `npm run search:check` kończy się kodem 0
-- [x] 1.5 `npm run perf -- --runs 1` lokalnie wypisuje metryki obu profili
+- [x] 1.1 `npx astro sync` i `npx astro check` bez błędów — 0869716
+- [x] 1.2 `npm run lint` przechodzi — 0869716
+- [x] 1.3 `npm run build` przechodzi — 0869716
+- [x] 1.4 `npm run search:check -- --save` zapisuje wzorzec, kolejne `npm run search:check` kończy się kodem 0 — 0869716
+- [x] 1.5 `npm run perf -- --runs 1` lokalnie wypisuje metryki obu profili — 0869716
 
 #### Manual
 
-- [ ] 1.6 Baseline lokalny (oba profile, mediana z 5) zanotowany w Progress
-- [ ] 1.7 Baseline produkcyjny przed zmianami (oba profile, mediana z 5) zanotowany w Progress
-- [ ] 1.8 `chrome-devtools-mcp` podłączony, trace pisania `ibu 400` przy CPU 6x zanotowany z podziałem najdłuższej interakcji
+- [x] 1.6 Baseline lokalny (oba profile, mediana z 5) zanotowany w Progress
+  - Lokalnie (`wrangler dev`, 2026-10-06), lista gotowa / pisanie `ibu 400` w trakcie wczytywania (interakcja, zadanie) / po gotowości (interakcja, zadanie): zwykły (Fast 4G, CPU 4x) 2128 ms (2068–2341) / 632 ms, 690 ms / 104 ms, 88 ms; słaby (Slow 4G, CPU 6x) 5802 ms (5268–6688) / 48 ms, 0 ms / 184 ms, 146 ms.
+- [x] 1.7 Baseline produkcyjny przed zmianami (oba profile, mediana z 5) zanotowany w Progress
+  - Produkcja (`https://mamlek.mig-app.workers.dev`, 2026-10-06, kod bez znacznika `mamlek:search-list-ready`, gotowość listy z tekstu strony): zwykły 2213 ms (2043–4195) / 576 ms, 597 ms / 88 ms, 64 ms; słaby 7353 ms (6666–8402) / 56 ms, 0 ms / 168 ms, 138 ms. Cele: lista < 3 s (zwykły) spełniony w medianie, ≤ 5 s (słaby) niespełniony o ok. 2,4 s.
+- [x] 1.8 `chrome-devtools-mcp` podłączony, trace pisania `ibu 400` przy CPU 6x zanotowany z podziałem najdłuższej interakcji
+  - Pierwszy trace nagrano Playwrightem (`browser.startTracing` + CDP, CPU 6x, lokalnie `wrangler dev`, po gotowości listy, `ibu 400` co 150 ms), bo `chrome-devtools-mcp` nie był wtedy podłączony. Po restarcie sesji powtórzono go przez `chrome-devtools-mcp` (`performance_start_trace`/`performance_stop_trace`, CPU 6x, znaki wpisywane pojedynczo co ok. 1,3 s) i wynik się potwierdził: zadanie 3. znaku 238 ms (funkcja `searchVariants` w chunku RegistrySearch ok. 114 ms próbek, layout 51 ms), kolejne znaki 45–106 ms, w nich `searchVariants` 21–58 ms. Zadanie 1. znaku (555 ms) to artefakt startu profilera i jest pomijane. Trace DevTools: scratchpad sesji (`devtools-trace.json`), nie w repo.
+  - Najdłuższa interakcja: 200 ms (3. znak `u`, pierwsze wyszukiwanie i pierwszy render listy); kolejne 57–108 ms; znaki 1–2 (poniżej progu wyszukiwania) 19–23 ms. Najdłuższe zadanie 179 ms: wyszukiwanie (`searchVariants`, chunk RegistrySearch) 91 ms, render Reacta 28 ms, layout 40 ms, przeliczenie stylów 7 ms, reszta JS i inne ok. 13 ms.
+  - Suma 6 zadań > 16 ms (ok. 455 ms): wyszukiwanie ok. 261 ms (ok. 57%), React ok. 50 ms, layout i style ok. 73 ms, malowanie ok. 12 ms. Wniosek: wąskie gardło po gotowości listy to samo przeszukiwanie listy w wątku głównym (faza 3 przenosi je do workera), render Reacta jest drugorzędny.
 
 ### Phase 2: Preload listy
 
 #### Automated
 
-- [ ] 2.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 2.2 `npm run lint` przechodzi
-- [ ] 2.3 `npm run build` przechodzi
-- [ ] 2.4 `npm run smoke` przechodzi
+- [x] 2.1 `npx astro sync` i `npx astro check` bez błędów
+- [x] 2.2 `npm run lint` przechodzi
+- [x] 2.3 `npm run build` przechodzi
+- [x] 2.4 `npm run smoke` przechodzi
 
 #### Manual
 
-- [ ] 2.5 Lista pobierana raz i przed chunkiem JS wyspy, brak ostrzeżenia o nieużytym preloadzie
-- [ ] 2.6 `npm run perf` lokalnie zanotowany i porównany z baseline'em lokalnym
+- [x] 2.5 Lista pobierana raz i przed chunkiem JS wyspy, brak ostrzeżenia o nieużytym preloadzie
+  - Lokalnie (`wrangler dev`, 2026-10-06): jedno żądanie listy, inicjator `link`, start 87 ms, przed chunkami JS wyspy (95–117 ms); `<link rel="preload" as="fetch" crossorigin="anonymous">` w `<head>`; konsola pusta po 6 s.
+- [x] 2.6 `npm run perf` lokalnie zanotowany i porównany z baseline'em lokalnym
+  - Lokalnie (`wrangler dev`, 2026-10-06, mediana z 5), lista gotowa / pisanie `ibu 400` w trakcie wczytywania (interakcja, zadanie) / po gotowości (interakcja, zadanie): zwykły (Fast 4G, CPU 4x) 1787 ms (max 1929; baseline 2128) / 224 ms, 196 ms (max 432) / 96 ms, 82 ms; słaby (Slow 4G, CPU 6x) 4454 ms (max 4607; baseline 5802) / 48 ms, 301 ms (max 1148) / 144 ms, 122 ms. Słaby profil spełnia lokalnie cel ≤ 5 s. Pisanie w trakcie wczytywania wypada gorzej niż w baseline (zadanie 301 ms wobec 0 ms), bo lista jest gotowa wcześniej i budowa indeksu nakłada się na pisanie; to praca głównego wątku, którą faza 3 przenosi do workera.
 
 ### Phase 3: Indeks w Web Workerze
 
