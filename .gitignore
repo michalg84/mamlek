@@ -45,3 +45,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# perf measurements and the search-rule golden file (npm run perf, npm run search:check)
+.perf/

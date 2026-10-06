@@ -55,7 +55,12 @@ export function useRegistrySearchList(version: number) {
           finish("error", null);
           return;
         }
-        finish("ready", buildSearchIndex(data));
+        const index = buildSearchIndex(data);
+        // Marks the moment suggestions start working; `npm run perf` reads it as "list ready".
+        if (!controller.signal.aborted) {
+          performance.mark("mamlek:search-list-ready");
+        }
+        finish("ready", index);
       } catch {
         // Aborted on unmount (ignored in `finish`), network failure, malformed JSON or malformed tuples.
         finish("error", null);
