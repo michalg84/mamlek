@@ -507,28 +507,28 @@ pages.
 
 #### Automated
 
-- [x] 1.1 `npx shadcn@latest add input card` leaves `package.json` dependencies unchanged (`git diff package.json` shows only the two new scripts)
-- [x] 1.2 `npm run ui:scan` reports 25 hits (24 from the 10x-ui pattern + 1 `bg-cosmic`) and exits 1
-- [x] 1.3 `npm run lint` and `npx astro check` pass
-- [x] 1.4 `npm run build` passes
+- [x] 1.1 `npx shadcn@latest add input card` leaves `package.json` dependencies unchanged (`git diff package.json` shows only the two new scripts) — b1f1fa8
+- [x] 1.2 `npm run ui:scan` reports 25 hits (24 from the 10x-ui pattern + 1 `bg-cosmic`) and exits 1 — b1f1fa8
+- [x] 1.3 `npm run lint` and `npx astro check` pass — b1f1fa8
+- [x] 1.4 `npm run build` passes — b1f1fa8
 
 #### Manual
 
-- [x] 1.5 `npm run ui:shots -- --label before` against a local dev server with the registry imported produces all 11 states at both widths, and each screenshot shows the named state
-- [x] 1.6 The user has looked at the "before" screenshots (baseline for the comparison in Phases 3–4)
+- [x] 1.5 `npm run ui:shots -- --label before` against a local dev server with the registry imported produces all 11 states at both widths, and each screenshot shows the named state — b1f1fa8
+- [x] 1.6 The user has looked at the "before" screenshots (baseline for the comparison in Phases 3–4) — b1f1fa8
 
 ### Phase 2: Token values — clinical teal
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` passes (prettier formats `global.css` and `palette.md`)
-- [ ] 2.2 `npm run build` passes
-- [ ] 2.3 `npm run ui:scan` still reports 25 hits (no view file touched)
+- [x] 2.1 `npm run lint` passes (prettier formats `global.css` and `palette.md`)
+- [x] 2.2 `npm run build` passes
+- [x] 2.3 `npm run ui:scan` still reports 25 hits (no view file touched)
 
 #### Manual
 
-- [ ] 2.4 Sign-in page at `http://localhost:4321/auth/signin` looks unchanged apart from the button focus ring colour (Tab to the submit button)
-- [ ] 2.5 The user confirmed `palette.md` records palette A as chosen during planning (fine-tuning on the real screen happens at the Phase 3 gate)
+- [x] 2.4 Sign-in page at `http://localhost:4321/auth/signin` looks unchanged apart from the button focus ring colour (Tab to the submit button)
+- [x] 2.5 The user confirmed `palette.md` records palette A as chosen during planning (fine-tuning on the real screen happens at the Phase 3 gate)
 
 ### Phase 3: The view reads tokens and components
 
