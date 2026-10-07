@@ -521,29 +521,29 @@ pages.
 
 #### Automated
 
-- [x] 2.1 `npm run lint` passes (prettier formats `global.css` and `palette.md`)
-- [x] 2.2 `npm run build` passes
-- [x] 2.3 `npm run ui:scan` still reports 25 hits (no view file touched)
+- [x] 2.1 `npm run lint` passes (prettier formats `global.css` and `palette.md`) — 01d277d
+- [x] 2.2 `npm run build` passes — 01d277d
+- [x] 2.3 `npm run ui:scan` still reports 25 hits (no view file touched) — 01d277d
 
 #### Manual
 
-- [x] 2.4 Sign-in page at `http://localhost:4321/auth/signin` looks unchanged apart from the button focus ring colour (Tab to the submit button)
-- [x] 2.5 The user confirmed `palette.md` records palette A as chosen during planning (fine-tuning on the real screen happens at the Phase 3 gate)
+- [x] 2.4 Sign-in page at `http://localhost:4321/auth/signin` looks unchanged apart from the button focus ring colour (Tab to the submit button) — 01d277d
+- [x] 2.5 The user confirmed `palette.md` records palette A as chosen during planning (fine-tuning on the real screen happens at the Phase 3 gate) — 01d277d
 
 ### Phase 3: The view reads tokens and components
 
 #### Automated
 
-- [ ] 3.1 `npm run ui:scan` reports 0 hits and exits 0
-- [ ] 3.2 `npm run lint` and `npx astro check` pass
-- [ ] 3.3 `npm run build` passes
-- [ ] 3.4 `npm run smoke` passes against the local preview (Topbar and page still render for signed-in and anonymous users)
+- [x] 3.1 `npm run ui:scan` reports 0 hits and exits 0
+- [x] 3.2 `npm run lint` and `npx astro check` pass
+- [x] 3.3 `npm run build` passes
+- [x] 3.4 `npm run smoke` passes against the local preview (Topbar and page still render for signed-in and anonymous users)
 
 #### Manual
 
-- [ ] 3.5 `npm run ui:shots -- --label phase3`: every state shows the light teal theme at 1280 px and 390 px; no white-on-white or purple remnants; the Topbar fits at 390 px
-- [ ] 3.6 Keyboard flow on `http://localhost:4321/szukaj` works as before: type `ibu`, ArrowDown/ArrowUp, Enter selects and shows the card, Escape closes the list; clicking or dragging the list scrollbar does not close it
-- [ ] 3.7 The user confirmed the palette on the real screen, or gave adjustments that are applied in `global.css` and recorded in `palette.md`
+- [x] 3.5 `npm run ui:shots -- --label phase3`: every state shows the light teal theme at 1280 px and 390 px; no white-on-white or purple remnants; the Topbar fits at 390 px
+- [x] 3.6 Keyboard flow on `http://localhost:4321/szukaj` works as before: type `ibu`, ArrowDown/ArrowUp, Enter selects and shows the card, Escape closes the list; clicking or dragging the list scrollbar does not close it
+- [x] 3.7 The user confirmed the palette on the real screen, or gave adjustments that are applied in `global.css` and recorded in `palette.md`
 
 ### Phase 4: States — the 7-state matrix
 

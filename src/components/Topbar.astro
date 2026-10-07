@@ -1,31 +1,36 @@
 ---
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
 const { user } = Astro.locals;
+const linkClass = cn(buttonVariants({ variant: "link" }), "h-auto px-2 py-1");
+const onSearch = Astro.url.pathname === "/szukaj";
 ---
 
-<div class="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
+<div class="bg-card mb-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-2 text-sm">
   {user ? (
     <>
-      <span class="text-blue-100/70">{user.email}</span>
-      <div class="flex items-center gap-3">
-        <a href="/dashboard" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Dashboard
+      <span class="text-muted-foreground min-w-0 truncate">{user.email}</span>
+      <div class="flex shrink-0 items-center gap-1">
+        <a href="/szukaj" class:list={linkClass} aria-current={onSearch ? "page" : undefined}>
+          Szukaj leku
         </a>
         <form method="POST" action="/api/auth/signout">
-          <button type="submit" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Sign out
+          <button type="submit" class:list={linkClass}>
+            Wyloguj
           </button>
         </form>
       </div>
     </>
   ) : (
     <>
-      <span class="text-blue-100/70">Not signed in</span>
-      <div class="flex gap-3">
-        <a href="/auth/signin" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign in
+      <span class="text-muted-foreground min-w-0 truncate">Nie zalogowano</span>
+      <div class="flex shrink-0 items-center gap-1">
+        <a href="/auth/signin" class:list={linkClass}>
+          Zaloguj się
         </a>
-        <a href="/auth/signup" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign up
+        <a href="/auth/signup" class:list={linkClass}>
+          Załóż konto
         </a>
       </div>
     </>
