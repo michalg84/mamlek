@@ -48,7 +48,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
 | S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
 | S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | proposed |
+| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | planning |
 | S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
 | S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
 
@@ -183,7 +183,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Gdzie i jak autor dostaje sygnał o nieudanym odświeżeniu (rejestr ryzyk w `infrastructure.md`: import może przestać działać po cichu). — Owner: autor. Block: no.
 - **Risk:** Zadanie w tle działa bez nadzoru poza aplikacją (per tech-stack.md), a `infrastructure.md` opisuje scenariusz, w którym wyłączony harmonogram niezauważenie postarza rejestr — dlatego data aktualizacji jest częścią tego wycinka, a nie dodatkiem. Niezależny od reszty, więc może iść równolegle od zaraz po F-01.
-- **Status:** proposed
+- **Status:** planning
 
 ### S-08: Ostrzeżenie o kończącej się dacie ważności
 

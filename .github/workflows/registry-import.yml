@@ -1,6 +1,11 @@
 name: Registry import
 
 on:
+  # Scheduled runs always use the default branch, so the main-only guard below passes. A failed run emails the user
+  # who last changed the cron line (GitHub's failed-workflow notification).
+  schedule:
+    # 04:17 UTC, off the full hour, where GitHub delays and drops more runs.
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 concurrency:

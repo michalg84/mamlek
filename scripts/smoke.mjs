@@ -86,7 +86,11 @@ const steps = [
     { status: 302, location: "/" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
-  ["search page renders for signed-in user", () => request("/szukaj"), { status: 200 }],
+  [
+    "search page renders for signed-in user",
+    () => request("/szukaj"),
+    { status: 200, check: (actual) => /Stan rejestru na \d{1,2}\.\d{2}\.\d{4}/.test(actual.body) },
+  ],
   [
     "search list returns variants for signed-in user",
     () => request(SEARCH_LIST),
