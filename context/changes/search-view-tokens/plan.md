@@ -564,11 +564,11 @@ pages.
 
 #### Automated
 
-- [x] 5.1 `npm run ui:scan` exits 0; temporarily adding `text-purple-300` to `Topbar.astro` makes it exit 1 (revert afterwards)
-- [x] 5.2 Staging a guarded file containing a palette class makes the pre-commit hook fail (revert afterwards)
+- [x] 5.1 `npm run ui:scan` exits 0; temporarily adding `text-purple-300` to `Topbar.astro` makes it exit 1 (revert afterwards) — 70dedf0
+- [x] 5.2 Staging a guarded file containing a palette class makes the pre-commit hook fail (revert afterwards) — 70dedf0
 - [ ] 5.3 `npm run lint`, `npx astro check` and `npm run build` pass; the CI `ci` job is green on the PR
 
 #### Manual
 
-- [x] 5.4 `AGENTS.md` UI section is readable and points at existing files and scripts
-- [x] 5.5 `research.md` charges show addressed/deferred status for C1–C5
+- [x] 5.4 `AGENTS.md` UI section is readable and points at existing files and scripts — 70dedf0
+- [x] 5.5 `research.md` charges show addressed/deferred status for C1–C5 — 70dedf0
