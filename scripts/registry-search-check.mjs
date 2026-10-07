@@ -9,7 +9,7 @@
 //   DATABASE_URL=postgresql://... npm run search:check -- --save   # write .perf/search-golden.json (before the change)
 //   DATABASE_URL=postgresql://... npm run search:check             # compare with it (after the change)
 //
-// Exit codes: 0 same results, 1 differences, 2 usage problem (no golden file, no DATABASE_URL, other list version).
+// Exit codes: 0 same results, 1 differences, 2 usage problem (no golden file, no or non-local DATABASE_URL, other list version).
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -19,6 +19,8 @@ import { buildSearchIndex, searchVariants } from "../src/lib/registry-search.ts"
 
 const GOLDEN_FILE = fileURLToPath(new URL("../.perf/search-golden.json", import.meta.url));
 const LIMIT = 20;
+// Local databases only: the connection is not encrypted (unlike registry-import.mjs, which verifies non-local hosts).
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 // Levels (see the S-01 plan): A = first query word starts the first word of the product name, B = another word of the
 // name, C = a word of the common name, D = a word of an active substance. Each following query word must start a word of
@@ -82,6 +84,15 @@ async function loadList() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     throw new UsageError("DATABASE_URL is not set (e.g. postgresql://postgres:postgres@127.0.0.1:54322/postgres)");
+  }
+  let host;
+  try {
+    host = new URL(databaseUrl).hostname;
+  } catch {
+    throw new UsageError("DATABASE_URL is not a valid URL");
+  }
+  if (!LOCAL_HOSTS.has(host)) {
+    throw new UsageError(`DATABASE_URL must point to a local database (got host ${host}): import the registry locally`);
   }
   const client = new pg.Client({ connectionString: databaseUrl });
   await client.connect();

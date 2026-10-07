@@ -156,13 +156,22 @@ function installRecorder({ loadingText }) {
 
 // Resolves to the "list ready" moment in ms since the navigation start: the performance mark when the page sets it,
 // otherwise the moment the loading text disappeared. `failed` is set when the page shows an error instead of a list.
+// `buildMs` is the worker's own decode + parse + index time carried by the mark (null without it).
 function readReadiness({ mark, errorTexts }) {
   const entry = globalThis.performance.getEntriesByName(mark)[0];
   const state = globalThis.__perf;
   const text = globalThis.document.body?.textContent ?? "";
-  if (entry) return { at: entry.startTime, source: "mark", failed: false };
+  if (entry) {
+    const buildMs = typeof entry.detail?.buildMs === "number" ? entry.detail.buildMs : null;
+    return { at: entry.startTime, source: "mark", failed: false, buildMs };
+  }
   if (state.textGoneAt !== null) {
-    return { at: state.textGoneAt, source: "text", failed: errorTexts.some((error) => text.includes(error)) };
+    return {
+      at: state.textGoneAt,
+      source: "text",
+      failed: errorTexts.some((error) => text.includes(error)),
+      buildMs: null,
+    };
   }
   return null;
 }
@@ -297,9 +306,17 @@ async function measureRun(browser, { baseUrl, credentials, profile }) {
     if (workerCount > 0) {
       workerThrottling = workers.throttled > 0 && workers.problems.length === 0 ? "ok" : "failed";
     }
+    // Without worker throttling the build ran at full speed: add the time it would take at the profile's CPU rate.
+    let workerEstimateMs = null;
+    if (readiness.buildMs !== null) {
+      workerEstimateMs =
+        workerThrottling === "failed" ? readiness.at + readiness.buildMs * (profile.cpuRate - 1) : readiness.at;
+    }
     return {
       listReadyMs: readiness.at,
       listReadySource: readiness.source,
+      workerBuildMs: readiness.buildMs,
+      workerEstimateMs,
       early,
       ready,
       workerThrottling,
@@ -329,6 +346,15 @@ function printProfile(name, runs, profileRuns) {
     ],
     ["ready typing: longest task (ms)", profileRuns.map((run) => run.ready.taskMs), targets.taskMs],
   ];
+  const estimateRuns = profileRuns.filter((run) => run.workerEstimateMs !== null && run.workerEstimateMs !== undefined);
+  if (estimateRuns.length > 0) {
+    rows.splice(
+      1,
+      0,
+      ["worker build, unthrottled (ms)", estimateRuns.map((run) => run.workerBuildMs), null],
+      ["list ready, est. throttled worker (ms)", estimateRuns.map((run) => run.workerEstimateMs), targets.listReadyMs],
+    );
+  }
   console.log(`\n${name}: ${profile.label}, ${profileRuns.length}/${runs} runs`);
   console.log(`${"metric".padEnd(42)}${"median".padStart(8)}${"max".padStart(8)}  target`);
   for (const [label, values, target] of rows) {
@@ -355,7 +381,7 @@ function printProfile(name, runs, profileRuns) {
     const reasons = [...new Set(failedWorker.flatMap((run) => run.workerProblems))].join("; ");
     console.log(
       `WARNING: CPU throttling could not be applied to the search worker in ${failedWorker.length} run(s)` +
-        `${reasons ? ` (${reasons})` : ""}: the time spent in the worker is under-reported`,
+        `${reasons ? ` (${reasons})` : ""}: the time spent in the worker is under-reported (see the estimate row)`,
     );
   }
 }
