@@ -13,6 +13,8 @@
     "smoke": "node scripts/smoke.mjs",
     "roadmap:sync": "node scripts/roadmap-sync.mjs",
     "registry:import": "node scripts/registry-import.mjs",
+    "perf": "node scripts/perf-search.mjs",
+    "search:check": "node --experimental-strip-types scripts/registry-search-check.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -50,6 +52,7 @@
     "husky": "9.1.7",
     "lint-staged": "^16.3.3",
     "pg": "^8.23.1",
+    "playwright": "^1.63.0",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^1.0.0",
     "prettier-plugin-tailwindcss": "^0.8.1",

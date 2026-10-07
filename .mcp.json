@@ -3,6 +3,14 @@
     "cloudflare": {
       "type": "http",
       "url": "https://mcp.cloudflare.com/mcp"
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp?exaApiKey=${EXA_API_KEY}"
+    },
+    "chrome-devtools": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest", "--isolated=true"]
     }
   }
 }

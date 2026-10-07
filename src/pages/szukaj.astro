@@ -24,6 +24,16 @@ try {
 ---
 
 <Layout title="Szukaj leku">
+  {list && (
+    // Same URL, mode and credentials as the fetch in useRegistrySearch, so the browser reuses this download.
+    <link
+      slot="head"
+      rel="preload"
+      href={`/api/registry/search-list?v=${list.version}`}
+      as="fetch"
+      crossorigin="anonymous"
+    />
+  )}
   <div class="bg-cosmic min-h-screen p-4">
     <div class="mx-auto w-full max-w-xl min-w-0">
       <Topbar />
