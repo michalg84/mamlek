@@ -1,10 +1,10 @@
 ---
 change_id: search-view-tokens
 title: Search view reads design tokens
-status: impl_reviewed
+status: archived
 created: 2026-10-07
 updated: 2026-10-07
-archived_at: null
+archived_at: 2026-10-07T11:51:01Z
 ---
 
 ## Notes
