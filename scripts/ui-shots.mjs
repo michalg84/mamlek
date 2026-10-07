@@ -38,7 +38,7 @@ function parseArgs(argv) {
     const arg = argv[i];
     if (arg === "--label") {
       options.label = argv[++i];
-      if (!options.label || !/^[\w.-]+$/.test(options.label)) {
+      if (!options.label || !/^[\w.-]+$/.test(options.label) || /^\.+$/.test(options.label)) {
         throw new UsageError("--label needs a name made of letters, digits, `.`, `_` or `-`");
       }
     } else throw new UsageError(`Unknown argument: ${arg}`);

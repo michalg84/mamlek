@@ -65,10 +65,11 @@
     "wrangler": "^4.142.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,astro}": [
+    "*.ts": [
       "eslint --fix"
     ],
     "*.{astro,tsx}": [
+      "eslint --fix",
       "node scripts/ui-scan.mjs"
     ],
     "*.{json,css,md}": [

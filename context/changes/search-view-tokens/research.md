@@ -183,7 +183,7 @@ text-accent-foreground` for the active/hovered option.
 - **C1** — addressed (Phases 2-3).
 - **C2** — addressed (Phase 4).
 - **C3** — addressed (Phases 1 and 3).
-- **C4** — Topbar addressed; the redirect (`signin.ts:19`) and the home page deferred to S-03.
+- **C4** — Topbar addressed; the redirect (`signin.ts:19`) and the home page deferred to S-03. The Topbar no longer links to `/dashboard`, so that page is intentionally unreachable from the UI until S-03 replaces it, and the light Topbar sits on the dark Welcome page until then.
 - **C5** — rule (`AGENTS.md` `## UI`) and `ui:scan` addressed; other views deferred (auth pages to their own 10x-ui change; Welcome/dashboard are replaced in S-03).
 
 ## Detailed Findings

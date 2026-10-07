@@ -34,4 +34,4 @@ Source of truth in code: `:root` in `src/styles/global.css`. Chart, sidebar, `--
 
 ## Adjustments at the Phase 2 gate
 
-None yet.
+None: palette A was confirmed on the real screen at the Phase 3 gate.

@@ -30,7 +30,7 @@ const PATTERN = new RegExp(
     String.raw`hsla?\(`,
     String.raw`oklch\(`,
     String.raw`-\[[0-9.]+(px|rem)\]`,
-    String.raw`\b(bg|text|border|ring|outline|from|via|to|fill|stroke|shadow|divide)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black)\b`,
+    String.raw`\b(bg|text|border|ring|outline|from|via|to|fill|stroke|shadow|divide|placeholder|caret|accent|decoration)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black)\b`,
     String.raw`\bbg-cosmic\b`,
   ].join("|"),
 );
