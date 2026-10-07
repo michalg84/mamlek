@@ -49,7 +49,7 @@ Na słabym telefonie strona `/szukaj` potrzebuje dziś ok. 11 s, zanim podpowied
 - **Runnera testów jednostkowych** (Vitest) i pomiarów w CI. `perf` i `search:check` uruchamiamy ręcznie.
 - **Cache'owania indeksu między wizytami** (IndexedDB) i pracy z wieloma kartami.
 - **Lighthouse'a i pomiaru całej strony poza przepływem `/szukaj`.**
-- **Faz 5 i 6, jeśli faza 4 pokaże spełnione cele.** Wtedy zostają tu przeniesione z wynikiem pomiaru.
+- **Faz 5 i 6** — pominięte, faza 4 pokazała spełnione cele (produkcja, 2026-10-07, mediana z 5): lista gotowa 1320 ms (zwykły) i 3969 ms (słaby), INP/zadania przy pisaniu na profilu słabym: najdłuższa interakcja 64 ms, najdłuższe zadanie 107 ms.
 
 ## Implementation Approach
 
@@ -543,45 +543,52 @@ Wykonywana tylko wtedy, gdy bramka z fazy 4 wskaże czas gotowości listy. Celem
   - Sprawdzone przez agenta w DevTools: `ibu 400` → 20 opcji i „Pokazano 20 z 53 — dopisz kolejne słowo…”; po ` max` 14 opcji i brak komunikatu; `żel` i `zel` → te same 19 opcji w tej samej kolejności. Potwierdzone przez użytkownika 2026-10-07.
 - [x] 3.10 Klawiatura, dotyk, czytnik ekranu i „Spróbuj ponownie” działają
   - Potwierdzone przez użytkownika 2026-10-07 (lokalnie, `wrangler dev`).
-- [ ] 3.11 Na telefonie podpowiedzi działają, także bez sieci po pobraniu listy
+- [x] 3.11 Na telefonie podpowiedzi działają, także bez sieci po pobraniu listy
+  - Potwierdzone przez użytkownika 2026-10-07 (telefon, produkcja).
 
 ### Phase 4: Pomiar na produkcji (bramka)
 
 #### Automated
 
-- [ ] 4.1 CI na PR z fazami 1–3 przechodzi
+- [x] 4.1 CI na PR z fazami 1–3 przechodzi — 0c63e7b
+  - PR #21: `ci` 59 s, `smoke` 2 min 33 s, oba zielone.
 
 #### Manual
 
-- [ ] 4.2 PR z fazami 1–3 zmergowany i wdrożony na produkcję
-- [ ] 4.3 `npm run perf` na produkcji zanotowany i porównany z celami i baseline'em produkcyjnym
-- [ ] 4.4 Decyzja o fazach 5 i 6 zapisana według reguły bramki
+- [x] 4.2 PR z fazami 1–3 zmergowany i wdrożony na produkcję — 0c63e7b
+  - PR #21 zmergowany 2026-10-07 08:52Z, przebieg `main` (deploy) zakończony sukcesem.
+- [x] 4.3 `npm run perf` na produkcji zanotowany i porównany z celami i baseline'em produkcyjnym
+  - Produkcja (`https://mamlek.mig-app.workers.dev`, 2026-10-07, `.perf/perf-2026-10-07.json`, mediana z 5), lista gotowa (zakres) / pisanie w trakcie wczytywania (interakcja, zadanie; max zadania) / po gotowości (interakcja, zadanie; max zadania). **Po fazach 1–3** (09:02Z): zwykły 1320 ms (1254–1858) / 24 ms, 55 ms (max 68) / 40 ms, 0 ms (max 0); słaby 3969 ms (3947–3971) / 40 ms, 0 ms (max 107) / 56 ms, 0 ms (max 0). **Przed wdrożeniem** (ten sam dzień 08:51Z, stary kod): zwykły 2249 ms (2047–3356) / 640 ms, 575 ms (max 660) / 96 ms, 77 ms (max 83); słaby 7220 ms (5993–7913) / 32 ms, 0 ms (max 0) / 152 ms, 123 ms (max 157).
+  - Cele: lista < 3 s (zwykły) spełniona (1320 ms), ≤ 5 s (słaby) spełniona (3969 ms, wcześniej 7220 ms). Pisanie: najdłuższa interakcja na profilu słabym 64 ms (< 200 ms), najdłuższe zadanie 107 ms (< 200 ms).
+  - Zastrzeżenie: dławienie CPU nie obejmuje workera („Operation is only supported for pages, not workers", 10 z 10 przebiegów), więc czas budowy indeksu w workerze jest zaniżony, a wynik słabego profilu optymistyczny. Sprawdzić na prawdziwym telefonie (3.11).
+- [x] 4.4 Decyzja o fazach 5 i 6 zapisana według reguły bramki
+  - Faza 5: nie (słaby: INP 64 ms < 200 ms, najdłuższe zadanie 107 ms < 200 ms). Faza 6: nie (zwykły 1320 ms < 3 s, słaby 3969 ms ≤ 5 s). Obie pominięte.
 
 ### Phase 5: Lżejszy render przy pisaniu (warunkowa)
 
 #### Automated
 
-- [ ] 5.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 5.2 `npm run lint` przechodzi
-- [ ] 5.3 `npm run build` przechodzi
-- [ ] 5.4 `npm run search:check` kończy się kodem 0
+- [x] 5.1 `npx astro sync` i `npx astro check` bez błędów — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
+- [x] 5.2 `npm run lint` przechodzi — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
+- [x] 5.3 `npm run build` przechodzi — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
+- [x] 5.4 `npm run search:check` kończy się kodem 0 — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
 
 #### Manual
 
-- [ ] 5.5 `npm run perf` lokalnie na profilu słabym: INP < 200 ms i brak zadań > 200 ms, zanotowany
-- [ ] 5.6 `npm run perf` na produkcji po wdrożeniu potwierdza cel pisania, zanotowany
-- [ ] 5.7 Klawiatura, dotyk i czytnik ekranu działają jak w S-01
+- [x] 5.5 `npm run perf` lokalnie na profilu słabym: INP < 200 ms i brak zadań > 200 ms, zanotowany — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
+- [x] 5.6 `npm run perf` na produkcji po wdrożeniu potwierdza cel pisania, zanotowany — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
+- [x] 5.7 Klawiatura, dotyk i czytnik ekranu działają jak w S-01 — pominięte (faza 4: cel spełniony, INP 64 ms, zadanie max 107 ms)
 
 ### Phase 6: Rozmiar JS strony (warunkowa)
 
 #### Automated
 
-- [ ] 6.1 `npx astro sync` i `npx astro check` bez błędów
-- [ ] 6.2 `npm run lint` przechodzi
-- [ ] 6.3 `npm run build` przechodzi
-- [ ] 6.4 `npm run smoke` przechodzi
+- [x] 6.1 `npx astro sync` i `npx astro check` bez błędów — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
+- [x] 6.2 `npm run lint` przechodzi — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
+- [x] 6.3 `npm run build` przechodzi — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
+- [x] 6.4 `npm run smoke` przechodzi — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
 
 #### Manual
 
-- [ ] 6.5 Rozmiar JS `/szukaj` przed i po zanotowany
-- [ ] 6.6 `npm run perf` na produkcji po wdrożeniu: cele gotowości listy spełnione albo pozostała luka zanotowana
+- [x] 6.5 Rozmiar JS `/szukaj` przed i po zanotowany — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
+- [x] 6.6 `npm run perf` na produkcji po wdrożeniu: cele gotowości listy spełnione albo pozostała luka zanotowana — pominięte (faza 4: cel spełniony, lista 1320 ms / 3969 ms)
