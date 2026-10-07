@@ -566,7 +566,7 @@ pages.
 
 - [x] 5.1 `npm run ui:scan` exits 0; temporarily adding `text-purple-300` to `Topbar.astro` makes it exit 1 (revert afterwards) — 70dedf0
 - [x] 5.2 Staging a guarded file containing a palette class makes the pre-commit hook fail (revert afterwards) — 70dedf0
-- [ ] 5.3 `npm run lint`, `npx astro check` and `npm run build` pass; the CI `ci` job is green on the PR
+- [x] 5.3 `npm run lint`, `npx astro check` and `npm run build` pass; the CI `ci` job is green on the PR — 70dedf0
 
 #### Manual
 
