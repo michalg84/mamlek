@@ -41,7 +41,7 @@ Automated checks run during the review: `astro sync`, `npm run lint`, `astro che
   - Tradeoff: The ≤ 5 s target on the slow profile stays unproven.
   - Confidence: MED — the margin (~1 s) may cover a 6x build, but this was never checked.
   - Blind spot: Real slow-phone timing.
-- **Decision**: FIXED (Fix A) — the ready mark carries `detail.buildMs`; `perf` records `workerBuildMs`/`workerEstimateMs` per run and prints "worker build, unthrottled" and "list ready, est. throttled worker" rows (judged against the list-ready target). Lint and astro check pass. Still to do: deploy, then run `npm run perf` on production to confirm or reopen the phase 6 gate.
+- **Decision**: FIXED (Fix A) — the ready mark carries `detail.buildMs`; `perf` records `workerBuildMs`/`workerEstimateMs` per run and prints "worker build, unthrottled" and "list ready, est. throttled worker" rows (judged against the list-ready target). Lint and astro check pass. Production run after deploy (2026-10-07 09:41Z, median of 5): slow-profile estimate 4651 ms (max 5652) ≤ 5000 ms, fast 1710 ms; the phase 6 gate holds with a ~350 ms margin (recorded in plan Progress 4.3/4.4).
 
 ### F2 — Unplanned exa MCP config and vendor command committed in feature commits
 
