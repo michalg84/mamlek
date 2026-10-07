@@ -8,7 +8,7 @@ topic: "UI audit of /szukaj against the design-system contract (tokens + shared 
 tags: [research, ui, design-tokens, shadcn, szukaj, MedicineSuggest, RegistrySearch, Topbar]
 status: complete
 last_updated: 2026-10-07
-last_updated_by: Claude (Opus 5.5)
+last_updated_by: Claude (Sonnet 5.5)
 ---
 
 # Research: UI audit of /szukaj against the design-system contract
@@ -177,6 +177,14 @@ text-accent-foreground` for the active/hovered option.
   `npx shadcn@latest add`, no palette classes or arbitrary colours in views, kitchen-sink
   location. Optional lint check — the repo has ESLint (CI `lint` step); a new rule
   dependency would be the learner's call.
+
+### Charge ledger (2026-10-07)
+
+- **C1** — addressed (Phases 2-3).
+- **C2** — addressed (Phase 4).
+- **C3** — addressed (Phases 1 and 3).
+- **C4** — Topbar addressed; the redirect (`signin.ts:19`) and the home page deferred to S-03.
+- **C5** — rule (`AGENTS.md` `## UI`) and `ui:scan` addressed; other views deferred (auth pages to their own 10x-ui change; Welcome/dashboard are replaced in S-03).
 
 ## Detailed Findings
 

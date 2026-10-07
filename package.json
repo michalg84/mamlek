@@ -68,6 +68,9 @@
     "*.{ts,tsx,astro}": [
       "eslint --fix"
     ],
+    "*.{astro,tsx}": [
+      "node scripts/ui-scan.mjs"
+    ],
     "*.{json,css,md}": [
       "prettier --write"
     ]

@@ -549,26 +549,26 @@ pages.
 
 #### Automated
 
-- [x] 4.1 `npm run ui:scan` reports 0 hits
-- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [x] 4.3 `npm run perf -- --profile fast --runs 1` completes (loading text and combobox selector still found)
+- [x] 4.1 `npm run ui:scan` reports 0 hits — 9c116dc
+- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass — 9c116dc
+- [x] 4.3 `npm run perf -- --profile fast --runs 1` completes (loading text and combobox selector still found) — 9c116dc
 
 #### Manual
 
-- [x] 4.4 `npm run ui:shots -- --label phase4`: all 11 states captured at both widths; focus visible on input and Topbar link; error and unauthorized show the icon and red text; loading shows the spinner; the field does not jump when loading ends
-- [x] 4.5 Server states checked once by hand: with the registry not imported (`npx supabase db reset`, no import) `http://localhost:4321/szukaj` shows the muted "Rejestr leków nie jest jeszcze wczytany"; the failure message styling reviewed in code (or by temporarily breaking the list query locally); registry re-imported afterwards
-- [x] 4.6 Lighthouse accessibility audit on `http://localhost:4321/szukaj` (desktop and mobile) reports no colour-contrast failures
-- [x] 4.7 `states.md` has every cell shown or N/A with a reason
+- [x] 4.4 `npm run ui:shots -- --label phase4`: all 11 states captured at both widths; focus visible on input and Topbar link; error and unauthorized show the icon and red text; loading shows the spinner; the field does not jump when loading ends — 9c116dc
+- [x] 4.5 Server states checked once by hand: with the registry not imported (`npx supabase db reset`, no import) `http://localhost:4321/szukaj` shows the muted "Rejestr leków nie jest jeszcze wczytany"; the failure message styling reviewed in code (or by temporarily breaking the list query locally); registry re-imported afterwards — 9c116dc
+- [x] 4.6 Lighthouse accessibility audit on `http://localhost:4321/szukaj` (desktop and mobile) reports no colour-contrast failures — 9c116dc
+- [x] 4.7 `states.md` has every cell shown or N/A with a reason — 9c116dc
 
 ### Phase 5: Guard — make it stick
 
 #### Automated
 
-- [ ] 5.1 `npm run ui:scan` exits 0; temporarily adding `text-purple-300` to `Topbar.astro` makes it exit 1 (revert afterwards)
-- [ ] 5.2 Staging a guarded file containing a palette class makes the pre-commit hook fail (revert afterwards)
+- [x] 5.1 `npm run ui:scan` exits 0; temporarily adding `text-purple-300` to `Topbar.astro` makes it exit 1 (revert afterwards)
+- [x] 5.2 Staging a guarded file containing a palette class makes the pre-commit hook fail (revert afterwards)
 - [ ] 5.3 `npm run lint`, `npx astro check` and `npm run build` pass; the CI `ci` job is green on the PR
 
 #### Manual
 
-- [ ] 5.4 `AGENTS.md` UI section is readable and points at existing files and scripts
-- [ ] 5.5 `research.md` charges show addressed/deferred status for C1–C5
+- [x] 5.4 `AGENTS.md` UI section is readable and points at existing files and scripts
+- [x] 5.5 `research.md` charges show addressed/deferred status for C1–C5
