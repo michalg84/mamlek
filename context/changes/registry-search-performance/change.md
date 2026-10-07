@@ -1,9 +1,9 @@
 ---
 change_id: registry-search-performance
 title: Wydajność wyszukiwania leków na słabym telefonie
-status: implementing
+status: impl_reviewed
 created: 2026-10-06
-updated: 2026-10-06
+updated: 2026-10-07
 ---
 
 ## Notes

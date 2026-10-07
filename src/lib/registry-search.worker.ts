@@ -32,7 +32,12 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
   }
   // A query that arrives before the index is built has nothing to answer; the page only sends queries once ready.
   if (index) {
-    const { results, total } = searchVariants(index, message.query, MAX_RESULTS);
-    reply({ type: "results", id: message.id, query: message.query, results, total });
+    try {
+      const { results, total } = searchVariants(index, message.query, MAX_RESULTS);
+      reply({ type: "results", id: message.id, query: message.query, results, total });
+    } catch {
+      // One failing query must not turn into "the list did not load": the index is still good for the next one.
+      reply({ type: "results", id: message.id, query: message.query, results: [], total: 0 });
+    }
   }
 });

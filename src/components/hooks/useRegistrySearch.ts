@@ -73,9 +73,10 @@ export function useRegistrySearch(version: number, query: string) {
         created.onmessage = (event: MessageEvent<RegistrySearchWorkerResponse>) => {
           const message = event.data;
           if (message.type === "ready") {
-            // Marks the moment suggestions start working; `npm run perf` reads it as "list ready".
+            // Marks the moment suggestions start working; `npm run perf` reads it as "list ready" and uses `buildMs`
+            // to estimate the slow-profile time when CPU throttling does not reach the worker.
             if (!controller.signal.aborted) {
-              performance.mark("mamlek:search-list-ready");
+              performance.mark("mamlek:search-list-ready", { detail: { buildMs: message.buildMs } });
             }
             finish("ready");
           } else if (message.type === "error") {
@@ -108,6 +109,10 @@ export function useRegistrySearch(version: number, query: string) {
   const current = loaded?.key === key ? loaded : null;
   const status: RegistrySearchStatus = current?.status ?? "loading";
   const longEnough = isQueryLongEnough(query);
+  // A too-short query ends the previous search: its answer must not come back while the next query is on its way.
+  if (!longEnough && answer !== null) {
+    setAnswer(null);
+  }
 
   // Sends the current query as soon as the index is ready (text typed while loading) and on every change after that.
   useEffect(() => {
