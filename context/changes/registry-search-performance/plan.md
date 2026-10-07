@@ -533,15 +533,16 @@ Wykonywana tylko wtedy, gdy bramka z fazy 4 wskaże czas gotowości listy. Celem
 
 #### Manual
 
-- [ ] 3.6 `npm run perf` lokalnie zanotowany; na profilu słabym brak zadań > 200 ms podczas pisania w trakcie wczytywania
-  - Wyniki z sesji agenta (2026-10-06, `wrangler dev`, mediana z 5), NIEPOTWIERDZONE przez użytkownika. Lista gotowa / pisanie w trakcie wczytywania (interakcja, zadanie, max zadania) / po gotowości (interakcja, zadanie, max zadania): zwykły 1376 ms (max 1469; baseline 2128) / 48 ms, 0 ms, 56 ms / 40 ms, 0 ms, 0 ms; słaby 3966 ms (max 4032; baseline 5802) / 40 ms, 0 ms, 109 ms / 56 ms, 0 ms, 112 ms. Na profilu słabym żadne zadanie > 200 ms.
-- [ ] 3.7 Dławienie workera potwierdzone (`buildMs` przy CPU 6x ≥ ok. 4x) albo ostrzeżenie zanotowane
-  - Ostrzeżenie skryptu `perf` w 10 z 10 przebiegów: „CPU throttling could not be applied to the search worker (Operation is only supported for pages, not workers)”. Czas w workerze jest więc zaniżony, a liczby z 3.6 optymistyczne. NIEPOTWIERDZONE przez użytkownika.
-- [ ] 3.8 Tekst wpisany przed gotowością daje wyniki po gotowości; brak migania „Brak leku…”
-  - Sprawdzone przez agenta w DevTools (Slow 4G + CPU 6x): wpisane `ibu 400` zostało, po gotowości 20 opcji, „Brak leku” niewidziane. Lista była już gotowa w chwili pierwszego odczytu, więc ścieżka „przed gotowością” potwierdzona tylko częściowo (lepiej pokrywają ją metryki early typing z `perf`). NIEPOTWIERDZONE przez użytkownika.
-- [ ] 3.9 `ibu 400` → 20 i „Pokazano 20 z 53…”, po `max` komunikat znika; `żel` = `zel`
-  - Sprawdzone przez agenta w DevTools: `ibu 400` → 20 opcji i „Pokazano 20 z 53 — dopisz kolejne słowo…”; po ` max` 14 opcji i brak komunikatu; `żel` i `zel` → te same 19 opcji w tej samej kolejności. NIEPOTWIERDZONE przez użytkownika.
-- [ ] 3.10 Klawiatura, dotyk, czytnik ekranu i „Spróbuj ponownie” działają
+- [x] 3.6 `npm run perf` lokalnie zanotowany; na profilu słabym brak zadań > 200 ms podczas pisania w trakcie wczytywania
+  - Wyniki z sesji agenta (2026-10-06, `wrangler dev`, mediana z 5), potwierdzone przez użytkownika 2026-10-07. Lista gotowa / pisanie w trakcie wczytywania (interakcja, zadanie, max zadania) / po gotowości (interakcja, zadanie, max zadania): zwykły 1376 ms (max 1469; baseline 2128) / 48 ms, 0 ms, 56 ms / 40 ms, 0 ms, 0 ms; słaby 3966 ms (max 4032; baseline 5802) / 40 ms, 0 ms, 109 ms / 56 ms, 0 ms, 112 ms. Na profilu słabym żadne zadanie > 200 ms.
+- [x] 3.7 Dławienie workera potwierdzone (`buildMs` przy CPU 6x ≥ ok. 4x) albo ostrzeżenie zanotowane
+  - Ostrzeżenie skryptu `perf` w 10 z 10 przebiegów: „CPU throttling could not be applied to the search worker (Operation is only supported for pages, not workers)”. Czas w workerze jest więc zaniżony, a liczby z 3.6 optymistyczne (ostrzeżenie zanotowane, rozstrzygnie pomiar produkcyjny w fazie 4). Potwierdzone przez użytkownika 2026-10-07.
+- [x] 3.8 Tekst wpisany przed gotowością daje wyniki po gotowości; brak migania „Brak leku…”
+  - Sprawdzone przez agenta w DevTools (Slow 4G + CPU 6x): wpisane `ibu 400` zostało, po gotowości 20 opcji, „Brak leku” niewidziane. Lista była już gotowa w chwili pierwszego odczytu, więc ścieżka „przed gotowością” potwierdzona tylko częściowo (lepiej pokrywają ją metryki early typing z `perf`). Potwierdzone przez użytkownika 2026-10-07.
+- [x] 3.9 `ibu 400` → 20 i „Pokazano 20 z 53…”, po `max` komunikat znika; `żel` = `zel`
+  - Sprawdzone przez agenta w DevTools: `ibu 400` → 20 opcji i „Pokazano 20 z 53 — dopisz kolejne słowo…”; po ` max` 14 opcji i brak komunikatu; `żel` i `zel` → te same 19 opcji w tej samej kolejności. Potwierdzone przez użytkownika 2026-10-07.
+- [x] 3.10 Klawiatura, dotyk, czytnik ekranu i „Spróbuj ponownie” działają
+  - Potwierdzone przez użytkownika 2026-10-07 (lokalnie, `wrangler dev`).
 - [ ] 3.11 Na telefonie podpowiedzi działają, także bez sieci po pobraniu listy
 
 ### Phase 4: Pomiar na produkcji (bramka)
