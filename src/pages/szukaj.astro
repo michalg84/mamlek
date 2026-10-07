@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import Topbar from "@/components/Topbar.astro";
 import { Card, CardContent } from "@/components/ui/card";
+import { CircleAlert } from "lucide-react";
 import RegistrySearch from "@/components/registry/RegistrySearch";
 import { createClient } from "@/lib/supabase";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
@@ -43,7 +44,10 @@ try {
           <CardContent className="min-w-0">
             <h1 class="text-foreground mb-4 text-2xl font-bold">Szukaj leku</h1>
             {failed ? (
-              <p class="text-muted-foreground text-sm">Nie udało się wczytać rejestru leków, spróbuj później</p>
+              <p class="text-destructive flex items-start gap-1.5 text-sm font-medium">
+                <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <span class="min-w-0">Nie udało się wczytać rejestru leków, spróbuj później</span>
+              </p>
             ) : list ? (
               <RegistrySearch version={list.version} client:load />
             ) : (

@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
+import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistrySearch } from "@/components/hooks/useRegistrySearch";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -223,9 +224,20 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
         {message && messageVisible && (
           <p
             id={messageId}
-            className={cn("text-sm break-words", problem ? "text-destructive" : "text-muted-foreground")}
+            className={cn(
+              "flex items-start gap-1.5 text-sm break-words",
+              problem ? "text-destructive font-medium" : "text-muted-foreground",
+            )}
           >
-            {message}
+            {/* Icons are 16px inside a 20px text line (mt-0.5), so the row keeps one line height. */}
+            {problem && <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />}
+            {status === "loading" && (
+              <LoaderCircle
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 animate-spin motion-reduce:animate-none"
+              />
+            )}
+            <span className="min-w-0">{message}</span>
           </p>
         )}
         {action}

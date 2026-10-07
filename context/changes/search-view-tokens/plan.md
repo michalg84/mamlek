@@ -534,31 +534,31 @@ pages.
 
 #### Automated
 
-- [x] 3.1 `npm run ui:scan` reports 0 hits and exits 0
-- [x] 3.2 `npm run lint` and `npx astro check` pass
-- [x] 3.3 `npm run build` passes
-- [x] 3.4 `npm run smoke` passes against the local preview (Topbar and page still render for signed-in and anonymous users)
+- [x] 3.1 `npm run ui:scan` reports 0 hits and exits 0 — 5f67d38
+- [x] 3.2 `npm run lint` and `npx astro check` pass — 5f67d38
+- [x] 3.3 `npm run build` passes — 5f67d38
+- [x] 3.4 `npm run smoke` passes against the local preview (Topbar and page still render for signed-in and anonymous users) — 5f67d38
 
 #### Manual
 
-- [x] 3.5 `npm run ui:shots -- --label phase3`: every state shows the light teal theme at 1280 px and 390 px; no white-on-white or purple remnants; the Topbar fits at 390 px
-- [x] 3.6 Keyboard flow on `http://localhost:4321/szukaj` works as before: type `ibu`, ArrowDown/ArrowUp, Enter selects and shows the card, Escape closes the list; clicking or dragging the list scrollbar does not close it
-- [x] 3.7 The user confirmed the palette on the real screen, or gave adjustments that are applied in `global.css` and recorded in `palette.md`
+- [x] 3.5 `npm run ui:shots -- --label phase3`: every state shows the light teal theme at 1280 px and 390 px; no white-on-white or purple remnants; the Topbar fits at 390 px — 5f67d38
+- [x] 3.6 Keyboard flow on `http://localhost:4321/szukaj` works as before: type `ibu`, ArrowDown/ArrowUp, Enter selects and shows the card, Escape closes the list; clicking or dragging the list scrollbar does not close it — 5f67d38
+- [x] 3.7 The user confirmed the palette on the real screen, or gave adjustments that are applied in `global.css` and recorded in `palette.md` — 5f67d38
 
 ### Phase 4: States — the 7-state matrix
 
 #### Automated
 
-- [ ] 4.1 `npm run ui:scan` reports 0 hits
-- [ ] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
-- [ ] 4.3 `npm run perf -- --profile fast --runs 1` completes (loading text and combobox selector still found)
+- [x] 4.1 `npm run ui:scan` reports 0 hits
+- [x] 4.2 `npm run lint`, `npx astro check` and `npm run build` pass
+- [x] 4.3 `npm run perf -- --profile fast --runs 1` completes (loading text and combobox selector still found)
 
 #### Manual
 
-- [ ] 4.4 `npm run ui:shots -- --label phase4`: all 11 states captured at both widths; focus visible on input and Topbar link; error and unauthorized show the icon and red text; loading shows the spinner; the field does not jump when loading ends
-- [ ] 4.5 Server states checked once by hand: with the registry not imported (`npx supabase db reset`, no import) `http://localhost:4321/szukaj` shows the muted "Rejestr leków nie jest jeszcze wczytany"; the failure message styling reviewed in code (or by temporarily breaking the list query locally); registry re-imported afterwards
-- [ ] 4.6 Lighthouse accessibility audit on `http://localhost:4321/szukaj` (desktop and mobile) reports no colour-contrast failures
-- [ ] 4.7 `states.md` has every cell shown or N/A with a reason
+- [x] 4.4 `npm run ui:shots -- --label phase4`: all 11 states captured at both widths; focus visible on input and Topbar link; error and unauthorized show the icon and red text; loading shows the spinner; the field does not jump when loading ends
+- [x] 4.5 Server states checked once by hand: with the registry not imported (`npx supabase db reset`, no import) `http://localhost:4321/szukaj` shows the muted "Rejestr leków nie jest jeszcze wczytany"; the failure message styling reviewed in code (or by temporarily breaking the list query locally); registry re-imported afterwards
+- [x] 4.6 Lighthouse accessibility audit on `http://localhost:4321/szukaj` (desktop and mobile) reports no colour-contrast failures
+- [x] 4.7 `states.md` has every cell shown or N/A with a reason
 
 ### Phase 5: Guard — make it stick
 
