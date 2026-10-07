@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import type { RegistryVariant } from "@/types";
 
@@ -9,16 +10,16 @@ interface Props {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs tracking-wide text-blue-100/60 uppercase">{label}</dt>
-      <dd className="mt-0.5 text-sm break-words text-white">{children}</dd>
+      <dt className="text-muted-foreground text-xs tracking-wide uppercase">{label}</dt>
+      <dd className="text-foreground mt-0.5 text-sm break-words">{children}</dd>
     </div>
   );
 }
 
 function VariantCard({ variant }: { variant: RegistryVariant }) {
   return (
-    <section aria-label="Wybrany lek" className="min-w-0 rounded-xl border border-white/10 bg-white/5 p-4">
-      <h2 className="text-lg font-semibold break-words text-white">{variant.name}</h2>
+    <Card role="region" aria-label="Wybrany lek" className="min-w-0 gap-0 p-4">
+      <h2 className="text-foreground text-lg font-semibold break-words">{variant.name}</h2>
       <dl className="mt-3 space-y-3">
         {variant.strength && <Field label="Moc">{variant.strength}</Field>}
         {variant.form && <Field label="Postać">{variant.form}</Field>}
@@ -33,7 +34,7 @@ function VariantCard({ variant }: { variant: RegistryVariant }) {
           </Field>
         )}
       </dl>
-    </section>
+    </Card>
   );
 }
 

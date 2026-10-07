@@ -13,6 +13,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { URL, fileURLToPath } from "node:url";
 import { setTimeout as sleep } from "node:timers/promises";
 import { chromium } from "playwright";
+import { signIn, signUpTestAccount } from "./lib/test-account.mjs";
 
 // Throttling presets of the Chrome DevTools network panel (Chromium front end, NetworkManager "Slow 4G" / "Fast 4G"):
 // throughput = nominal rate * 0.9 in bytes per second, latency = nominal RTT * 3.75 in ms.
@@ -94,23 +95,6 @@ function median(values) {
 function maximum(values) {
   const present = values.filter((value) => value !== null);
   return present.length ? Math.max(...present) : null;
-}
-
-// Local test account, like scripts/smoke.mjs (sign-up without email confirmation: local Supabase only).
-async function signUpTestAccount(baseUrl) {
-  const email = `perf-${Date.now()}@example.com`;
-  const password = "Perf-Test-Passw0rd!";
-  const response = await fetch(`${baseUrl}/api/auth/signup`, {
-    method: "POST",
-    redirect: "manual",
-    headers: { Origin: baseUrl, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ email, password }).toString(),
-  });
-  const location = response.headers.get("location") ?? "";
-  if (response.status !== 302 || !location.startsWith("/auth/confirm-email")) {
-    throw new MeasurementError(`Could not create the test account: sign-up answered ${response.status} ${location}`);
-  }
-  return { email, password };
 }
 
 // Page-side recorder, installed before any page script runs. Collects long tasks and event timings (with
@@ -224,20 +208,6 @@ async function enableWorkerThrottling(cdp, cpuRate) {
     state.problems.push(`auto-attach failed: ${error instanceof Error ? error.message : String(error)}`);
   }
   return state;
-}
-
-async function signIn(page, baseUrl, { email, password }) {
-  await page.goto(`${baseUrl}/auth/signin`);
-  // The form is a React island; wait for hydration so the typed values are not reset by it.
-  await page.waitForSelector("astro-island:has(#email):not([ssr])", { state: "attached" });
-  await page.fill("#email", email);
-  await page.fill("#password", password);
-  await page.click('button[type="submit"]');
-  try {
-    await page.waitForURL((url) => !url.pathname.startsWith("/auth/"), { timeout: 30_000 });
-  } catch {
-    throw new MeasurementError(`Sign-in failed (still on ${page.url()})`);
-  }
 }
 
 // Longest interaction and longest task that overlap the [from, to] window (ms since navigation start).
@@ -412,7 +382,7 @@ async function main() {
   }
 
   const names = options.profile === "both" ? ["fast", "slow"] : [options.profile];
-  const credentials = email ? { email, password } : await signUpTestAccount(baseUrl);
+  const credentials = email ? { email, password } : await signUpTestAccount(baseUrl, "perf");
 
   let browser;
   try {

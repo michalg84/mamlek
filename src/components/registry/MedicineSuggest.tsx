@@ -1,6 +1,8 @@
 import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
+import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistrySearch } from "@/components/hooks/useRegistrySearch";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { isQueryLongEnough, MIN_QUERY_LENGTH } from "@/lib/registry-search";
 import type { RegistryVariant } from "@/types";
@@ -108,7 +110,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     problem = true;
     message = "Sesja wygasła — zaloguj się ponownie";
     action = (
-      <a href="/auth/signin" className="font-medium text-purple-300 underline underline-offset-4 hover:text-purple-100">
+      <a href="/auth/signin" className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}>
         Zaloguj się
       </a>
     );
@@ -116,13 +118,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     problem = true;
     message = "Nie udało się wczytać listy leków.";
     action = (
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={retry}
-        className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-      >
+      <Button type="button" variant="outline" size="sm" onClick={retry}>
         Spróbuj ponownie
       </Button>
     );
@@ -161,10 +157,10 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
 
   return (
     <div className="min-w-0">
-      <label htmlFor={inputId} className="mb-1 block text-sm text-blue-100/80">
+      <label htmlFor={inputId} className="text-muted-foreground mb-1 block text-sm font-medium">
         {label}
       </label>
-      <input
+      <Input
         id={inputId}
         type="text"
         role="combobox"
@@ -188,7 +184,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
           setOpen(false);
           setActiveIndex(-1);
         }}
-        className="block min-h-11 w-full min-w-0 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-base text-white placeholder-white/40 transition-colors focus:ring-2 focus:ring-purple-400 focus:outline-none"
+        className="min-h-11 w-full min-w-0 text-base md:text-base"
       />
       {expanded && (
         <ul
@@ -199,7 +195,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
           onMouseDown={(event) => {
             event.preventDefault();
           }}
-          className="mt-1 max-h-[min(24rem,50vh)] divide-y divide-white/10 overflow-x-hidden overflow-y-auto rounded-lg border border-white/20 bg-slate-900"
+          className="bg-popover text-popover-foreground divide-border mt-1 max-h-[min(24rem,50vh)] divide-y overflow-x-hidden overflow-y-auto rounded-lg border shadow-md"
         >
           {results.map((variant, position) => {
             const details = [variant.strength, variant.form].filter(Boolean).join(" · ");
@@ -213,12 +209,12 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
                   select(variant);
                 }}
                 className={cn(
-                  "min-h-11 min-w-0 cursor-pointer overflow-hidden px-3 py-2 text-white hover:bg-white/10",
-                  position === active && "bg-purple-500/30",
+                  "hover:bg-accent hover:text-accent-foreground min-h-11 min-w-0 cursor-pointer overflow-hidden px-3 py-2",
+                  position === active && "bg-accent text-accent-foreground",
                 )}
               >
                 <span className="line-clamp-2 block font-bold break-words">{variant.name}</span>
-                {details && <span className="block truncate text-sm text-blue-100/70">{details}</span>}
+                {details && <span className="text-muted-foreground block truncate text-sm">{details}</span>}
               </li>
             );
           })}
@@ -226,8 +222,22 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
       )}
       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
         {message && messageVisible && (
-          <p id={messageId} className={cn("text-sm break-words", problem ? "text-red-300" : "text-blue-100/70")}>
-            {message}
+          <p
+            id={messageId}
+            className={cn(
+              "flex items-start gap-1.5 text-sm break-words",
+              problem ? "text-destructive font-medium" : "text-muted-foreground",
+            )}
+          >
+            {/* Icons are 16px inside a 20px text line (mt-0.5), so the row keeps one line height. */}
+            {problem && <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />}
+            {status === "loading" && (
+              <LoaderCircle
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 animate-spin motion-reduce:animate-none"
+              />
+            )}
+            <span className="min-w-0">{message}</span>
           </p>
         )}
         {action}

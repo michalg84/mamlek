@@ -14,6 +14,8 @@
     "roadmap:sync": "node scripts/roadmap-sync.mjs",
     "registry:import": "node scripts/registry-import.mjs",
     "perf": "node scripts/perf-search.mjs",
+    "ui:shots": "node scripts/ui-shots.mjs",
+    "ui:scan": "node scripts/ui-scan.mjs",
     "search:check": "node --experimental-strip-types scripts/registry-search-check.mjs",
     "prepare": "husky"
   },
@@ -63,8 +65,12 @@
     "wrangler": "^4.142.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,astro}": [
+    "*.ts": [
       "eslint --fix"
+    ],
+    "*.{astro,tsx}": [
+      "eslint --fix",
+      "node scripts/ui-scan.mjs"
     ],
     "*.{json,css,md}": [
       "prettier --write"
