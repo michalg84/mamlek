@@ -310,13 +310,13 @@ New table and function only; no existing data touched. Production migrations rea
 
 #### Automated
 
-- [x] 3.1 Hardcoded-value scan is clean
-- [x] 3.2 Type check, lint and build pass
-- [x] 3.3 Smoke still passes
+- [x] 3.1 Hardcoded-value scan is clean — 8bee9e0
+- [x] 3.2 Type check, lint and build pass — 8bee9e0
+- [x] 3.3 Smoke still passes — 8bee9e0
 
 #### Manual
 
-- [x] 3.4 At http://localhost:4321/apteczka: add a medicine with quantity and expiry, then the same pack again without them — confirmation, duplicate notice, „12 z 30 …”, „03/2027” and „nieznane” render correctly
-- [x] 3.5 Pack auto-selected for a single-pack medicine; holder shown when packs come from several products
-- [x] 3.6 At 390 px width no horizontal scroll; keyboard-only flow works with visible focus
-- [x] 3.7 Second account at http://localhost:4321/apteczka sees an empty kit
+- [x] 3.4 At http://localhost:4321/apteczka: add a medicine with quantity and expiry, then the same pack again without them — confirmation, duplicate notice, „12 z 30 …”, „03/2027” and „nieznane” render correctly — 8bee9e0
+- [x] 3.5 Pack auto-selected for a single-pack medicine; holder shown when packs come from several products — 8bee9e0
+- [x] 3.6 At 390 px width no horizontal scroll; keyboard-only flow works with visible focus — 8bee9e0
+- [x] 3.7 Second account at http://localhost:4321/apteczka sees an empty kit — 8bee9e0
