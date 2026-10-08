@@ -3,7 +3,7 @@ change_id: add-medicine-to-kit
 title: Add a registry medicine to the home kit
 status: implementing
 created: 2026-10-07
-updated: 2026-10-07
+updated: 2026-10-08
 archived_at: null
 ---
 

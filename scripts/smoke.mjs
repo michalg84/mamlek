@@ -6,32 +6,34 @@ const email = `smoke-${Date.now()}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
 
-function cookieHeader() {
-  return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
+function cookieHeader(cookies = jar) {
+  return [...cookies.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
 }
 
-function storeCookies(response) {
+function storeCookies(response, cookies = jar) {
   for (const raw of response.headers.getSetCookie()) {
     const [pair, ...attrs] = raw.split(";");
     const [name, ...rest] = pair.split("=");
     const expired = attrs.some((a) => /max-age=0/i.test(a.trim()));
-    if (expired) jar.delete(name.trim());
-    else jar.set(name.trim(), rest.join("="));
+    if (expired) cookies.delete(name.trim());
+    else cookies.set(name.trim(), rest.join("="));
   }
 }
 
-async function request(path, { method = "GET", form } = {}) {
+// `json` sends a JSON body; `jar` picks another cookie jar (another account, or an empty one for anonymous).
+async function request(path, { method = "GET", form, json, jar: cookies = jar } = {}) {
   const response = await fetch(BASE_URL + path, {
     method,
     redirect: "manual",
     headers: {
-      Cookie: cookieHeader(),
+      Cookie: cookieHeader(cookies),
       Origin: BASE_URL,
       ...(form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      ...(json ? { "Content-Type": "application/json" } : {}),
     },
-    body: form ? new URLSearchParams(form).toString() : undefined,
+    body: form ? new URLSearchParams(form).toString() : json ? JSON.stringify(json) : undefined,
   });
-  storeCookies(response);
+  storeCookies(response, cookies);
   return {
     status: response.status,
     location: response.headers.get("location") ?? "",
@@ -63,6 +65,43 @@ async function requestVersionedSearchList(offset = 0) {
   } catch {
     return { ...first, status: -1 };
   }
+}
+
+const PACKAGES = "/api/registry/packages";
+const KIT = "/api/kit";
+// Filled by the pack lookup step, used by the later kit steps: the medicine name and its first pack.
+const kit = { name: "", packageId: 0 };
+
+function parsePackages(body) {
+  try {
+    const { packages } = JSON.parse(body);
+    return Array.isArray(packages) ? packages : [];
+  } catch {
+    return [];
+  }
+}
+
+// Walks the search list for the first variant that has packs and remembers its name and first pack.
+// When none has, the last response is returned as is, so the step fails with that status.
+async function requestPacksOfFirstVariant() {
+  const list = await request(SEARCH_LIST);
+  let variants = [];
+  try {
+    variants = JSON.parse(list.body).variants ?? [];
+  } catch {
+    // not a usable list: falls through to the failing response below
+  }
+  let last = { ...list, status: -1 };
+  for (const [id, name] of variants.slice(0, 20)) {
+    last = await request(`${PACKAGES}?product=${id}`);
+    const [first] = parsePackages(last.body);
+    if (last.status === 200 && first) {
+      kit.name = name;
+      kit.packageId = first.packageId;
+      return last;
+    }
+  }
+  return last;
 }
 
 const steps = [
@@ -108,6 +147,37 @@ const steps = [
         return /^private,.*\bno-cache\b/.test(cacheControl) && !/immutable/.test(cacheControl);
       },
     },
+  ],
+  [
+    "kit page redirects anonymous user",
+    () => request("/apteczka", { jar: new Map() }),
+    { status: 302, location: "/auth/signin" },
+  ],
+  [
+    "kit add rejects anonymous user",
+    () => request(KIT, { method: "POST", json: { packageId: 1 }, jar: new Map() }),
+    { status: 401 },
+  ],
+  ["packs lookup rejects invalid product", () => request(`${PACKAGES}?product=abc`), { status: 400 }],
+  [
+    "packs lookup returns packs for a variant",
+    () => requestPacksOfFirstVariant(),
+    { status: 200, check: (actual) => parsePackages(actual.body).length > 0 },
+  ],
+  [
+    "kit add stores a pack without quantity and expiry",
+    () => request(KIT, { method: "POST", json: { packageId: kit.packageId } }),
+    { status: 201, check: (actual) => Number.isInteger(JSON.parse(actual.body).id) },
+  ],
+  [
+    "kit add rejects negative quantity",
+    () => request(KIT, { method: "POST", json: { packageId: kit.packageId, quantity: -1 } }),
+    { status: 400 },
+  ],
+  [
+    "kit add rejects unknown package",
+    () => request(KIT, { method: "POST", json: { packageId: 999999999999 } }),
+    { status: 400 },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],

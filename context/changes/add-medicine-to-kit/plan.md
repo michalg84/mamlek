@@ -286,25 +286,25 @@ New table and function only; no existing data touched. Production migrations rea
 
 #### Automated
 
-- [x] 1.1 Local database resets with the new migration
-- [x] 1.2 Fixture imports and the import check still pass
-- [x] 1.3 Type check, lint and build pass
+- [x] 1.1 Local database resets with the new migration — 46c1709
+- [x] 1.2 Fixture imports and the import check still pass — 46c1709
+- [x] 1.3 Type check, lint and build pass — 46c1709
 
 #### Manual
 
-- [x] 1.4 In Supabase Studio SQL (as two different `authenticated` users via `set local role` + `request.jwt.claims`), user B selects 0 rows of user A's kit item and cannot update/delete it; an insert with someone else's `user_id` is rejected
-- [x] 1.5 `select * from registry_variant_packages(<fixture product id>)` returns that product's active packs and none with `removed_at`
+- [x] 1.4 In Supabase Studio SQL (as two different `authenticated` users via `set local role` + `request.jwt.claims`), user B selects 0 rows of user A's kit item and cannot update/delete it; an insert with someone else's `user_id` is rejected — 46c1709
+- [x] 1.5 `select * from registry_variant_packages(<fixture product id>)` returns that product's active packs and none with `removed_at` — 46c1709
 
 ### Phase 2: Services and API
 
 #### Automated
 
-- [ ] 2.1 Type check, lint and build pass
-- [ ] 2.2 Smoke passes against the local production build with fixtures imported
+- [x] 2.1 Type check, lint and build pass
+- [x] 2.2 Smoke passes against the local production build with fixtures imported
 
 #### Manual
 
-- [ ] 2.3 `POST /api/kit` with `quantity` above the pack's count returns 400 for a single-unit pack (e.g. via browser devtools fetch while signed in)
+- [x] 2.3 `POST /api/kit` with `quantity` above the pack's count returns 400 for a single-unit pack (e.g. via browser devtools fetch while signed in)
 
 ### Phase 3: Kit page and add form
 
