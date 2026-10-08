@@ -25,6 +25,8 @@
     "@astrojs/react": "^6.0.5",
     "@astrojs/sitemap": "^3.7.4",
     "@eslint/config-helpers": "^0.7.0",
+    "@radix-ui/react-label": "^2.1.16",
+    "@radix-ui/react-radio-group": "^1.4.8",
     "@radix-ui/react-slot": "^1.1.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.99.1",

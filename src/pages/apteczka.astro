@@ -1,0 +1,118 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { Card, CardContent } from "@/components/ui/card";
+import { CircleAlert } from "lucide-react";
+import KitAddForm from "@/components/kit/KitAddForm";
+import { createClient } from "@/lib/supabase";
+import { formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
+import { getSearchListVersion } from "@/lib/services/registry-search-list";
+import { countKitItemsWithPackage, listKitItems } from "@/lib/services/kit";
+import type { KitItem, RegistrySearchListVersion } from "@/types";
+
+let list: RegistrySearchListVersion | null = null;
+let items: KitItem[] = [];
+let added: KitItem | null = null;
+let duplicate = false;
+let failed = false;
+try {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    [list, items] = await Promise.all([getSearchListVersion(supabase), listKitItems(supabase)]);
+    // `?dodano=<id>` comes from the add form; anything that is not an item of this account is ignored.
+    const addedId = Astro.url.searchParams.get("dodano");
+    if (addedId !== null && /^\d+$/.test(addedId)) {
+      added = items.find((item) => String(item.id) === addedId) ?? null;
+      if (added) {
+        duplicate = (await countKitItemsWithPackage(supabase, added.packageId)) > 1;
+      }
+    }
+  } else {
+    failed = true;
+  }
+} catch (error) {
+  // Typically the app deployed before the migration reached the database; show a message instead of a 500 page.
+  failed = true;
+  // eslint-disable-next-line no-console -- the only trace of the failure; the page shows a generic message
+  console.error(error);
+}
+---
+
+<Layout title="Apteczka">
+  {list && (
+    // Same URL, mode and credentials as the fetch in useRegistrySearch, so the browser reuses this download.
+    <link
+      slot="head"
+      rel="preload"
+      href={`/api/registry/search-list?v=${list.version}`}
+      as="fetch"
+      crossorigin="anonymous"
+    />
+  )}
+  <div class="min-h-screen p-4">
+    <div class="mx-auto w-full max-w-xl min-w-0">
+      <Topbar />
+      <main class="min-w-0">
+        <Card>
+          <CardContent className="min-w-0">
+            <h1 class="text-foreground mb-4 text-2xl font-bold">Apteczka</h1>
+            {failed ? (
+              <p class="text-destructive flex items-start gap-1.5 text-sm font-medium">
+                <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <span class="min-w-0">Nie udało się wczytać apteczki, spróbuj później</span>
+              </p>
+            ) : (
+              <div class="min-w-0 space-y-6">
+                {added && (
+                  <div role="status" class="bg-accent text-accent-foreground min-w-0 rounded-md px-3 py-2 text-sm">
+                    <p class="font-medium break-words">Dodano: {added.name}</p>
+                    {duplicate && <p class="break-words">To już kolejne opakowanie tego leku w apteczce</p>}
+                  </div>
+                )}
+                <section class="min-w-0" aria-labelledby="add-heading">
+                  <h2 id="add-heading" class="text-foreground mb-3 text-lg font-semibold">
+                    Dodaj lek
+                  </h2>
+                  {list ? (
+                    <KitAddForm version={list.version} client:load />
+                  ) : (
+                    <p class="text-muted-foreground text-sm">Rejestr leków nie jest jeszcze wczytany</p>
+                  )}
+                </section>
+                <section class="min-w-0" aria-labelledby="list-heading">
+                  <h2 id="list-heading" class="text-foreground mb-3 text-lg font-semibold">
+                    W apteczce
+                  </h2>
+                  {items.length === 0 ? (
+                    <p class="text-muted-foreground text-sm">Apteczka jest pusta</p>
+                  ) : (
+                    <ul class="divide-border min-w-0 divide-y rounded-lg border">
+                      {items.map((item) => (
+                        <li class="min-w-0 px-3 py-3">
+                          <p class="text-foreground font-bold break-words">{item.name}</p>
+                          {[item.strength, item.form].some(Boolean) && (
+                            <p class="text-muted-foreground text-sm break-words">
+                              {[item.strength, item.form].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
+                          <p class="text-foreground mt-1 text-sm break-words">{packLabel(item.units)}</p>
+                          <p class="text-foreground text-sm break-words">
+                            Ilość: {formatQuantity(item.quantity, item.units)}
+                          </p>
+                          <p class="text-foreground text-sm break-words">
+                            Ważny do: {formatExpiry(item.expiresOn, item.expiryPrecision)}
+                          </p>
+                          {item.withdrawn && <p class="text-muted-foreground text-sm">wycofany z rejestru</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  </div>
+</Layout>
