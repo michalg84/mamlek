@@ -6,6 +6,7 @@ import { CircleAlert } from "lucide-react";
 import RegistrySearch from "@/components/registry/RegistrySearch";
 import { createClient } from "@/lib/supabase";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
+import { formatRegistryDate } from "@/lib/registry-date";
 import type { RegistrySearchListVersion } from "@/types";
 
 let list: RegistrySearchListVersion | null = null;
@@ -49,7 +50,12 @@ try {
                 <span class="min-w-0">Nie udało się wczytać rejestru leków, spróbuj później</span>
               </p>
             ) : list ? (
-              <RegistrySearch version={list.version} client:load />
+              <>
+                <RegistrySearch version={list.version} client:load />
+                <p class="text-muted-foreground mt-4 text-xs">
+                  Stan rejestru na {formatRegistryDate(list.snapshotDate)}
+                </p>
+              </>
             ) : (
               <p class="text-muted-foreground text-sm">Rejestr leków nie jest jeszcze wczytany</p>
             )}
