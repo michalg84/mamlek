@@ -183,10 +183,10 @@ None. The first scheduled run after merge behaves like today's manual import.
 #### Automated
 
 - [x] 2.1 `/ci-check` passes
-- [ ] 2.2 `gh workflow view registry-import.yml` on the branch lists the schedule trigger
+- [x] 2.2 `gh workflow view registry-import.yml` on the branch lists the schedule trigger
 
 #### Manual
 
-- [ ] 2.3 After merge, a manual run succeeds and production `/szukaj` shows today's state date
+- [x] 2.3 After merge, a manual run succeeds and production `/szukaj` shows today's state date
 - [ ] 2.4 The next morning, a `schedule` run of the workflow succeeded
-- [ ] 2.5 GitHub notification settings send email for failed workflows to the author
+- [x] 2.5 GitHub notification settings send email for failed workflows to the author
