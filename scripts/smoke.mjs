@@ -71,6 +71,22 @@ const PACKAGES = "/api/registry/packages";
 const KIT = "/api/kit";
 // Filled by the pack lookup step, used by the later kit steps: the medicine name and its first pack.
 const kit = { name: "", packageId: 0 };
+const email2 = `smoke-${Date.now()}-b@example.com`;
+const jar2 = new Map();
+
+function escapeHtml(text) {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+// The page shows the name of the pack's own product, which may differ from the list's representative in case only.
+function pageShowsMedicine(body) {
+  return kit.name !== "" && body.toLowerCase().includes(escapeHtml(kit.name).toLowerCase());
+}
 
 function parsePackages(body) {
   try {
@@ -178,6 +194,26 @@ const steps = [
     "kit add rejects unknown package",
     () => request(KIT, { method: "POST", json: { packageId: 999999999999 } }),
     { status: 400 },
+  ],
+  [
+    "kit page lists the added medicine",
+    () => request("/apteczka"),
+    { status: 200, check: (actual) => actual.body.includes("nieznane") && pageShowsMedicine(actual.body) },
+  ],
+  [
+    "second signup creates account",
+    () => request("/api/auth/signup", { method: "POST", form: { email: email2, password }, jar: jar2 }),
+    { status: 302, location: "/auth/confirm-email" },
+  ],
+  [
+    "second signin accepts correct password",
+    () => request("/api/auth/signin", { method: "POST", form: { email: email2, password }, jar: jar2 }),
+    { status: 302, location: "/" },
+  ],
+  [
+    "kit page hides the medicine from another account",
+    () => request("/apteczka", { jar: jar2 }),
+    { status: 200, check: (actual) => !pageShowsMedicine(actual.body) },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],

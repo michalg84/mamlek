@@ -299,24 +299,24 @@ New table and function only; no existing data touched. Production migrations rea
 
 #### Automated
 
-- [x] 2.1 Type check, lint and build pass
-- [x] 2.2 Smoke passes against the local production build with fixtures imported
+- [x] 2.1 Type check, lint and build pass — f069e0c
+- [x] 2.2 Smoke passes against the local production build with fixtures imported — f069e0c
 
 #### Manual
 
-- [x] 2.3 `POST /api/kit` with `quantity` above the pack's count returns 400 for a single-unit pack (e.g. via browser devtools fetch while signed in)
+- [x] 2.3 `POST /api/kit` with `quantity` above the pack's count returns 400 for a single-unit pack (e.g. via browser devtools fetch while signed in) — f069e0c
 
 ### Phase 3: Kit page and add form
 
 #### Automated
 
-- [ ] 3.1 Hardcoded-value scan is clean
-- [ ] 3.2 Type check, lint and build pass
-- [ ] 3.3 Smoke still passes
+- [x] 3.1 Hardcoded-value scan is clean
+- [x] 3.2 Type check, lint and build pass
+- [x] 3.3 Smoke still passes
 
 #### Manual
 
-- [ ] 3.4 At http://localhost:4321/apteczka: add a medicine with quantity and expiry, then the same pack again without them — confirmation, duplicate notice, „12 z 30 …”, „03/2027” and „nieznane” render correctly
-- [ ] 3.5 Pack auto-selected for a single-pack medicine; holder shown when packs come from several products
-- [ ] 3.6 At 390 px width no horizontal scroll; keyboard-only flow works with visible focus
-- [ ] 3.7 Second account at http://localhost:4321/apteczka sees an empty kit
+- [x] 3.4 At http://localhost:4321/apteczka: add a medicine with quantity and expiry, then the same pack again without them — confirmation, duplicate notice, „12 z 30 …”, „03/2027” and „nieznane” render correctly
+- [x] 3.5 Pack auto-selected for a single-pack medicine; holder shown when packs come from several products
+- [x] 3.6 At 390 px width no horizontal scroll; keyboard-only flow works with visible focus
+- [x] 3.7 Second account at http://localhost:4321/apteczka sees an empty kit
