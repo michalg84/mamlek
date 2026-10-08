@@ -4,6 +4,9 @@ import type { RegistryPackageUnit } from "@/types";
 
 const UNKNOWN = "nieznane";
 
+/** Upper bound for a quantity when the pack gives no cap; keeps it far below the Postgres `integer` limit. */
+export const MAX_QUANTITY = 100000;
+
 function present(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   if (!trimmed) {

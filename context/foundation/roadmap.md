@@ -255,6 +255,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Tryb offline** — Why parked: PRD §Non-Goals.
 - **Układ na duży ekran** — Why parked: PRD §Non-Goals — MVP na przeglądarkę mobilną.
 - **Build na Androida** — Why parked: PRD §Non-Goals.
+- **Zapis apteczki tylko przez aplikację (twarda granica w bazie)** — Why parked: opcjonalne zadanie po MVP; dziś limit ilości, zakres daty i regułę „opakowanie nie jest wycofane" sprawdza tylko API, więc zalogowany użytkownik mógłby własnym tokenem zapisać nieprawidłowe wartości we własnej apteczce (cudze dane są chronione RLS). Opcje: odebrać roli `authenticated` INSERT/UPDATE/DELETE na `kit_items` i pisać przez funkcję w bazie albo klucz serwisowy; albo dołożyć CHECK-i w bazie. Źródło: impl-review `add-medicine-to-kit`, F2.
 
 ## Milestone History
 

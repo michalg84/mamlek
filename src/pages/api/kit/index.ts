@@ -1,14 +1,14 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import { createClient } from "@/lib/supabase";
-import { expiryToDate, packQuantity } from "@/lib/kit-format";
+import { expiryToDate, MAX_QUANTITY, packQuantity } from "@/lib/kit-format";
 import { addKitItem, getPackage } from "@/lib/services/kit";
 import type { AddKitItemResponse } from "@/types";
 
 const addRequest = z
   .object({
     packageId: z.number().int().positive(),
-    quantity: z.number().int().min(0).nullable().optional(),
+    quantity: z.number().int().min(0).max(MAX_QUANTITY).nullable().optional(),
     expiry: z
       .object({ month: z.number().int().min(1).max(12), year: z.number().int().min(2000).max(2100) })
       .strict()
@@ -31,6 +31,10 @@ export const POST: APIRoute = async (context) => {
   }
   if (!context.locals.user) {
     return json({ error: "Unauthorized" }, 401);
+  }
+
+  if (!context.request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return json({ error: "Content-Type must be application/json" }, 415);
   }
 
   let body: unknown;

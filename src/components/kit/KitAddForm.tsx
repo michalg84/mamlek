@@ -1,4 +1,4 @@
-import { useId, useState, type SubmitEvent, type ReactNode } from "react";
+import { useEffect, useId, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { packLabel, packQuantity } from "@/lib/kit-format";
+import { MAX_QUANTITY, packLabel, packQuantity } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 import type { AddKitItemRequest, AddKitItemResponse, RegistryVariant, RegistryVariantPackage } from "@/types";
 
@@ -52,6 +52,19 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Coming back with the Back button can restore this page from the bfcache with the button still disabled.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setSaving(false);
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
   const packGroupId = useId();
   const quantityId = useId();
   const quantityErrorId = useId();
@@ -78,8 +91,8 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
       const value = Number(trimmed);
       if (!Number.isInteger(value) || value < 0) {
         errors.quantity = "Podaj liczbę całkowitą, 0 lub większą";
-      } else if (max !== null && value > max) {
-        errors.quantity = `Ilość nie może być większa niż ${max}`;
+      } else if (value > (max ?? MAX_QUANTITY)) {
+        errors.quantity = `Ilość nie może być większa niż ${max ?? MAX_QUANTITY}`;
       } else {
         parsedQuantity = value;
       }
@@ -116,9 +129,10 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
         body: JSON.stringify(body),
       });
       if (response.status === 201) {
-        const { id } = (await response.json()) as AddKitItemResponse;
+        // The item exists now: always leave the form, even when the body is unreadable, so a retry cannot add it twice.
+        const created = (await response.json().catch(() => null)) as AddKitItemResponse | null;
         // Stays in the saving state while the browser navigates, so the item cannot be added twice.
-        window.location.assign(`/apteczka?dodano=${id}`);
+        window.location.assign(created ? `/apteczka?dodano=${created.id}` : "/apteczka");
         return;
       }
       if (response.status === 401) {
@@ -237,7 +251,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
                 type="number"
                 inputMode="numeric"
                 min={0}
-                max={max ?? undefined}
+                max={max ?? MAX_QUANTITY}
                 value={quantity}
                 onChange={(event) => {
                   setQuantity(event.target.value);
