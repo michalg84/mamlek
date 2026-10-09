@@ -1,10 +1,10 @@
 ---
 change_id: daily-registry-refresh
 title: Daily registry refresh
-status: planned
+status: archived
 created: 2026-10-07
-updated: 2026-10-07
-archived_at: null
+updated: 2026-10-09
+archived_at: 2026-10-09T12:01:21Z
 ---
 
 ## Notes
