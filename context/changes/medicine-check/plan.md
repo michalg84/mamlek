@@ -505,12 +505,12 @@ Endpoint, typy, hook i komponent wyniku. Nowe tokeny `success` / `warning`. `/sz
 
 #### Automated
 
-- [x] 3.1 Type check, lint i skan UI przechodzą
-- [x] 3.2 Build przechodzi
-- [x] 3.3 Smoke przechodzi
-- [x] 3.4 Brak odniesień do /dashboard i Welcome w src
+- [x] 3.1 Type check, lint i skan UI przechodzą — 6ceb587
+- [x] 3.2 Build przechodzi — 6ceb587
+- [x] 3.3 Smoke przechodzi — 6ceb587
+- [x] 3.4 Brak odniesień do /dashboard i Welcome w src — 6ceb587
 
 #### Manual
 
-- [x] 3.5 Wejście na / prowadzi na logowanie lub /szukaj
-- [x] 3.6 Wylogowanie kończy się na ekranie logowania
+- [x] 3.5 Wejście na / prowadzi na logowanie lub /szukaj — 6ceb587
+- [x] 3.6 Wylogowanie kończy się na ekranie logowania — 6ceb587
