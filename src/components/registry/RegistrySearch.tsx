@@ -47,7 +47,14 @@ export default function RegistrySearch({ version }: Props) {
 
   return (
     <div className="min-w-0 space-y-6">
-      <MedicineSuggest version={version} onSelect={setSelected} />
+      {/* Editing the text drops the pick: the card and the verdict must never sit under a different name. */}
+      <MedicineSuggest
+        version={version}
+        onSelect={setSelected}
+        onEdit={() => {
+          setSelected(null);
+        }}
+      />
       {/* Only the name is announced; the card itself is read when the user moves to it. The verdict is announced by
           MedicineCheckResult once the check answers. */}
       <p role="status" aria-live="polite" className="sr-only">

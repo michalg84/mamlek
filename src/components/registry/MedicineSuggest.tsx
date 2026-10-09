@@ -11,6 +11,8 @@ interface MedicineSuggestProps {
   /** Version of the search list as rendered by the server; addresses the HTTP cache entry of the list. */
   version: number;
   onSelect: (variant: RegistryVariant) => void;
+  /** Called when the user edits the text, so a previous pick no longer matches what the field shows. */
+  onEdit?: () => void;
   label?: string;
 }
 
@@ -21,7 +23,7 @@ function countText(count: number) {
   return `${count} ${count === 1 ? "podpowiedź" : "podpowiedzi"}`;
 }
 
-export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: MedicineSuggestProps) {
+export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku" }: MedicineSuggestProps) {
   const [query, setQuery] = useState("");
   const { status, results, total, resultsQuery, retry } = useRegistrySearch(version, query);
   const [open, setOpen] = useState(false);
@@ -58,6 +60,7 @@ export function MedicineSuggest({ version, onSelect, label = "Nazwa leku" }: Med
     setQuery(event.target.value);
     setOpen(true);
     setActiveIndex(-1);
+    onEdit?.();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {

@@ -108,8 +108,8 @@ async function pickFirst(page, baseUrl) {
   await page.locator('[aria-label="Wybrany lek"]').waitFor({ timeout: STATE_TIMEOUT_MS });
 }
 
-// The visible verdict block (the live regions are `p.sr-only`).
-const VERDICT = 'div[role="status"]';
+// The visible verdict block (the live regions, e.g. MedicineSuggest's `div.sr-only`, are excluded).
+const VERDICT = 'div[role="status"]:not(.sr-only)';
 
 // Fixed answers of GET /api/kit/check for the result states; the searched medicine is whatever was picked.
 const SEARCHED = {
@@ -244,6 +244,21 @@ const STATES = [
     reach: async (page, baseUrl) => {
       await pickFirst(page, baseUrl);
       await page.locator(VERDICT).first().waitFor({ timeout: STATE_TIMEOUT_MS });
+    },
+  },
+  {
+    name: "edited-after-pick",
+    // Editing the text after a pick must drop the card and the verdict (they would sit under a different name).
+    route: async (context) => {
+      await context.route(CHECK_URL, (route) => route.fulfill({ json: CHECK_ANSWERS.same }));
+    },
+    reach: async (page, baseUrl) => {
+      await pickFirst(page, baseUrl);
+      await page.locator(VERDICT).first().waitFor({ timeout: STATE_TIMEOUT_MS });
+      await page.locator(INPUT).fill("");
+      await typeQuery(page, "paracetamol");
+      await page.locator('[aria-label="Wybrany lek"]').waitFor({ state: "detached", timeout: STATE_TIMEOUT_MS });
+      if ((await page.locator(VERDICT).count()) > 0) throw new StateError("The verdict stayed after editing the text");
     },
   },
   checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek"),
