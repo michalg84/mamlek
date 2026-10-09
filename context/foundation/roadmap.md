@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-08
+updated: 2026-10-09
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -48,7 +48,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
 | S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
 | S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | planning |
+| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | done     |
 | S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
 | S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
 
@@ -183,7 +183,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Gdzie i jak autor dostaje sygnał o nieudanym odświeżeniu (rejestr ryzyk w `infrastructure.md`: import może przestać działać po cichu). — Owner: autor. Block: no.
 - **Risk:** Zadanie w tle działa bez nadzoru poza aplikacją (per tech-stack.md), a `infrastructure.md` opisuje scenariusz, w którym wyłączony harmonogram niezauważenie postarza rejestr — dlatego data aktualizacji jest częścią tego wycinka, a nie dodatkiem. Niezależny od reszty, więc może iść równolegle od zaraz po F-01.
-- **Status:** planning
+- **Status:** done
 
 ### S-08: Ostrzeżenie o kończącej się dacie ważności
 
@@ -264,4 +264,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **F-01: (foundation) kopia Rejestru Produktów Leczniczych — produkty z nazwą, nazwą powszechnie stosowaną, mocą, postacią i listą substancji czynnych — jest wczytana do bazy importem, który można uruchomić ponownie bez ręcznego sprzątania, a podmiana danych jest atomowa.** — Archived 2026-10-01 → `context/archive/2026-10-01-registry-copy-load/`. Lesson: —.
 - **S-01: użytkownik po zalogowaniu wpisuje pierwsze litery i widzi podpowiedzi z rejestru — nazwa produktu razem z mocą i postacią — z pierwszeństwem nazwy produktu przed nazwą powszechnie stosowaną i substancjami czynnymi.** — Archived 2026-10-02 → `context/archive/2026-10-02-registry-search-suggestions/`. Lesson: —.
 - **S-09: na słabym telefonie użytkownik może zacząć wyszukiwać lek na `/szukaj` bez długiego czekania na wczytanie listy, a wpisywanie nazwy nie zacina się — także wtedy, gdy zacznie pisać, zanim lista się wczyta.** — Archived 2026-10-07 → `context/archive/2026-10-06-registry-search-performance/`. Lesson: —.
-- **S-02: użytkownik dodaje do apteczki domu lek wskazany z podpowiedzi rejestru, opcjonalnie z datą ważności i pozostałą ilością, a brak którejś z nich widzi wprost jako „nieznane"; apteczka jest widoczna wyłącznie po zalogowaniu na konto domu.** — Archived 2026-10-08 → `context/archive/2026-10-07-add-medicine-to-kit/`. Lesson: —.
+- **S-07: użytkownik widzi w aplikacji datę ostatniej aktualizacji rejestru, a rejestr odświeża się sam codziennie; nieudane odświeżenie jest zgłaszane autorowi, zamiast przejść po cichu.** — Archived 2026-10-09 → `context/archive/2026-10-07-daily-registry-refresh/`. Lesson: —.

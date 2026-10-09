@@ -14,7 +14,7 @@ Roadmap slice S-07: the production registry refreshes itself every day, the user
 
 ## Desired End State
 
-- Production imports run daily at 04:17 UTC from `main`, and can still be started by hand.
+- Production imports are scheduled daily at 04:17 UTC from `main` (GitHub starts them late: observed ~11:20 UTC on 2026-10-08 and 2026-10-09), and can still be started by hand.
 - `/szukaj`, with a loaded list, shows a discreet muted line `Stan rejestru na 7.10.2026` (RPL `stanNaDzien`, format `d.MM.yyyy`).
 - A failed scheduled run sends the author GitHub's standard failed-workflow email.
 - README and AGENTS.md describe the daily schedule.
@@ -123,7 +123,7 @@ Run the production import daily from `main` and update the docs that say it is m
 #### Manual Verification:
 
 - After merge to `main`, a manual run (`gh workflow run registry-import.yml --ref main`) succeeds, and `/szukaj` in production shows today's state date
-- The next morning, `gh run list --workflow registry-import.yml` shows a run with event `schedule` that succeeded
+- Within a day of the merge (GitHub starts scheduled runs hours after 04:17 UTC; observed ~11:20 UTC), `gh run list --workflow registry-import.yml` shows a run with event `schedule` that succeeded
 - GitHub notification settings (Settings → Notifications → Actions) send email for failed workflows, and you are the user who last changed the cron line
 
 **Implementation Note**: The schedule only fires from `main`, so the manual checks of this phase happen after the PR is merged.
@@ -183,10 +183,10 @@ None. The first scheduled run after merge behaves like today's manual import.
 #### Automated
 
 - [x] 2.1 `/ci-check` passes
-- [ ] 2.2 `gh workflow view registry-import.yml` on the branch lists the schedule trigger
+- [x] 2.2 `gh workflow view registry-import.yml` on the branch lists the schedule trigger
 
 #### Manual
 
-- [ ] 2.3 After merge, a manual run succeeds and production `/szukaj` shows today's state date
-- [ ] 2.4 The next morning, a `schedule` run of the workflow succeeded
-- [ ] 2.5 GitHub notification settings send email for failed workflows to the author
+- [x] 2.3 After merge, a manual run succeeds and production `/szukaj` shows today's state date
+- [x] 2.4 Within a day of the merge, a `schedule` run of the workflow succeeded — runs 37769510168 (2026-10-08 11:21 UTC), 37922993073 (2026-10-09 11:19 UTC)
+- [x] 2.5 GitHub notification settings send email for failed workflows to the author
