@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Light tokens: context/changes/search-view-tokens/palette.md */
+/* Light tokens: context/archive/2026-10-07-search-view-tokens/palette.md */
 :root {
   --radius: 0.625rem;
   --background: oklch(0.985 0.004 197);

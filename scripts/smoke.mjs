@@ -132,8 +132,7 @@ async function requestPacksOfFirstVariant() {
 }
 
 const steps = [
-  ["home renders", () => request("/"), { status: 200 }],
-  ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
   ["search page redirects anonymous user", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],
   ["search list rejects anonymous user", () => request(SEARCH_LIST), { status: 401 }],
   [
@@ -149,9 +148,9 @@ const steps = [
   [
     "signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/szukaj" },
   ],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["home redirects signed-in user", () => request("/"), { status: 302, location: "/szukaj" }],
   [
     "search page renders for signed-in user",
     () => request("/szukaj"),
@@ -237,7 +236,7 @@ const steps = [
   [
     "second signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email: email2, password }, jar: jar2 }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/szukaj" },
   ],
   [
     "kit page hides the medicine from another account",
@@ -256,7 +255,7 @@ const steps = [
     },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
-  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["search page redirects after signout", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],
 ];
 
 let failed = 0;

@@ -488,29 +488,29 @@ Endpoint, typy, hook i komponent wyniku. Nowe tokeny `success` / `warning`. `/sz
 
 #### Automated
 
-- [x] 2.1 Type check przechodzi
-- [x] 2.2 Lint i skan UI przechodzą
-- [x] 2.3 Build przechodzi
-- [x] 2.4 Smoke przechodzi na lokalnej bazie z fixture'ami
-- [x] 2.5 Zrzuty stanów powstają bez błędu
+- [x] 2.1 Type check przechodzi — 4e5da56
+- [x] 2.2 Lint i skan UI przechodzą — 4e5da56
+- [x] 2.3 Build przechodzi — 4e5da56
+- [x] 2.4 Smoke przechodzi na lokalnej bazie z fixture'ami — 4e5da56
+- [x] 2.5 Zrzuty stanów powstają bez błędu — 4e5da56
 
 #### Manual
 
-- [x] 2.6 Trzy werdykty, sekcje, zastrzeżenie i sortowanie na /szukaj
-- [x] 2.7 Czytelność w 390 px i w trybie ciemnym
-- [x] 2.8 Brak odczuwalnego opóźnienia i regresji ładowania listy
-- [x] 2.9 Czytnik ekranu ogłasza werdykt
+- [x] 2.6 Trzy werdykty, sekcje, zastrzeżenie i sortowanie na /szukaj — 4e5da56
+- [x] 2.7 Czytelność w 390 px i w trybie ciemnym — 4e5da56
+- [x] 2.8 Brak odczuwalnego opóźnienia i regresji ładowania listy — 4e5da56
+- [x] 2.9 Czytnik ekranu ogłasza werdykt — 4e5da56
 
 ### Phase 3: Strona startowa i przekierowania
 
 #### Automated
 
-- [ ] 3.1 Type check, lint i skan UI przechodzą
-- [ ] 3.2 Build przechodzi
-- [ ] 3.3 Smoke przechodzi
-- [ ] 3.4 Brak odniesień do /dashboard i Welcome w src
+- [x] 3.1 Type check, lint i skan UI przechodzą
+- [x] 3.2 Build przechodzi
+- [x] 3.3 Smoke przechodzi
+- [x] 3.4 Brak odniesień do /dashboard i Welcome w src
 
 #### Manual
 
-- [ ] 3.5 Wejście na / prowadzi na logowanie lub /szukaj
-- [ ] 3.6 Wylogowanie kończy się na ekranie logowania
+- [x] 3.5 Wejście na / prowadzi na logowanie lub /szukaj
+- [x] 3.6 Wylogowanie kończy się na ekranie logowania

@@ -14,7 +14,7 @@ Setup, scripts, CI and deployment: see @README.md.
 
 ## UI
 
-- **Tokens**: the design tokens are the `:root` values in `src/styles/global.css` (theme: light clinical teal; the values are recorded in `context/changes/search-view-tokens/palette.md` until that change is archived). Change a colour there, not in a view.
+- **Tokens**: the design tokens are the `:root` values in `src/styles/global.css` (theme: light clinical teal; the palette is recorded in `context/archive/2026-10-07-search-view-tokens/palette.md`), including `success` / `warning` (with `-foreground`) for the medicine-check verdicts. Change a colour there, not in a view.
 - **Role classes only**: in views use `bg-background`, `bg-card`, `text-muted-foreground`, `text-destructive`, `ring-ring` and the other role classes. Never palette classes (`text-blue-100`, `bg-slate-900`), colour functions (`rgb()`, `oklch()`, hex) or `bg-cosmic`.
 - **Components**: check `src/components/ui/` before writing a control; add missing ones with `npx shadcn@latest add <name>`. Style links/buttons in `.astro` files with `buttonVariants`.
 - **Guards**: `npm run ui:scan` checks the cleaned views for literal values (add a view to its list when its change cleans it); `npm run ui:shots` captures the `/szukaj` states.
@@ -26,7 +26,7 @@ Setup, scripts, CI and deployment: see @README.md.
 - `src/middleware.ts` — runs on every request, resolves the current user, attaches to `context.locals.user`. Redirects unauthenticated users away from routes listed in `PROTECTED_ROUTES`.
 - API endpoints: `src/pages/api/auth/{signin,signup,signout}.ts`
 - Auth pages: `src/pages/auth/{signin,signup,confirm-email}.astro`
-- Protected page example: `src/pages/dashboard.astro`
+- Protected page example: `src/pages/szukaj.astro`
 
 ## Command tripwires
 
