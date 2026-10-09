@@ -21,6 +21,8 @@ const GUARDED = [
   "src/components/Topbar.astro",
   "src/components/registry/RegistrySearch.tsx",
   "src/components/registry/MedicineSuggest.tsx",
+  "src/pages/apteczka.astro",
+  "src/components/kit/KitAddForm.tsx",
 ];
 
 const PATTERN = new RegExp(
