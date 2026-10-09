@@ -80,6 +80,46 @@ export interface AddKitItemResponse {
   id: number;
 }
 
+/** A kit item matching the checked medicine, as returned by `GET /api/kit/check`. */
+export interface MedicineCheckItem {
+  id: number;
+  packageId: number;
+  /** "variant": the same medicine (name, strength, form); "substance": the same active composition. */
+  match: "variant" | "substance";
+  /** Which set matched a "substance" item ("common_name" wins when both do); null for "variant" items. */
+  matchedBy: "common_name" | "substances" | null;
+  name: string;
+  strength: string | null;
+  form: string | null;
+  holder: string | null;
+  commonName: string | null;
+  /** Raw active substance names in registry position order (possibly empty). */
+  substances: string[];
+  units: RegistryPackageUnit[];
+  quantity: number | null;
+  /** ISO date (YYYY-MM-DD); for month precision the last day of the month. */
+  expiresOn: string | null;
+  expiryPrecision: "month" | "day" | null;
+  /** The pack or its product has disappeared from the registry. */
+  withdrawn: boolean;
+  createdAt: string;
+}
+
+/** Body of a successful `GET /api/kit/check` (200). Items: variant matches first, then nearest expiry, newest first. */
+export interface MedicineCheckResponse {
+  searched: {
+    id: number;
+    name: string;
+    strength: string | null;
+    form: string | null;
+    commonName: string | null;
+    substances: string[];
+  };
+  /** The searched medicine has a usable common name or substance set, so "substance" matches were possible. */
+  comparable: boolean;
+  items: MedicineCheckItem[];
+}
+
 /** Page -> search worker: the raw list bytes (transferred, not copied), then queries. */
 export type RegistrySearchWorkerRequest =
   { type: "load"; buffer: ArrayBuffer } | { type: "search"; id: number; query: string };

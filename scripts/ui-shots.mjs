@@ -19,6 +19,7 @@ const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const INPUT = 'input[role="combobox"]';
 const OPTION = '[role="option"]';
 const LIST_URL = "**/api/registry/search-list*";
+const CHECK_URL = "**/api/kit/check**";
 const READY_MARK = "mamlek:search-list-ready";
 const LOADING_TEXT = "Wczytywanie listy leków…";
 const WIDTHS = [
@@ -99,6 +100,90 @@ async function openSuggestions(page, baseUrl) {
   await page.locator(OPTION).first().waitFor({ timeout: STATE_TIMEOUT_MS });
 }
 
+// Picks the first suggestion of "ibu", which starts the medicine check.
+async function pickFirst(page, baseUrl) {
+  await openSuggestions(page, baseUrl);
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await page.locator('[aria-label="Wybrany lek"]').waitFor({ timeout: STATE_TIMEOUT_MS });
+}
+
+// The visible verdict block (the live regions are `p.sr-only`).
+const VERDICT = 'div[role="status"]';
+
+// Fixed answers of GET /api/kit/check for the result states; the searched medicine is whatever was picked.
+const SEARCHED = {
+  id: 1,
+  name: "Ibuprom",
+  strength: "400 mg",
+  form: "Tabletki powlekane",
+  commonName: "Ibuprofenum",
+  substances: ["Ibuprofenum"],
+};
+const UNIT = { count: "12", kind: "tabl.", capacity: null, capacity_unit: null, info: null };
+
+function checkItem(overrides) {
+  return {
+    id: 1,
+    packageId: 1,
+    match: "variant",
+    matchedBy: null,
+    name: "Ibuprom",
+    strength: "400 mg",
+    form: "Tabletki powlekane",
+    holder: "US Pharmacia Sp. z o.o.",
+    commonName: "Ibuprofenum",
+    substances: ["Ibuprofenum"],
+    units: [UNIT],
+    quantity: 3,
+    expiresOn: "2026-03-31",
+    expiryPrecision: "month",
+    withdrawn: false,
+    createdAt: "2026-09-01T10:00:00Z",
+    ...overrides,
+  };
+}
+
+const NUROFEN = checkItem({
+  id: 3,
+  packageId: 3,
+  match: "substance",
+  matchedBy: "common_name",
+  name: "Nurofen",
+  holder: "Reckitt Benckiser",
+  units: [{ ...UNIT, count: "24" }],
+  quantity: 20,
+  expiresOn: "2027-11-30",
+});
+
+const CHECK_ANSWERS = {
+  have: {
+    searched: SEARCHED,
+    comparable: true,
+    items: [checkItem({}), checkItem({ id: 2, quantity: null, expiresOn: "2027-08-31", withdrawn: true }), NUROFEN],
+  },
+  same: { searched: SEARCHED, comparable: true, items: [NUROFEN] },
+  none: { searched: SEARCHED, comparable: true, items: [] },
+  noneUncomparable: {
+    searched: { ...SEARCHED, name: "Sinupret", strength: null, commonName: "Preparat złożony", substances: [] },
+    comparable: false,
+    items: [],
+  },
+};
+
+function checkState(name, answer, waitText) {
+  return {
+    name,
+    route: async (context) => {
+      await context.route(CHECK_URL, (route) => route.fulfill({ json: answer }));
+    },
+    reach: async (page, baseUrl) => {
+      await pickFirst(page, baseUrl);
+      await page.locator(VERDICT).filter({ hasText: waitText }).waitFor({ timeout: STATE_TIMEOUT_MS });
+    },
+  };
+}
+
 // Each state: `route` runs on the new context before any navigation, `reach` drives the page into the state.
 const STATES = [
   {
@@ -155,11 +240,35 @@ const STATES = [
   },
   {
     name: "result",
+    // The real check of the throwaway account's empty kit.
     reach: async (page, baseUrl) => {
-      await openSuggestions(page, baseUrl);
-      await page.keyboard.press("ArrowDown");
-      await page.keyboard.press("Enter");
-      await page.locator('[aria-label="Wybrany lek"]').waitFor({ timeout: STATE_TIMEOUT_MS });
+      await pickFirst(page, baseUrl);
+      await page.locator(VERDICT).first().waitFor({ timeout: STATE_TIMEOUT_MS });
+    },
+  },
+  checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek"),
+  checkState("check-same", CHECK_ANSWERS.same, "Masz lek z tą samą substancją czynną"),
+  checkState("check-none", CHECK_ANSWERS.none, "Nie masz tego leku"),
+  checkState("check-none-uncomparable", CHECK_ANSWERS.noneUncomparable, "Nie masz tego leku"),
+  {
+    name: "check-error",
+    route: async (context) => {
+      await context.route(CHECK_URL, (route) => route.fulfill({ status: 500, json: { error: "Failed" } }));
+    },
+    reach: async (page, baseUrl) => {
+      await pickFirst(page, baseUrl);
+      await page.getByRole("button", { name: "Spróbuj ponownie" }).waitFor({ timeout: STATE_TIMEOUT_MS });
+    },
+  },
+  {
+    name: "check-loading",
+    // The check is never answered, so the result stays in the loading state.
+    route: async (context) => {
+      await context.route(CHECK_URL, () => undefined);
+    },
+    reach: async (page, baseUrl) => {
+      await pickFirst(page, baseUrl);
+      await page.getByText("Sprawdzam apteczkę…").waitFor({ timeout: STATE_TIMEOUT_MS });
     },
   },
   {

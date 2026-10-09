@@ -474,32 +474,32 @@ Endpoint, typy, hook i komponent wyniku. Nowe tokeny `success` / `warning`. `/sz
 
 #### Automated
 
-- [x] 1.1 Migracja aplikuje się na czystej bazie
-- [x] 1.2 Skrypt reguły przechodzi lokalnie
-- [x] 1.3 Import i jego sprawdzenie nadal przechodzą
-- [x] 1.4 Lint przechodzi
+- [x] 1.1 Migracja aplikuje się na czystej bazie — 6a60ade
+- [x] 1.2 Skrypt reguły przechodzi lokalnie — 6a60ade
+- [x] 1.3 Import i jego sprawdzenie nadal przechodzą — 6a60ade
+- [x] 1.4 Lint przechodzi — 6a60ade
 
 #### Manual
 
-- [x] 1.5 Werdykty RPC dla par z researchu na pełnym rejestrze
-- [x] 1.6 Czas wywołania RPC na pełnym rejestrze pomijalny
+- [x] 1.5 Werdykty RPC dla par z researchu na pełnym rejestrze — 6a60ade
+- [x] 1.6 Czas wywołania RPC na pełnym rejestrze pomijalny — 6a60ade
 
 ### Phase 2: Wynik sprawdzenia na /szukaj
 
 #### Automated
 
-- [ ] 2.1 Type check przechodzi
-- [ ] 2.2 Lint i skan UI przechodzą
-- [ ] 2.3 Build przechodzi
-- [ ] 2.4 Smoke przechodzi na lokalnej bazie z fixture'ami
-- [ ] 2.5 Zrzuty stanów powstają bez błędu
+- [x] 2.1 Type check przechodzi
+- [x] 2.2 Lint i skan UI przechodzą
+- [x] 2.3 Build przechodzi
+- [x] 2.4 Smoke przechodzi na lokalnej bazie z fixture'ami
+- [x] 2.5 Zrzuty stanów powstają bez błędu
 
 #### Manual
 
-- [ ] 2.6 Trzy werdykty, sekcje, zastrzeżenie i sortowanie na /szukaj
-- [ ] 2.7 Czytelność w 390 px i w trybie ciemnym
-- [ ] 2.8 Brak odczuwalnego opóźnienia i regresji ładowania listy
-- [ ] 2.9 Czytnik ekranu ogłasza werdykt
+- [x] 2.6 Trzy werdykty, sekcje, zastrzeżenie i sortowanie na /szukaj
+- [x] 2.7 Czytelność w 390 px i w trybie ciemnym
+- [x] 2.8 Brak odczuwalnego opóźnienia i regresji ładowania listy
+- [x] 2.9 Czytnik ekranu ogłasza werdykt
 
 ### Phase 3: Strona startowa i przekierowania
 

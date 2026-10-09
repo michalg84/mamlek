@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
+import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import type { RegistryVariant } from "@/types";
 
@@ -40,15 +41,24 @@ function VariantCard({ variant }: { variant: RegistryVariant }) {
 
 export default function RegistrySearch({ version }: Props) {
   const [selected, setSelected] = useState<RegistryVariant | null>(null);
+  // Full data of the checked medicine (e.g. the full strength); until the check answers the card shows the suggestion.
+  const [searched, setSearched] = useState<RegistryVariant | null>(null);
+  const shown = selected && searched?.id === selected.id ? searched : selected;
 
   return (
     <div className="min-w-0 space-y-6">
       <MedicineSuggest version={version} onSelect={setSelected} />
-      {/* Only the name is announced; the card itself is read when the user moves to it. */}
+      {/* Only the name is announced; the card itself is read when the user moves to it. The verdict is announced by
+          MedicineCheckResult once the check answers. */}
       <p role="status" aria-live="polite" className="sr-only">
         {selected ? `Wybrano: ${selected.name}` : ""}
       </p>
-      {selected && <VariantCard variant={selected} />}
+      {selected && shown && (
+        <div className="min-w-0 space-y-4">
+          <VariantCard variant={shown} />
+          <MedicineCheckResult key={selected.id} productId={selected.id} onSearched={setSearched} />
+        </div>
+      )}
     </div>
   );
 }

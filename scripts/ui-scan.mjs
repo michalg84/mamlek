@@ -23,6 +23,7 @@ const GUARDED = [
   "src/components/registry/MedicineSuggest.tsx",
   "src/pages/apteczka.astro",
   "src/components/kit/KitAddForm.tsx",
+  "src/components/registry/MedicineCheckResult.tsx",
 ];
 
 const PATTERN = new RegExp(
