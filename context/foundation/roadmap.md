@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-09
+updated: 2026-10-10
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -39,18 +39,18 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status      |
-| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | ----------- |
-| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done        |
-| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done        |
-| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done        |
-| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | in-progress |
-| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed    |
-| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed    |
-| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed    |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | done        |
-| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed    |
-| S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done        |
+| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status   |
+| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
+| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done     |
+| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done     |
+| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
+| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | done     |
+| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
+| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
+| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
+| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | done     |
+| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
+| S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
 
 ## Streams
 
@@ -131,7 +131,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Jak porównywane są leki złożone, zanim dojdzie wybór poziomu dopasowania (S-06) — domyślnie precyzyjny, zgodnie z bezpiecznikiem „fałszywe wskazanie gorsze niż brak odpowiedzi”; patrz Open Roadmap Question 4. — Owner: autor. Block: no.
 - **Risk:** Tu po raz pierwszy wychodzi na jaw najbardziej ryzykowne założenie produktu — czyli to, bez którego produkt traci sens: że porównanie po substancji czynnej na danych rejestru daje poprawną i czytelną odpowiedź. Wycinek obejmuje jedną akcję (sprawdzenie jednego leku); wybór poziomu dopasowania jest wydzielony do S-06, żeby gwiazda przewodnia była jak najmniejsza.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-04: Import apteczki z CSV z ekranem zatwierdzenia
 
@@ -267,3 +267,4 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-01: użytkownik po zalogowaniu wpisuje pierwsze litery i widzi podpowiedzi z rejestru — nazwa produktu razem z mocą i postacią — z pierwszeństwem nazwy produktu przed nazwą powszechnie stosowaną i substancjami czynnymi.** — Archived 2026-10-02 → `context/archive/2026-10-02-registry-search-suggestions/`. Lesson: —.
 - **S-09: na słabym telefonie użytkownik może zacząć wyszukiwać lek na `/szukaj` bez długiego czekania na wczytanie listy, a wpisywanie nazwy nie zacina się — także wtedy, gdy zacznie pisać, zanim lista się wczyta.** — Archived 2026-10-07 → `context/archive/2026-10-06-registry-search-performance/`. Lesson: —.
 - **S-07: użytkownik widzi w aplikacji datę ostatniej aktualizacji rejestru, a rejestr odświeża się sam codziennie; nieudane odświeżenie jest zgłaszane autorowi, zamiast przejść po cichu.** — Archived 2026-10-09 → `context/archive/2026-10-07-daily-registry-refresh/`. Lesson: —.
+- **S-03: użytkownik wpisuje nazwę jednego leku, wybiera pozycję z podpowiedzi i widzi jedną z odpowiedzi — masz ten lek / masz lek z tą samą substancją czynną / nie masz — z substancjami czynnymi, mocą, postacią, ilością i datą ważności po obu stronach porównania oraz zastrzeżeniem o konsultacji z farmaceutą lub lekarzem przy wyniku z tą samą substancją.** — Archived 2026-10-10 → `context/archive/2026-10-09-medicine-check/`. Lesson: —.
