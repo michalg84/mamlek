@@ -154,7 +154,8 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Prerequisites:** S-02
 - **Parallel with:** S-03, S-04, S-06, S-07
 - **Blockers:** —
-- **Unknowns:** —
+- **Unknowns:**
+  - Lista apteczki nie oznacza przeterminowanych opakowań, a wynik sprawdzenia (S-03) już tak — użyć `isExpired` z `src/lib/kit-format.ts`, żeby to samo opakowanie wyglądało tak samo w obu widokach. Źródło: impl-review `medicine-check`, F10. — Owner: autor. Block: no.
 - **Risk:** Nie jest na ścieżce do pierwszego sprawdzenia, więc stoi za S-03 i S-04; bez niego jednak pomyłek z importu i zużytych opakowań nie da się poprawić, a wynik sprawdzenia z czasem przestaje odpowiadać szufladzie.
 - **Status:** proposed
 
@@ -195,6 +196,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:**
   - Ile dni przed końcem ważności aplikacja ostrzega — patrz Open Roadmap Question 3. — Owner: autor. Block: no.
+  - Co mówi werdykt „Masz ten lek”, gdy wszystkie pasujące opakowania są przeterminowane — dziś (S-03) jest zielony, a „przeterminowany” widać tylko w wierszu pozycji i nie słyszy go czytnik ekranu; przypadek mieszany (część opakowań po terminie) też do rozstrzygnięcia. Źródło: impl-review `medicine-check`, F4. — Owner: autor. Block: no.
 - **Risk:** Wymaganie „miłe do posiadania” i drugorzędne kryterium sukcesu — stoi na końcu i przy braku czasu jako pierwsze przechodzi do kolejnego kamienia milowego; korzysta tylko z danych, które S-02–S-05 już zapisują.
 - **Status:** proposed
 

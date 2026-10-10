@@ -108,8 +108,8 @@ async function pickFirst(page, baseUrl) {
   await page.locator('[aria-label="Wybrany lek"]').waitFor({ timeout: STATE_TIMEOUT_MS });
 }
 
-// The visible verdict block (the live regions, e.g. MedicineSuggest's `div.sr-only`, are excluded).
-const VERDICT = 'div[role="status"]:not(.sr-only)';
+// The visible verdict block (the sr-only live region next to it announces the same text).
+const VERDICT = "[data-verdict]";
 
 // Fixed answers of GET /api/kit/check for the result states; the searched medicine is whatever was picked.
 const SEARCHED = {

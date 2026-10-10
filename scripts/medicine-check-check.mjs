@@ -1,16 +1,32 @@
 // Medicine check rule check: verifies public.medicine_check() (same medicine / same active substance / no match,
 // research decisions D1–D3) on synthetic registry rows, users and kit items. Everything is inserted in one
 // transaction that is always rolled back, so nothing is left behind and the result does not depend on the registry
-// contents (any migrated database works). Used by the CI smoke job.
+// contents (any migrated database works). Used by the CI smoke job. Local databases only. Exit 1 = a check failed,
+// 2 = no or non-local DATABASE_URL.
 //
 //   DATABASE_URL=postgresql://... node scripts/medicine-check-check.mjs
 
+import { URL } from "node:url";
 import pg from "pg";
+
+// Local databases only: the rows are rolled back, but the inserts would still fire triggers and take locks elsewhere.
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
   console.error("Medicine check check failed: DATABASE_URL is not set");
-  process.exit(1);
+  process.exit(2);
+}
+let host;
+try {
+  host = new URL(databaseUrl).hostname;
+} catch {
+  console.error("Medicine check check failed: DATABASE_URL is not a valid URL");
+  process.exit(2);
+}
+if (!LOCAL_HOSTS.has(host)) {
+  console.error(`Medicine check check failed: DATABASE_URL must point to a local database (got host ${host})`);
+  process.exit(2);
 }
 
 // Synthetic ids start far above the fixtures (and the real registry). Package id = product id + 1000.
@@ -29,6 +45,12 @@ const P = {
   herbalB: 9_000_000_012, // only substance "Preparat złożony", generic common name
   homeoA: 9_000_000_013, // no substances, generic common name
   homeoB: 9_000_000_014, // no substances, same generic common name
+  vitaminA: 9_000_000_015, // common name "Preparat witaminowy" (generic by prefix, not on the list)
+  vitaminB: 9_000_000_016, // same common name, different substances
+  comboAB: 9_000_000_017, // two-part common name
+  comboBA: 9_000_000_018, // the same parts in the other order, different substances
+  monoA: 9_000_000_019, // one of the two parts only
+  afronisParallel: 9_000_000_020, // same variant key as Afronis (strength NULL on both sides)
 };
 const pkg = (productId) => productId + 1000;
 const SORTIS_REMOVED_PACKAGE = 9_000_002_001; // withdrawn package of the active Sortis product
@@ -74,6 +96,28 @@ const PRODUCTS = [
   [P.herbalB, "Herbal B", null, "krople", "Produkt ziołowy", false, ["Preparat złożony"]],
   [P.homeoA, "Homeo A", null, "granulki", "Homeopatyczny produkt leczniczy", false, []],
   [P.homeoB, "Homeo B", null, "krople", "Homeopatyczny produkt leczniczy", false, []],
+  [P.vitaminA, "Vitamin A", null, "proszek", "Preparat witaminowy", false, ["Acidum ascorbicum"]],
+  [P.vitaminB, "Vitamin B", null, "proszek", "Preparat witaminowy", false, ["Acidum folicum"]],
+  [
+    P.comboAB,
+    "Combo AB",
+    "5 mg + 80 mg",
+    "tabletki",
+    "Amlodipinum + Valsartanum",
+    false,
+    ["Amlodipini besilas", "Valsartanum"],
+  ],
+  [
+    P.comboBA,
+    "Combo BA",
+    "5 mg + 80 mg",
+    "tabletki",
+    "valsartanum  +  AMLODIPINUM",
+    false,
+    ["Amlodipini maleas", "Valsartanum"],
+  ],
+  [P.monoA, "Mono A", "5 mg", "tabletki", "Amlodipinum", false, ["Amlodipinum"]],
+  [P.afronisParallel, "AFRONIS", null, "Tabletki do ssania", "Preparat złożony", false, ["Mentholum"]],
 ];
 
 // One synthetic account per case, so every case sees exactly its own kit.
@@ -92,6 +136,10 @@ const KIT = [
   ["herbalB", user(8), pkg(P.herbalB), null, null],
   ["otherMedicine", user(9), pkg(P.atoris), null, null],
   ["homeoB", user(10), pkg(P.homeoB), null, null],
+  ["vitaminB", user(14), pkg(P.vitaminB), null, null],
+  ["comboBA", user(15), pkg(P.comboBA), null, null],
+  ["comboAB", user(16), pkg(P.comboAB), null, null],
+  ["afronisParallel", user(17), pkg(P.afronisParallel), null, null],
   // user(11) has an empty kit; user(1) owns a variant match of Sortis.
   ["orderNoDate", user(13), pkg(P.sortis), null, null],
   ["orderLater", user(13), pkg(P.sortis), "2030-12-31", "day"],
@@ -221,8 +269,32 @@ const checks = [
   [
     'only substance "Preparat złożony" and a generic common name',
     () => checkAs(user(8), P.herbalA),
-    (v) => v !== null && same(v.items, []),
-    "no items",
+    (v) => v?.comparable === false && same(v.items, []),
+    "comparable: false, no items",
+  ],
+  [
+    'common name "Preparat witaminowy" (generic by prefix), different substances',
+    () => checkAs(user(14), P.vitaminA),
+    (v) => v?.comparable === true && same(v.items, []),
+    "comparable, no items",
+  ],
+  [
+    "two-part common name in another order and letter case",
+    () => checkAs(user(15), P.comboAB),
+    (v) => same(summary(v), [[ids.comboBA, "substance", "common_name", false]]),
+    "substance by common_name",
+  ],
+  [
+    "one part of a two-part common name is not a match",
+    () => checkAs(user(16), P.monoA),
+    (v) => v?.comparable === true && same(v.items, []),
+    "comparable, no items",
+  ],
+  [
+    "same variant key with no strength on both sides",
+    () => checkAs(user(17), P.afronis),
+    (v) => same(summary(v), [[ids.afronisParallel, "variant", null, false]]),
+    "variant",
   ],
   ["other medicine", () => checkAs(user(9), P.metafen), (v) => v !== null && same(v.items, []), "no items"],
   [

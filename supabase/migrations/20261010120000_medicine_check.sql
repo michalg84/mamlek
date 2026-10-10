@@ -31,7 +31,9 @@ comment on function public.medicine_check_normalize(text) is
   'Normalizes a registry name for set comparison: trim, lowercase, whitespace collapsed to one space. NULL stays NULL.';
 
 -- Placeholders the registry uses instead of a real common name or substance (measured on the
--- 2026-09-23 export; the list is not exhaustive).
+-- 2026-09-23 export; the list is not exhaustive). Any value starting with "produkt " or
+-- "preparat " is a class word as well (e.g. "Preparat witaminowy", "Produkt odżywczy"): real
+-- common names and substances are Latin and never start that way, and the registry changes daily.
 create function public.medicine_check_is_generic(p_value text)
 returns boolean
 language sql
@@ -47,13 +49,14 @@ as $$
       'preparat ziołowy',
       'produkt ziołowy',
       'produkt homeopatyczny'
-    ]),
+    ])
+    or public.medicine_check_normalize(p_value) ~ '^(produkt|preparat) ',
     false
   )
 $$;
 
 comment on function public.medicine_check_is_generic(text) is
-  'True when the normalized value is a generic registry placeholder (e.g. "Preparat złożony") that must never produce a match.';
+  'True when the normalized value is a generic registry placeholder (a listed one, or any value starting with "produkt " or "preparat ") that must never produce a match.';
 
 create function public.medicine_check_common_name_set(p_common_name text)
 returns text[]

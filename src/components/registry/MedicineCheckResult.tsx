@@ -3,7 +3,7 @@ import { CircleAlert, CircleCheck, CircleMinus, Info, LoaderCircle, type LucideI
 import { useMedicineCheck } from "@/components/hooks/useMedicineCheck";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
+import { formatExpiry, formatQuantity, isExpired, packLabel, todayIso } from "@/lib/kit-format";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
@@ -61,12 +61,6 @@ function verdictOf(result: MedicineCheckResponse, variants: MedicineCheckItem[],
   };
 }
 
-/** Today's local date as YYYY-MM-DD, comparable with `expiresOn` as a string. */
-function todayIso() {
-  const now = new Date();
-  return [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((part) => String(part).padStart(2, "0")).join("-");
-}
-
 function Note({ children }: { children: ReactNode }) {
   return <p className="bg-warning text-warning-foreground rounded-md px-3 py-2 text-sm break-words">{children}</p>;
 }
@@ -76,8 +70,7 @@ function ItemList({ items, today }: { items: MedicineCheckItem[]; today: string 
     <ul className="divide-border min-w-0 divide-y rounded-lg border">
       {items.map((item) => {
         const details = [item.strength, item.form].filter(Boolean).join(" · ");
-        // For month precision `expiresOn` is the last day of the month, so the pack is usable through that month.
-        const expired = item.expiresOn !== null && item.expiresOn < today;
+        const expired = isExpired(item.expiresOn, today);
         return (
           <li key={item.id} className="min-w-0 px-3 py-3">
             <p className="text-foreground font-bold break-words">{item.name}</p>
@@ -150,11 +143,14 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
     const Icon = verdict.icon;
     const today = todayIso();
     const main = variants.length > 0 ? variants : same;
-    announcement = [verdict.title, verdict.detail].filter(Boolean).join(". ");
+    // The notes carry the safety caveats, so they are announced together with the verdict.
+    announcement = [verdict.title, verdict.detail, same.length > 0 && CAUTION, !result.comparable && UNCOMPARABLE]
+      .filter(Boolean)
+      .join(". ");
 
     content = (
       <div className="min-w-0 space-y-3">
-        <div role="status" className={cn("flex min-w-0 items-start gap-2 rounded-md px-3 py-2", verdict.className)}>
+        <div data-verdict className={cn("flex min-w-0 items-start gap-2 rounded-md px-3 py-2", verdict.className)}>
           <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           <div className="min-w-0">
             <p className="font-semibold break-words">{verdict.title}</p>

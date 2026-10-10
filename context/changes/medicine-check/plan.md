@@ -466,6 +466,15 @@ Endpoint, typy, hook i komponent wyniku. Nowe tokeny `success` / `warning`. `/sz
 - Wzorce: `src/pages/api/registry/packages.ts`, `src/components/hooks/useVariantPackages.ts`, `scripts/registry-import-check.mjs`, `src/pages/apteczka.astro:91-106`
 - PRD: `context/foundation/prd.md:84-90,165-170`; roadmapa: `context/foundation/roadmap.md:123-134`
 
+## Addenda
+
+Zmiany poza kontraktem faz, dopisane po implementacji (impl-review 2026-10-10).
+
+- **Czyszczenie wyniku po zmianie tekstu (commit `3c974ae`).** `MedicineSuggest` dostał opcjonalny prop `onEdit`, wywoływany przy każdej zmianie tekstu przez użytkownika (wybór podpowiedzi go nie wywołuje). `RegistrySearch` czyści wtedy wybrany lek, więc karta i werdykt znikają, zamiast zostać pod inną wpisaną nazwą. `ui:shots` ma na to stan `edited-after-pick`.
+- **Ogólniki po prefiksie (F1).** `medicine_check_is_generic` uznaje za ogólnik także każdą wartość zaczynającą się od „produkt ” lub „preparat ”, obok listy z kontraktu Fazy 1. Powód: w pełnym rejestrze są NPS spoza listy („Preparat witaminowy”, „Produkt witaminowy”, „Produkt odżywczy”, „Produkt immunostymulujący”), przez które Cernevit i Soluvit N dawały „ta sama substancja” mimo różnych składów. Prefiks trafia w rejestrze wyłącznie w nazwy klas (13 wartości NPS, 2 wartości substancji). Skrypt reguły ma na to osobny przypadek.
+- **Ogłoszenie werdyktu (F2, F6).** Komunikat `sr-only` jest w `MedicineCheckResult`, a nie w `RegistrySearch`, i zawiera też zastrzeżenie oraz uwagę o braku składu. Widoczny blok werdyktu nie ma `role="status"` (ma `data-verdict`), żeby czytnik nie czytał werdyktu dwa razy.
+- **Skrypt reguły tylko lokalnie (F3).** `medicine-check-check.mjs` kończy się kodem 2, gdy `DATABASE_URL` nie wskazuje lokalnej bazy.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

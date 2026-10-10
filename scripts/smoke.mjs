@@ -249,8 +249,9 @@ const steps = [
     {
       status: 200,
       check: (actual) => {
+        // The second account's kit is empty, so nothing at all may come back.
         const items = parseCheckItems(actual.body);
-        return items !== null && !items.some((item) => item.packageId === kit.packageId);
+        return items !== null && items.length === 0;
       },
     },
   ],

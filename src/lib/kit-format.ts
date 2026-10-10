@@ -67,6 +67,20 @@ export function formatExpiry(expiresOn: string | null, precision: "month" | "day
   return precision === "day" ? `${day}.${month}.${year}` : `${month}/${year}`;
 }
 
+/** Today's local date as YYYY-MM-DD, comparable with `expiresOn` as a string. */
+export function todayIso(): string {
+  const now = new Date();
+  return `${String(now.getFullYear()).padStart(4, "0")}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+}
+
+/**
+ * True when the pack is past its expiry date. For month precision `expiresOn` is the last day of the month,
+ * so the pack is usable through that month. An unknown date is never expired.
+ */
+export function isExpired(expiresOn: string | null, today: string): boolean {
+  return expiresOn !== null && expiresOn < today;
+}
+
 /** Display of a remaining quantity: "12 z 30 sasz.", "12" (no known cap) or "nieznane". */
 export function formatQuantity(quantity: number | null, units: RegistryPackageUnit[]): string {
   if (quantity === null) {

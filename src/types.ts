@@ -107,14 +107,8 @@ export interface MedicineCheckItem {
 
 /** Body of a successful `GET /api/kit/check` (200). Items: variant matches first, then nearest expiry, newest first. */
 export interface MedicineCheckResponse {
-  searched: {
-    id: number;
-    name: string;
-    strength: string | null;
-    form: string | null;
-    commonName: string | null;
-    substances: string[];
-  };
+  /** The checked medicine with its full (untruncated) strength. */
+  searched: RegistryVariant;
   /** The searched medicine has a usable common name or substance set, so "substance" matches were possible. */
   comparable: boolean;
   items: MedicineCheckItem[];
