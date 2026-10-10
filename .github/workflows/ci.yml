@@ -52,6 +52,7 @@ jobs:
           npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml
           npm run registry:import -- --file scripts/fixtures/rpl-sample-v2.xml
           node scripts/registry-import-check.mjs
+          node scripts/medicine-check-check.mjs
       - name: Configure secrets for build and preview
         run: |
           source supabase.env

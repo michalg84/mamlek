@@ -11,7 +11,7 @@ Planned MVP:
 
 The full requirements are in [`context/foundation/prd.md`](context/foundation/prd.md) (in Polish), and the stack decision is in [`context/foundation/tech-stack.md`](context/foundation/tech-stack.md).
 
-**Status:** early development. The app is currently the bootstrapped scaffold (Supabase auth, a protected `/dashboard`) and none of the product features exist yet.
+**Status:** early development. Working so far: registry search (`/szukaj`, the entry page after sign-in), the household cabinet (`/apteczka`, adding a package from the registry) and the medicine check against the cabinet on `/szukaj`. The CSV import is not built yet.
 
 ## Tech stack
 

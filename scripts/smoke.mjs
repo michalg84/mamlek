@@ -69,8 +69,9 @@ async function requestVersionedSearchList(offset = 0) {
 
 const PACKAGES = "/api/registry/packages";
 const KIT = "/api/kit";
-// Filled by the pack lookup step, used by the later kit steps: the medicine name and its first pack.
-const kit = { name: "", packageId: 0 };
+const CHECK = "/api/kit/check";
+// Filled by the pack lookup step, used by the later kit steps: the medicine (variant id and name) and its first pack.
+const kit = { productId: 0, name: "", packageId: 0 };
 const email2 = `smoke-${Date.now()}-b@example.com`;
 const jar2 = new Map();
 
@@ -97,6 +98,15 @@ function parsePackages(body) {
   }
 }
 
+function parseCheckItems(body) {
+  try {
+    const { items } = JSON.parse(body);
+    return Array.isArray(items) ? items : null;
+  } catch {
+    return null;
+  }
+}
+
 // Walks the search list for the first variant that has packs and remembers its name and first pack.
 // When none has, the last response is returned as is, so the step fails with that status.
 async function requestPacksOfFirstVariant() {
@@ -112,6 +122,7 @@ async function requestPacksOfFirstVariant() {
     last = await request(`${PACKAGES}?product=${id}`);
     const [first] = parsePackages(last.body);
     if (last.status === 200 && first) {
+      kit.productId = id;
       kit.name = name;
       kit.packageId = first.packageId;
       return last;
@@ -121,8 +132,7 @@ async function requestPacksOfFirstVariant() {
 }
 
 const steps = [
-  ["home renders", () => request("/"), { status: 200 }],
-  ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["home redirects anonymous user", () => request("/"), { status: 302, location: "/auth/signin" }],
   ["search page redirects anonymous user", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],
   ["search list rejects anonymous user", () => request(SEARCH_LIST), { status: 401 }],
   [
@@ -138,9 +148,9 @@ const steps = [
   [
     "signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/szukaj" },
   ],
-  ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["home redirects signed-in user", () => request("/"), { status: 302, location: "/szukaj" }],
   [
     "search page renders for signed-in user",
     () => request("/szukaj"),
@@ -179,6 +189,9 @@ const steps = [
     { status: 401 },
   ],
   ["packs lookup rejects invalid product", () => request(`${PACKAGES}?product=abc`), { status: 400 }],
+  ["medicine check rejects anonymous user", () => request(`${CHECK}?product=1`, { jar: new Map() }), { status: 401 }],
+  ["medicine check rejects invalid product", () => request(`${CHECK}?product=abc`), { status: 400 }],
+  ["medicine check reports an unknown product", () => request(`${CHECK}?product=999999999999`), { status: 404 }],
   [
     "packs lookup returns packs for a variant",
     () => requestPacksOfFirstVariant(),
@@ -205,6 +218,17 @@ const steps = [
     { status: 200, check: (actual) => actual.body.includes("nieznane") && pageShowsMedicine(actual.body) },
   ],
   [
+    "medicine check finds the added medicine",
+    () => request(`${CHECK}?product=${kit.productId}`),
+    {
+      status: 200,
+      check: (actual) => {
+        const [first] = parseCheckItems(actual.body) ?? [];
+        return first?.match === "variant" && first.packageId === kit.packageId;
+      },
+    },
+  ],
+  [
     "second signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email: email2, password }, jar: jar2 }),
     { status: 302, location: "/auth/confirm-email" },
@@ -212,15 +236,27 @@ const steps = [
   [
     "second signin accepts correct password",
     () => request("/api/auth/signin", { method: "POST", form: { email: email2, password }, jar: jar2 }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/szukaj" },
   ],
   [
     "kit page hides the medicine from another account",
     () => request("/apteczka", { jar: jar2 }),
     { status: 200, check: (actual) => !pageShowsMedicine(actual.body) },
   ],
+  [
+    "medicine check hides the medicine from another account",
+    () => request(`${CHECK}?product=${kit.productId}`, { jar: jar2 }),
+    {
+      status: 200,
+      check: (actual) => {
+        // The second account's kit is empty, so nothing at all may come back.
+        const items = parseCheckItems(actual.body);
+        return items !== null && items.length === 0;
+      },
+    },
+  ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
-  ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  ["search page redirects after signout", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],
 ];
 
 let failed = 0;
