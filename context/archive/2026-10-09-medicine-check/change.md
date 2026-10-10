@@ -1,10 +1,10 @@
 ---
 change_id: medicine-check
 title: Medicine check
-status: impl_reviewed
+status: archived
 created: 2026-10-09
 updated: 2026-10-10
-archived_at: null
+archived_at: 2026-10-10T15:20:14Z
 ---
 
 ## Notes
