@@ -6,7 +6,7 @@
 --   1 registry state, 2 local lower()/NBSP check, 3 suspicious common names, 4 NBSP counts,
 --   5 separator counts, 6 separator samples, 7 whitespace-only variant key pairs, 8 their samples.
 --
--- DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres node -e "const pg=require('pg'),fs=require('fs');const u=process.env.DATABASE_URL||'';if(!/@(127\.0\.0\.1|localhost)[:\/]/.test(u))throw new Error('local DATABASE_URL only');(async()=>{const c=new pg.Client({connectionString:u});await c.connect();try{const r=await c.query('begin read only;'+fs.readFileSync(process.argv[1],'utf8')+';rollback;');for(const x of r)if(x.command==='SELECT')console.log(JSON.stringify(x.rows))}finally{await c.end()}})()" context/changes/testing-check-verdict-correctness/placeholder-measurement.sql
+-- DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres node -e "const pg=require('pg'),fs=require('fs');const u=process.env.DATABASE_URL||'';if(!/@(127\.0\.0\.1|localhost)[:\/]/.test(u))throw new Error('local DATABASE_URL only');(async()=>{const c=new pg.Client({connectionString:u});await c.connect();try{const r=await c.query('begin read only;'+fs.readFileSync(process.argv[1],'utf8')+';rollback;');for(const x of r)if(x.command==='SELECT')console.log(JSON.stringify(x.rows))}finally{await c.end()}})()" context/archive/2026-10-10-testing-check-verdict-correctness/placeholder-measurement.sql
 --
 -- Everything is measured through medicine_check_common_name_set / medicine_check_substance_set, so it counts what
 -- the rule sees. Withdrawn products are included on purpose: a withdrawn pack in the kit is still compared.
