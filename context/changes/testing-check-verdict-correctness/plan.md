@@ -579,25 +579,25 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 6.1 Zapytania wykonują się na pełnym lokalnym rejestrze bez błędu i bez zapisu do bazy
-- [x] 6.2 Plik z wynikiem zawiera cztery liczby i listę podejrzanych nazw
-- [x] 6.3 Testy reguły nadal przechodzą na bazie z pełnym rejestrem: `npm run test:db`
+- [x] 6.1 Zapytania wykonują się na pełnym lokalnym rejestrze bez błędu i bez zapisu do bazy — 49f42a1
+- [x] 6.2 Plik z wynikiem zawiera cztery liczby i listę podejrzanych nazw — 49f42a1
+- [x] 6.3 Testy reguły nadal przechodzą na bazie z pełnym rejestrem: `npm run test:db` — 49f42a1
 
 #### Manual
 
 - [ ] 6.4 Autor przejrzał listę podejrzanych nazw i zapisał decyzję dla każdego potwierdzonego ogólnika (odłożone przez autora 2026-10-13, patrz placeholder-measurement.md)
-- [x] 6.5 Autor zdecydował, czy liczby dla spacji nierozdzielającej, separatorów i odstępów wymagają dalszych kroków
-- [x] 6.6 Autor uruchomił na bazie produkcyjnej zapytanie o małe litery i spację nierozdzielającą, a wynik jest zapisany w pliku pomiaru obok wyniku z bazy lokalnej
+- [x] 6.5 Autor zdecydował, czy liczby dla spacji nierozdzielającej, separatorów i odstępów wymagają dalszych kroków — 49f42a1
+- [x] 6.6 Autor uruchomił na bazie produkcyjnej zapytanie o małe litery i spację nierozdzielającą, a wynik jest zapisany w pliku pomiaru obok wyniku z bazy lokalnej — 49f42a1
 
 ### Phase 7: Stryker i dokumentacja
 
 #### Automated
 
-- [ ] 7.1 Stryker kończy uruchomienie i zapisuje raport: `npm run test:mutation`
-- [ ] 7.2 Testy bez bazy przechodzą po dopisaniu asercji: `npm test`
-- [ ] 7.3 Lint przechodzi: `npm run lint`
-- [ ] 7.4 Typy przechodzą: `npx astro check`
-- [ ] 7.5 Build przechodzi: `npm run build`
+- [ ] 7.1 Stryker kończy uruchomienie i zapisuje raport: `npm run test:mutation` (nie do wykonania: Stryker 10.0.0 nie działa z Vitest 5.0.4, zależności wycofane, powód w test-plan §6.6)
+- [x] 7.2 Testy bez bazy przechodzą po dopisaniu asercji: `npm test`
+- [x] 7.3 Lint przechodzi: `npm run lint`
+- [x] 7.4 Typy przechodzą: `npx astro check`
+- [x] 7.5 Build przechodzi: `npm run build`
 
 #### Manual
 
