@@ -564,16 +564,16 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 5.1 Testy reguły przechodzą na lokalnej bazie po `npx supabase db reset`: `npm run test:db`
-- [x] 5.2 Uruchomienie bez `DATABASE_URL` kończy się błędem, nie pominięciem: `npm run test:db`
-- [x] 5.3 Testy bez bazy nadal przechodzą: `npm test`
-- [x] 5.4 Lint przechodzi: `npm run lint`
-- [x] 5.5 Typy przechodzą: `npx astro check`
-- [x] 5.6 Żadne odwołanie do usuniętego skryptu nie zostało poza `context/`: wyszukiwanie `medicine-check-check` w repozytorium
+- [x] 5.1 Testy reguły przechodzą na lokalnej bazie po `npx supabase db reset`: `npm run test:db` — 9958a01
+- [x] 5.2 Uruchomienie bez `DATABASE_URL` kończy się błędem, nie pominięciem: `npm run test:db` — 9958a01
+- [x] 5.3 Testy bez bazy nadal przechodzą: `npm test` — 9958a01
+- [x] 5.4 Lint przechodzi: `npm run lint` — 9958a01
+- [x] 5.5 Typy przechodzą: `npx astro check` — 9958a01
+- [x] 5.6 Żadne odwołanie do usuniętego skryptu nie zostało poza `context/`: wyszukiwanie `medicine-check-check` w repozytorium — 9958a01
 
 #### Manual
 
-- [ ] 5.7 Po wypchnięciu gałęzi i otwarciu roboczego pull requesta zadanie `smoke` z krokiem `npm run test:db` jest zielone
+- [x] 5.7 Po wypchnięciu gałęzi i otwarciu roboczego pull requesta zadanie `smoke` z krokiem `npm run test:db` jest zielone — 9958a01
 
 ### Phase 6: Pomiar na pełnym rejestrze
 
