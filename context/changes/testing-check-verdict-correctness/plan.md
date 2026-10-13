@@ -556,20 +556,20 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 4.1 Testy komponentu i logiki przechodzą: `npm test`
-- [x] 4.2 Lint przechodzi: `npm run lint`
-- [x] 4.3 Typy przechodzą: `npx astro check`
+- [x] 4.1 Testy komponentu i logiki przechodzą: `npm test` — d789aea
+- [x] 4.2 Lint przechodzi: `npm run lint` — d789aea
+- [x] 4.3 Typy przechodzą: `npx astro check` — d789aea
 
 ### Phase 5: Testy reguły w Vitest
 
 #### Automated
 
-- [ ] 5.1 Testy reguły przechodzą na lokalnej bazie po `npx supabase db reset`: `npm run test:db`
-- [ ] 5.2 Uruchomienie bez `DATABASE_URL` kończy się błędem, nie pominięciem: `npm run test:db`
-- [ ] 5.3 Testy bez bazy nadal przechodzą: `npm test`
-- [ ] 5.4 Lint przechodzi: `npm run lint`
-- [ ] 5.5 Typy przechodzą: `npx astro check`
-- [ ] 5.6 Żadne odwołanie do usuniętego skryptu nie zostało poza `context/`: wyszukiwanie `medicine-check-check` w repozytorium
+- [x] 5.1 Testy reguły przechodzą na lokalnej bazie po `npx supabase db reset`: `npm run test:db`
+- [x] 5.2 Uruchomienie bez `DATABASE_URL` kończy się błędem, nie pominięciem: `npm run test:db`
+- [x] 5.3 Testy bez bazy nadal przechodzą: `npm test`
+- [x] 5.4 Lint przechodzi: `npm run lint`
+- [x] 5.5 Typy przechodzą: `npx astro check`
+- [x] 5.6 Żadne odwołanie do usuniętego skryptu nie zostało poza `context/`: wyszukiwanie `medicine-check-check` w repozytorium
 
 #### Manual
 

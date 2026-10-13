@@ -138,8 +138,8 @@ the relevant rollout phase ships; before that, the sub-section reads
 ### 6.2 Adding a database rule test
 
 - **Existing pattern**: synthetic rows inserted in one transaction that is always rolled back.
-- **Reference test**: `scripts/medicine-check-check.mjs`.
-- **Run locally**: `node scripts/medicine-check-check.mjs` with `DATABASE_URL` set, after `npx supabase db reset`.
+- **Reference test**: `tests/db/medicine-check.test.ts` (fixtures in `tests/db/medicine-check-fixtures.ts`).
+- **Run locally**: `npm run test:db` with `DATABASE_URL` set to the local database, after `npx supabase db reset`.
 - TBD — see §3 Phase 1 for false-negative / false-positive verdict cases and §3 Phase 3 for the two-user isolation pattern.
 
 ### 6.3 Adding a component or hook test
