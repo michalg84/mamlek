@@ -543,22 +543,22 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 3.1 Testy bezpiecznika i werdyktu przechodzą: `npm test`
-- [x] 3.2 Lint przechodzi: `npm run lint`
-- [x] 3.3 Typy przechodzą: `npx astro check`
-- [x] 3.4 Build przechodzi: `npm run build`
+- [x] 3.1 Testy bezpiecznika i werdyktu przechodzą: `npm test` — 0ee8f6c
+- [x] 3.2 Lint przechodzi: `npm run lint` — 0ee8f6c
+- [x] 3.3 Typy przechodzą: `npx astro check` — 0ee8f6c
+- [x] 3.4 Build przechodzi: `npm run build` — 0ee8f6c
 
 #### Manual
 
-- [x] 3.5 Na `http://localhost:4321/szukaj` sprawdzenie leku z apteczki i leku spoza apteczki nadal pokazuje werdykt, a nie błąd
+- [x] 3.5 Na `http://localhost:4321/szukaj` sprawdzenie leku z apteczki i leku spoza apteczki nadal pokazuje werdykt, a nie błąd — 0ee8f6c
 
 ### Phase 4: Test komponentu wyniku
 
 #### Automated
 
-- [ ] 4.1 Testy komponentu i logiki przechodzą: `npm test`
-- [ ] 4.2 Lint przechodzi: `npm run lint`
-- [ ] 4.3 Typy przechodzą: `npx astro check`
+- [x] 4.1 Testy komponentu i logiki przechodzą: `npm test`
+- [x] 4.2 Lint przechodzi: `npm run lint`
+- [x] 4.3 Typy przechodzą: `npx astro check`
 
 ### Phase 5: Testy reguły w Vitest
 
