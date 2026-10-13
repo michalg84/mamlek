@@ -594,10 +594,10 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 #### Automated
 
 - [ ] 7.1 Stryker kończy uruchomienie i zapisuje raport: `npm run test:mutation` (nie do wykonania: Stryker 10.0.0 nie działa z Vitest 5.0.4, zależności wycofane, powód w test-plan §6.6)
-- [x] 7.2 Testy bez bazy przechodzą po dopisaniu asercji: `npm test`
-- [x] 7.3 Lint przechodzi: `npm run lint`
-- [x] 7.4 Typy przechodzą: `npx astro check`
-- [x] 7.5 Build przechodzi: `npm run build`
+- [x] 7.2 Testy bez bazy przechodzą po dopisaniu asercji: `npm test` — 3308c6b
+- [x] 7.3 Lint przechodzi: `npm run lint` — 3308c6b
+- [x] 7.4 Typy przechodzą: `npx astro check` — 3308c6b
+- [x] 7.5 Build przechodzi: `npm run build` — 3308c6b
 
 #### Manual
 
