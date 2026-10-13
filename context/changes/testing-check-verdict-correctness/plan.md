@@ -579,15 +579,15 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [ ] 6.1 Zapytania wykonują się na pełnym lokalnym rejestrze bez błędu i bez zapisu do bazy
-- [ ] 6.2 Plik z wynikiem zawiera cztery liczby i listę podejrzanych nazw
-- [ ] 6.3 Testy reguły nadal przechodzą na bazie z pełnym rejestrem: `npm run test:db`
+- [x] 6.1 Zapytania wykonują się na pełnym lokalnym rejestrze bez błędu i bez zapisu do bazy
+- [x] 6.2 Plik z wynikiem zawiera cztery liczby i listę podejrzanych nazw
+- [x] 6.3 Testy reguły nadal przechodzą na bazie z pełnym rejestrem: `npm run test:db`
 
 #### Manual
 
-- [ ] 6.4 Autor przejrzał listę podejrzanych nazw i zapisał decyzję dla każdego potwierdzonego ogólnika
-- [ ] 6.5 Autor zdecydował, czy liczby dla spacji nierozdzielającej, separatorów i odstępów wymagają dalszych kroków
-- [ ] 6.6 Autor uruchomił na bazie produkcyjnej zapytanie o małe litery i spację nierozdzielającą, a wynik jest zapisany w pliku pomiaru obok wyniku z bazy lokalnej
+- [ ] 6.4 Autor przejrzał listę podejrzanych nazw i zapisał decyzję dla każdego potwierdzonego ogólnika (odłożone przez autora 2026-10-13, patrz placeholder-measurement.md)
+- [x] 6.5 Autor zdecydował, czy liczby dla spacji nierozdzielającej, separatorów i odstępów wymagają dalszych kroków
+- [x] 6.6 Autor uruchomił na bazie produkcyjnej zapytanie o małe litery i spację nierozdzielającą, a wynik jest zapisany w pliku pomiaru obok wyniku z bazy lokalnej
 
 ### Phase 7: Stryker i dokumentacja
 
