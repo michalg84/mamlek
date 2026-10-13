@@ -70,13 +70,13 @@ Each row is a discrete rollout phase that will open its own change folder
 via `/10x-new`. Status moves left-to-right through the values below; the
 orchestrator updates Status as artifacts appear on disk.
 
-| #   | Phase name                      | Goal (one line)                                                                                            | Risks covered | Test types                  | Status        | Change folder                                      |
-| --- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ------------- | -------------------------------------------------- |
-| 1   | Check verdict correctness       | Bootstrap the test runner and prove the verdict the user sees is right, from rule to screen                | #1, #2        | unit + database integration | change opened | context/changes/testing-check-verdict-correctness/ |
-| 2   | Result state and search         | Prove the screen never shows an answer to a different question and suggestions keep their order            | #3, #5        | unit + component            | not started   | —                                                  |
-| 3   | Kit access and input boundaries | Prove kit data is isolated per account and invalid input is rejected cleanly                               | #4, #6        | database + API integration  | not started   | —                                                  |
-| 4   | Quality-gates wiring            | Make the suites from Phases 1–3 required locally and in CI, and add an after-edit hook                     | cross-cutting | gates                       | not started   | —                                                  |
-| 5   | Registry import scripts         | Prove the import and its parser keep every valid product intact or fail loudly, then add them to the gates | #7            | unit + database integration | not started   | —                                                  |
+| #   | Phase name                      | Goal (one line)                                                                                            | Risks covered | Test types                  | Status        | Change folder                                                 |
+| --- | ------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ------------- | ------------------------------------------------------------- |
+| 1   | Check verdict correctness       | Bootstrap the test runner and prove the verdict the user sees is right, from rule to screen                | #1, #2        | unit + database integration | complete      | context/archive/2026-10-10-testing-check-verdict-correctness/ |
+| 2   | Result state and search         | Prove the screen never shows an answer to a different question and suggestions keep their order            | #3, #5        | unit + component            | change opened | context/changes/testing-result-state-and-search/              |
+| 3   | Kit access and input boundaries | Prove kit data is isolated per account and invalid input is rejected cleanly                               | #4, #6        | database + API integration  | not started   | —                                                             |
+| 4   | Quality-gates wiring            | Make the suites from Phases 1–3 required locally and in CI, and add an after-edit hook                     | cross-cutting | gates                       | not started   | —                                                             |
+| 5   | Registry import scripts         | Prove the import and its parser keep every valid product intact or fail loudly, then add them to the gates | #7            | unit + database integration | not started   | —                                                             |
 
 **Status vocabulary** (fixed — parser literals): `not started` → `change opened` → `researched` → `planned` → `implementing` → `complete`.
 
