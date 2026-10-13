@@ -520,24 +520,24 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 1.1 Testy bez bazy uruchamiają się na pustym zestawie: `npm test -- --passWithNoTests`
-- [x] 1.2 Lint przechodzi z nowymi plikami konfiguracji: `npm run lint`
-- [x] 1.3 Typy przechodzą: `npx astro sync && npx astro check`
-- [x] 1.4 Build przechodzi i nie zawiera plików testowych: `npm run build`
+- [x] 1.1 Testy bez bazy uruchamiają się na pustym zestawie: `npm test -- --passWithNoTests` — e9fe0b4
+- [x] 1.2 Lint przechodzi z nowymi plikami konfiguracji: `npm run lint` — e9fe0b4
+- [x] 1.3 Typy przechodzą: `npx astro sync && npx astro check` — e9fe0b4
+- [x] 1.4 Build przechodzi i nie zawiera plików testowych: `npm run build` — e9fe0b4
 
 ### Phase 2: Logika werdyktu w osobnym pliku
 
 #### Automated
 
-- [ ] 2.1 Testy logiki werdyktu przechodzą: `npm test`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
-- [ ] 2.3 Skan widoków przechodzi: `npm run ui:scan`
-- [ ] 2.4 Typy przechodzą: `npx astro check`
-- [ ] 2.5 Build przechodzi: `npm run build`
+- [x] 2.1 Testy logiki werdyktu przechodzą: `npm test`
+- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.3 Skan widoków przechodzi: `npm run ui:scan`
+- [x] 2.4 Typy przechodzą: `npx astro check`
+- [x] 2.5 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 2.6 Na `http://localhost:4321/szukaj` trzy werdykty (lek z apteczki, lek z tą samą substancją, lek spoza apteczki) wyglądają i brzmią jak przed zmianą
+- [x] 2.6 Na `http://localhost:4321/szukaj` trzy werdykty (lek z apteczki, lek z tą samą substancją, lek spoza apteczki) wyglądają i brzmią jak przed zmianą
 
 ### Phase 3: Bezpiecznik odpowiedzi
 
