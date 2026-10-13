@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "vitest run --config vitest.db.config.ts",
     "smoke": "node scripts/smoke.mjs",
     "roadmap:sync": "node scripts/roadmap-sync.mjs",
     "registry:import": "node scripts/registry-import.mjs",
@@ -47,6 +50,9 @@
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/pg": "^8.23.1",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-astro": "^3.1.0",
@@ -55,6 +61,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "9.1.7",
+    "jsdom": "^29.1.1",
     "lint-staged": "^16.3.3",
     "pg": "^8.23.1",
     "playwright": "^1.63.0",
@@ -65,6 +72,7 @@
     "supabase": "^2.23.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.4",
     "wrangler": "^4.142.0"
   },
   "lint-staged": {

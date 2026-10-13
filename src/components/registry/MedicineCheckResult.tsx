@@ -4,6 +4,7 @@ import { useMedicineCheck } from "@/components/hooks/useMedicineCheck";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatExpiry, formatQuantity, isExpired, packLabel, todayIso } from "@/lib/kit-format";
+import { checkVerdict, type CheckVerdict } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
@@ -16,50 +17,11 @@ const CAUTION = "Ten sam skład czynny nie oznacza, że leki można zamieniać. 
 const UNCOMPARABLE =
   "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków z tą samą substancją.";
 
-interface Verdict {
-  icon: LucideIcon;
-  title: string;
-  detail: string | null;
-  className: string;
-}
-
-/** "1 opakowanie", "2 opakowania", "5 opakowań", "22 opakowania", "12 opakowań". */
-function packCount(count: number) {
-  const lastDigit = count % 10;
-  const lastTwo = count % 100;
-  if (count === 1) {
-    return "1 opakowanie";
-  }
-  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) {
-    return `${count} opakowania`;
-  }
-  return `${count} opakowań`;
-}
-
-function verdictOf(result: MedicineCheckResponse, variants: MedicineCheckItem[], same: MedicineCheckItem[]): Verdict {
-  if (variants.length > 0) {
-    return {
-      icon: CircleCheck,
-      title: `Masz ten lek · ${packCount(variants.length)}`,
-      detail: null,
-      className: "bg-success text-success-foreground",
-    };
-  }
-  if (same.length > 0) {
-    return {
-      icon: Info,
-      title: "Masz lek z tą samą substancją czynną",
-      detail: [...new Set(same.map((item) => item.name))].join(", "),
-      className: "bg-warning text-warning-foreground",
-    };
-  }
-  return {
-    icon: CircleMinus,
-    title: "Nie masz tego leku",
-    detail: result.comparable ? "Ani leku z tą samą substancją czynną" : null,
-    className: "bg-muted text-foreground",
-  };
-}
+const VERDICT_STYLE: Record<CheckVerdict["kind"], { icon: LucideIcon; className: string }> = {
+  variant: { icon: CircleCheck, className: "bg-success text-success-foreground" },
+  substance: { icon: Info, className: "bg-warning text-warning-foreground" },
+  none: { icon: CircleMinus, className: "bg-muted text-foreground" },
+};
 
 function Note({ children }: { children: ReactNode }) {
   return <p className="bg-warning text-warning-foreground rounded-md px-3 py-2 text-sm break-words">{children}</p>;
@@ -136,29 +98,27 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
       </div>
     );
   } else {
-    // The RPC already orders the items (variant first, nearest expiry, unknown last, newest first): only split them.
-    const variants = result.items.filter((item) => item.match === "variant");
-    const same = result.items.filter((item) => item.match === "substance");
-    const verdict = verdictOf(result, variants, same);
-    const Icon = verdict.icon;
+    const verdict = checkVerdict(result);
+    const { variants, same } = verdict;
+    const { icon: Icon, className } = VERDICT_STYLE[verdict.kind];
     const today = todayIso();
     const main = variants.length > 0 ? variants : same;
     // The notes carry the safety caveats, so they are announced together with the verdict.
-    announcement = [verdict.title, verdict.detail, same.length > 0 && CAUTION, !result.comparable && UNCOMPARABLE]
+    announcement = [verdict.title, verdict.detail, verdict.caution && CAUTION, verdict.uncomparable && UNCOMPARABLE]
       .filter(Boolean)
       .join(". ");
 
     content = (
       <div className="min-w-0 space-y-3">
-        <div data-verdict className={cn("flex min-w-0 items-start gap-2 rounded-md px-3 py-2", verdict.className)}>
+        <div data-verdict className={cn("flex min-w-0 items-start gap-2 rounded-md px-3 py-2", className)}>
           <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           <div className="min-w-0">
             <p className="font-semibold break-words">{verdict.title}</p>
             {verdict.detail && <p className="text-sm break-words">{verdict.detail}</p>}
           </div>
         </div>
-        {variants.length === 0 && same.length > 0 && <Note>{CAUTION}</Note>}
-        {!result.comparable && <Note>{UNCOMPARABLE}</Note>}
+        {verdict.kind === "substance" && <Note>{CAUTION}</Note>}
+        {verdict.uncomparable && <Note>{UNCOMPARABLE}</Note>}
         {main.length > 0 && (
           <section className="min-w-0 space-y-2" aria-labelledby={mainId}>
             <h3 id={mainId} className="text-muted-foreground text-xs font-medium tracking-wide uppercase">

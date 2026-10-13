@@ -88,22 +88,23 @@ that a deterministic test would not catch more cheaply.
 The classic test base for this project. AI-native tools (if any) carry a
 `checked:` date so future readers can see which lines need re-verification.
 
-| Layer                | Tool                                              | Version | Notes                                                                                                        |
-| -------------------- | ------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
-| unit + component     | none yet — see Phase 1 (Vitest is the hypothesis) | —       | Astro documents Vitest through `getViteConfig()`; version and DOM environment are chosen in Phase 1 research |
-| database integration | Node check scripts + `pg` against local Supabase  | pg 8.x  | Exists: rule and import checks run in the CI `smoke` job in a rolled-back transaction                        |
-| API mocking          | none planned                                      | —       | Integration tests use the real local Supabase; do not mock the Supabase client                               |
-| e2e / flow           | `npm run smoke` (dependency-free)                 | —       | Exists: auth flow and search-list steps against the production preview                                       |
-| browser automation   | Playwright                                        | 1.63    | Installed for `perf` and `ui:shots`; a test layer only if a component test cannot reproduce a risk           |
-| static guards        | ESLint, `astro check`, `ui:scan`                  | —       | Exist and are required in CI                                                                                 |
+| Layer                | Tool                                 | Version                                  | Notes                                                                                                                                                                                                                                 |
+| -------------------- | ------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unit + component     | Vitest + jsdom + Testing Library     | Vitest 5.0, jsdom 29, Testing Library 16 | Plain `vitest.config.ts` with two projects (`unit` node, `component` jsdom); the tested files import no `astro:*` modules, so Astro's `getViteConfig()` (it loads the Cloudflare plugin) is not used. `npm test`; checked: 2026-10-13 |
+| database integration | Vitest + `pg` against local Supabase | pg 8.x                                   | `vitest.db.config.ts`, `npm run test:db`, rows inserted in a rolled-back transaction; runs in the CI `smoke` job (the import check is still a Node script)                                                                            |
+| API mocking          | none planned                         | —                                        | Integration tests use the real local Supabase; do not mock the Supabase client                                                                                                                                                        |
+| e2e / flow           | `npm run smoke` (dependency-free)    | —                                        | Exists: auth flow and search-list steps against the production preview                                                                                                                                                                |
+| browser automation   | Playwright                           | 1.63                                     | Installed for `perf` and `ui:shots`; a test layer only if a component test cannot reproduce a risk                                                                                                                                    |
+| static guards        | ESLint, `astro check`, `ui:scan`     | —                                        | Exist and are required in CI                                                                                                                                                                                                          |
 
 Test-base profile on 2026-10-10: `none` — no test-runner config and no test
-files; the checks above are custom scripts, two of which (`search:check`,
-`perf`) need a full local registry and do not run in CI.
+files; the checks above were custom scripts, two of which (`search:check`,
+`perf`) need a full local registry and do not run in CI. Since 2026-10-13
+(Phase 1) the unit, component and database tests above run on Vitest.
 
 **Stack grounding tools (current session):**
 
-- Docs: Context7 — Astro testing guide checked (Vitest via `getViteConfig()`); checked: 2026-10-10
+- Docs: Context7 — Astro testing guide checked (Vitest via `getViteConfig()`, not needed here: see §4); checked: 2026-10-10
 - Search: Exa.ai — available, not used (no tool-status question needed it); checked: 2026-10-10
 - Runtime/browser: chrome-devtools MCP and Claude in Chrome — available, not used; possible manual verification aid, not a test layer; checked: 2026-10-10
 - Provider/platform: Cloudflare MCP — available, not used; no quality gate depends on it; checked: 2026-10-10
@@ -133,17 +134,26 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.1 Adding a unit test
 
-- TBD — see §3 Phase 1 for the verdict-mapping pattern (a match never becomes "nie masz") and §3 Phase 2 for the search-matching pattern.
+- **Existing pattern (verdict logic)**: a pure function in `src/lib/` that the screen calls, tested with the expected value taken from the PRD rule, not from the function's output; one `it.each` per property ("a match never becomes „nie masz”" over every kind and count of items).
+- **Reference test**: `src/lib/medicine-check-verdict.test.ts` (`checkVerdict`, `parseMedicineCheck`).
+- **Run locally**: `npm test` (no database needed).
+- A guard that rejects an answer the screen cannot show is tested both ways: every valid answer passes unchanged, each broken field is rejected.
+- TBD — see §3 Phase 2 for the search-matching pattern.
 
 ### 6.2 Adding a database rule test
 
 - **Existing pattern**: synthetic rows inserted in one transaction that is always rolled back.
-- **Reference test**: `scripts/medicine-check-check.mjs`.
-- **Run locally**: `node scripts/medicine-check-check.mjs` with `DATABASE_URL` set, after `npx supabase db reset`.
-- TBD — see §3 Phase 1 for false-negative / false-positive verdict cases and §3 Phase 3 for the two-user isolation pattern.
+- **Reference test**: `tests/db/medicine-check.test.ts` (fixtures in `tests/db/medicine-check-fixtures.ts`).
+- **Run locally**: `npm run test:db` with `DATABASE_URL` set to the local database, after `npx supabase db reset`.
+- **Synthetic data**: ids start at 9,000,000,001, a package id is the product id + 1000, every case gets its own account, a savepoint per test; `connectLocal` throws (never skips) without a local `DATABASE_URL`.
+- **Through the screen's code**: every answer of the rule goes through `parseMedicineCheck` and `checkVerdict`, so a field rename or a verdict that turns a match into „nie masz” fails here, not on the screen.
+- **Known limitations** (a different salt with a different common name, a substance written as one string) are pinned by tests whose names say so, not left out.
+- TBD — see §3 Phase 3 for the two-user isolation pattern.
 
 ### 6.3 Adding a component or hook test
 
+- **Existing pattern**: render the real component, replace only `fetch`, assert on the rendered text (texts that are legal wording are pinned as constants; the live region repeats the verdict, so visible text is looked up outside `[role=status]`).
+- **Reference test**: `src/components/registry/MedicineCheckResult.test.tsx`.
 - TBD — see §3 Phase 2 for the stale-verdict pattern (controlled async, assertions on what is rendered).
 
 ### 6.4 Adding a test for a new API endpoint
@@ -157,7 +167,14 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.6 Per-rollout-phase notes
 
-(Empty until a phase lands.)
+**Phase 1 — Check verdict correctness (2026-10-13, change `testing-check-verdict-correctness`)**
+
+- **Delivered**: Vitest runner (`npm test`, `npm run test:db`), `checkVerdict` and `parseMedicineCheck` as tested pure functions, a component test for the check result, the rule script ported to 35 Vitest cases. An unreadable answer now shows an error with a retry instead of „Nie masz tego leku”.
+- **No real rule bug** was found by the 16 new cases; the value is regression protection and the bridge from rule output to screen verdict.
+- **Mutation testing**: Stryker 10.0.0 with `@stryker-mutator/vitest-runner` does not work with Vitest 5.0.4. With `projects` it fails to start (`Converting circular structure to JSON` on `resolvedProjects`); with a flat config it starts, but no mutant is ever killed (0 of 155, also for an obviously broken `return ""`), so the score is meaningless. Dependencies and config were removed. Mutation checks of this phase were done by hand (deliberate breaks of the verdict, the guard and the SQL rule). Retry when Stryker supports Vitest 5.
+- **Measurement on the full registry (2026-10-08 export)**: 309 common names join products with disjoint substance sets, 1 NBSP value, 118 common names with a separator other than „+”, 6 variant key pairs differing only in whitespace. `lower()` and `s` behave the same locally and in production. Details and the author's decisions: `context/changes/testing-check-verdict-correctness/placeholder-measurement.md`.
+- **Decisions**: only trimming leading and trailing spaces of the variant key will change (separate change); the review of the 309 names for real placeholders is deferred.
+- **Learned**: `projects` in `vitest.config.ts` works for the runner but not for Stryker; the substance rule is an OR of common-name set and substance set, so a substance written as one string breaks only the substance path.
 
 ## 7. What We Deliberately Don't Test
 
@@ -171,8 +188,8 @@ contributors should respect these unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-10-10
-- Stack versions last verified: 2026-10-10
+- Strategy (§1–§5) last reviewed: 2026-10-13 (§4 and §6 updated by Phase 1; strategy itself unchanged)
+- Stack versions last verified: 2026-10-13 (Vitest 5.0.4, jsdom 29.1.1, Testing Library 16.3.3, pg 8.x)
 - AI-native tool references last verified: 2026-10-10
 
 Refresh (`/10x-test-plan --refresh`) when:
