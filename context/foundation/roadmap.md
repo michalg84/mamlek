@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-10
+updated: 2026-10-13
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -170,6 +170,8 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Który poziom jest domyślny — patrz Open Roadmap Question 4. — Owner: autor. Block: no.
   - Czy trzy poziomy są czytelne dla kogoś, kto nie myśli kategoriami zbiorów (uwaga Socratesa przy FR-016). — Owner: autor. Block: no.
+  - Czy treść zastrzeżenia o konsultacji z farmaceutą lub lekarzem spełnia wymagania prawne — patrz Open Roadmap Question 6. S-06 zmienia komunikaty przy wyniku, więc to dobry moment na ustalenie ostatecznej treści. — Owner: autor. Block: no.
+  - Czy wynik ma rozróżniać „ta sama substancja czynna” i „ta sama nazwa powszechna” — baza zwraca już pole `matchedBy`, ekran go nie pokazuje. Pomysł autora z 2026-10-13 (plan `testing-check-verdict-correctness`). — Owner: autor. Block: no.
 - **Risk:** Rozszerza regułę z S-03 na leki złożone bez dorabiania wyjątków; wydzielony, bo dla leków jednoskładnikowych wszystkie poziomy dają ten sam wynik, więc pierwsze sprawdzenia w aptece nie muszą na niego czekać.
 - **Status:** proposed
 
@@ -238,6 +240,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 3. **Ile dni przed końcem ważności aplikacja ostrzega?** — okres do ustalenia. Owner: autor. Block: S-08 (nie blokuje planowania).
 4. **Który poziom dopasowania substancji czynnych jest domyślny?** — bezpiecznik „fałszywe wskazanie gorsze niż brak odpowiedzi” przemawia za startem od poziomu precyzyjnego i świadomym rozluźnianiem przez użytkownika. Ryzyko przeciwne: przy pierwszym użyciu aplikacja częściej odpowie „nie masz” i może wyjść na bezużyteczną. Owner: autor. Block: S-03, S-06 (nie blokuje planowania).
 5. **Czy produkty wycofane z obrotu zostają w kopii rejestru i w podpowiedziach?** — rejestr zawiera produkty wycofane (kontrargument przy FR-001); stary lek w szufladzie może być wycofany, a nadal trzeba go rozpoznać przy imporcie. Owner: autor. Block: F-01, S-01, S-04 (nie blokuje planowania).
+6. **Czy zastrzeżenie przy wyniku „ta sama substancja czynna” spełnia wymagania prawne?** — FR-012 wymaga zastrzeżenia o konsultacji z farmaceutą lub lekarzem, ale jego treści nikt nie sprawdził pod kątem prawnym: czy potrzebna jest inna formuła, zastrzeżenie o braku porady medycznej i czy samo wskazanie leku z tą samą substancją nie jest traktowane jako porada albo reklama produktu leczniczego. Tekst na ekranie różni się od sformułowania w PRD; weryfikacja ma wskazać jedną wersję (PRD Open Question 5). Owner: autor. Block: S-06 (nie blokuje planowania).
 
 ## Parked
 

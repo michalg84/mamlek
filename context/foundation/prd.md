@@ -288,3 +288,12 @@ rozstrzygnięta — patrz Open Questions.
    precyzyjnego i świadomym rozluźnianiem przez użytkownika. Ryzyko przeciwne:
    przy pierwszym użyciu aplikacja częściej odpowie „nie masz" i może wyjść
    na bezużyteczną. Owner: autor. Blokuje: nie.
+5. **Czy zastrzeżenie przy wyniku „ta sama substancja czynna" spełnia wymagania
+   prawne?** — FR-012 wymaga zastrzeżenia o konsultacji z farmaceutą lub lekarzem,
+   ale jego treści nikt nie sprawdził pod kątem prawnym. Do sprawdzenia: czy potrzebna
+   jest inna formuła, czy trzeba dodać zastrzeżenie o braku porady medycznej i czy
+   samo wskazanie leku z tą samą substancją nie jest traktowane jako porada albo
+   reklama produktu leczniczego. Tekst na ekranie („Ten sam skład czynny nie oznacza,
+   że leki można zamieniać. Zapytaj farmaceutę lub lekarza.") różni się od
+   sformułowania w Guardrails („decyzję konsultuj z farmaceutą lub lekarzem");
+   weryfikacja ma objąć obie wersje i wskazać jedną. Owner: autor. Blokuje: nie.
