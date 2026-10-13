@@ -529,28 +529,28 @@ Sekcja §3 (status faz) należy do `/10x-test-plan` i zostaje bez zmian.
 
 #### Automated
 
-- [x] 2.1 Testy logiki werdyktu przechodzą: `npm test`
-- [x] 2.2 Lint przechodzi: `npm run lint`
-- [x] 2.3 Skan widoków przechodzi: `npm run ui:scan`
-- [x] 2.4 Typy przechodzą: `npx astro check`
-- [x] 2.5 Build przechodzi: `npm run build`
+- [x] 2.1 Testy logiki werdyktu przechodzą: `npm test` — 54b1b03
+- [x] 2.2 Lint przechodzi: `npm run lint` — 54b1b03
+- [x] 2.3 Skan widoków przechodzi: `npm run ui:scan` — 54b1b03
+- [x] 2.4 Typy przechodzą: `npx astro check` — 54b1b03
+- [x] 2.5 Build przechodzi: `npm run build` — 54b1b03
 
 #### Manual
 
-- [x] 2.6 Na `http://localhost:4321/szukaj` trzy werdykty (lek z apteczki, lek z tą samą substancją, lek spoza apteczki) wyglądają i brzmią jak przed zmianą
+- [x] 2.6 Na `http://localhost:4321/szukaj` trzy werdykty (lek z apteczki, lek z tą samą substancją, lek spoza apteczki) wyglądają i brzmią jak przed zmianą — 54b1b03
 
 ### Phase 3: Bezpiecznik odpowiedzi
 
 #### Automated
 
-- [ ] 3.1 Testy bezpiecznika i werdyktu przechodzą: `npm test`
-- [ ] 3.2 Lint przechodzi: `npm run lint`
-- [ ] 3.3 Typy przechodzą: `npx astro check`
-- [ ] 3.4 Build przechodzi: `npm run build`
+- [x] 3.1 Testy bezpiecznika i werdyktu przechodzą: `npm test`
+- [x] 3.2 Lint przechodzi: `npm run lint`
+- [x] 3.3 Typy przechodzą: `npx astro check`
+- [x] 3.4 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 3.5 Na `http://localhost:4321/szukaj` sprawdzenie leku z apteczki i leku spoza apteczki nadal pokazuje werdykt, a nie błąd
+- [x] 3.5 Na `http://localhost:4321/szukaj` sprawdzenie leku z apteczki i leku spoza apteczki nadal pokazuje werdykt, a nie błąd
 
 ### Phase 4: Test komponentu wyniku
 

@@ -15,6 +15,48 @@ export interface CheckVerdict {
   uncomparable: boolean;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** The fields the selected-medicine card reads without checking. */
+function isSearched(value: unknown) {
+  return (
+    isRecord(value) && typeof value.id === "number" && typeof value.name === "string" && Array.isArray(value.substances)
+  );
+}
+
+/** The fields the item list reads without checking; fields that may be null in a real answer are left alone. */
+function isItem(value: unknown) {
+  return (
+    isRecord(value) &&
+    (value.match === "variant" || value.match === "substance") &&
+    typeof value.id === "number" &&
+    typeof value.name === "string" &&
+    Array.isArray(value.substances) &&
+    Array.isArray(value.units) &&
+    value.units.every(isRecord) &&
+    (value.expiresOn === null || typeof value.expiresOn === "string")
+  );
+}
+
+/**
+ * Checks the body of `GET /api/kit/check` before the screen uses it. Null means the answer is not one the screen can
+ * show: an unknown match type would drop out of both lists and read as "Nie masz tego leku".
+ */
+export function parseMedicineCheck(body: unknown): MedicineCheckResponse | null {
+  if (
+    !isRecord(body) ||
+    !isSearched(body.searched) ||
+    typeof body.comparable !== "boolean" ||
+    !Array.isArray(body.items) ||
+    !body.items.every(isItem)
+  ) {
+    return null;
+  }
+  return body as unknown as MedicineCheckResponse;
+}
+
 /** "1 opakowanie", "2 opakowania", "5 opakowań", "22 opakowania", "12 opakowań". */
 function packCount(count: number) {
   const lastDigit = count % 10;

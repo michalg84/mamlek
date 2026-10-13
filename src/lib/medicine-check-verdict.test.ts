@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkVerdict } from "@/lib/medicine-check-verdict";
+import { checkVerdict, parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 let nextId = 1;
@@ -136,4 +136,54 @@ describe("checkVerdict", () => {
       expect(verdict.caution).toBe(same > 0);
     },
   );
+});
+
+describe("parseMedicineCheck", () => {
+  const sortis = item("variant");
+  const atoris = item("substance");
+  const valid = response([sortis, atoris]);
+
+  it.each([
+    ["an item with an unknown match type", { ...valid, items: [sortis, { ...atoris, match: "ingredient" }] }],
+    ["a body without items", { searched: valid.searched, comparable: true }],
+    ["items that are not a list", { ...valid, items: { 0: sortis } }],
+    ["an item without substances", { ...valid, items: [{ ...sortis, substances: undefined }] }],
+    ["a searched medicine without substances", { ...valid, searched: { ...valid.searched, substances: undefined } }],
+    ["an item whose expiry date is a number", { ...valid, items: [{ ...sortis, expiresOn: 20271231 }] }],
+    ["an item whose pack units are not objects", { ...valid, items: [{ ...sortis, units: ["30 tabl."] }] }],
+    ["a body without the comparable flag", { searched: valid.searched, items: [] }],
+    ["null", null],
+    ["an empty object", {}],
+  ])("rejects %s", (_label, body) => {
+    expect(parseMedicineCheck(body)).toBeNull();
+  });
+
+  it("accepts an answer with no matching items", () => {
+    const body = response([]);
+
+    expect(parseMedicineCheck(body)).toEqual(body);
+  });
+
+  it("returns an answer with both match types unchanged", () => {
+    expect(parseMedicineCheck(valid)).toEqual(valid);
+  });
+
+  it("accepts an item whose optional fields are empty", () => {
+    const bare = item("substance", { strength: null, form: null, commonName: null, quantity: null, holder: null });
+    const body = response([bare]);
+
+    expect(parseMedicineCheck(body)).toEqual(body);
+  });
+
+  it("accepts an item with a pack description and an expiry date", () => {
+    const dated = item("variant", {
+      units: [{ count: "30", kind: "tabl.", capacity: null, capacity_unit: null, info: null }],
+      quantity: 12,
+      expiresOn: "2099-12-31",
+      expiryPrecision: "month",
+    });
+    const body = response([dated]);
+
+    expect(parseMedicineCheck(body)).toEqual(body);
+  });
 });

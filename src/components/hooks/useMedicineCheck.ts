@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckResponse } from "@/types";
 
 export type MedicineCheckStatus = "loading" | "ready" | "unauthorized" | "error";
@@ -13,7 +14,7 @@ interface Loaded {
 /**
  * Checks the picked medicine against the kit (`GET /api/kit/check`). Changing `productId` aborts the previous request
  * and starts a new one; until it answers the status is "loading". 401 means the session is gone; anything else that
- * goes wrong (404 included) is a generic error with retry.
+ * goes wrong (404 and an answer the screen cannot read included) is a generic error with retry.
  */
 export function useMedicineCheck(productId: number) {
   const [attempt, setAttempt] = useState(0);
@@ -40,7 +41,12 @@ export function useMedicineCheck(productId: number) {
           finish("error");
           return;
         }
-        finish("ready", (await response.json()) as MedicineCheckResponse);
+        const result = parseMedicineCheck(await response.json());
+        if (!result) {
+          finish("error");
+          return;
+        }
+        finish("ready", result);
       } catch {
         // Aborted on unmount or product change (ignored in `finish`), network failure or an unreadable body.
         finish("error");
