@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-13
+updated: 2026-10-16
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -51,6 +51,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | done     |
 | S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
 | S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
+| S-10 | kit-add-form-reset-on-edit  | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku         | S-02          | FR-003                               | proposed |
 
 ## Streams
 
@@ -63,6 +64,7 @@ Pomoc w nawigacji — grupuje pozycje, które dzielą łańcuch Prerequisites. W
 | C      | Utrzymanie apteczki | `S-05` → `S-08`                            | Dołącza do Stream A przy `S-02`; `S-08` czeka dodatkowo na `S-03`.                            |
 | D      | Świeżość rejestru   | `S-07`                                     | Dołącza do Stream A przy `F-01`; niezależny od reszty, dobry kandydat na równoległy przebieg. |
 | E      | Wydajność           | `S-09`                                     | Dołącza do Stream A przy `S-01`; usprawnia komponent podpowiedzi używany przez S-02–S-04.     |
+| F      | Poprawki            | `S-10`                                     | Dołącza do Stream A przy `S-02`; mała, niezależna poprawka defektu znalezionego w testach.    |
 
 ## Baseline
 
@@ -143,6 +145,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Blockers:** —
 - **Unknowns:**
   - Jak proponować rekordy rejestru dla nazw z CSV, nie zgadując leku — bezpiecznik PRD wymaga pytania zamiast strzelania przy braku pewnego wskazania. — Owner: autor. Block: no.
+  - Czy wyszukiwanie zmieści się w progu wydajności, jeśli import doda pracy liście lub workerowi — zapas na profilu Slow 4G + CPU 6x to tylko ok. 350 ms (4651 ms wobec celu 5 s, najgorszy przebieg 5652 ms); po zmianach w liście lub workerze uruchomić `npm run perf`. Źródło: S-09. — Owner: autor. Block: no.
 - **Risk:** Bez masowego wejścia próg startu zabija aplikację w pierwszym tygodniu (Wizja), więc idzie zaraz obok S-03; ekran zatwierdzenia jest granicą odpowiedzialności z FR-009 — żaden wiersz nie może zostać pominięty po cichu.
 - **Status:** proposed
 
@@ -156,6 +159,8 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Blockers:** —
 - **Unknowns:**
   - Lista apteczki nie oznacza przeterminowanych opakowań, a wynik sprawdzenia (S-03) już tak — użyć `isExpired` z `src/lib/kit-format.ts`, żeby to samo opakowanie wyglądało tak samo w obu widokach. Źródło: impl-review `medicine-check`, F10. — Owner: autor. Block: no.
+  - Czy lista apteczki potrzebuje limitu lub stronicowania — `listKitItems` (`src/lib/services/kit.ts`) nie ma limitu ani górnej granicy wierszy na konto; apteczki domowe są małe, a użytkownik spowalnia tylko własną stronę. Źródło: impl-review `add-medicine-to-kit`, F4. — Owner: autor. Block: no.
+  - `kit_items.updated_at` nie ma triggera aktualizacji — dziś wartość jest poprawna, bo nie ma edycji, ale S-05 ją dodaje, więc kolumna przestanie odpowiadać ostatniej zmianie. Źródło: impl-review `add-medicine-to-kit`, F6. — Owner: autor. Block: no.
 - **Risk:** Nie jest na ścieżce do pierwszego sprawdzenia, więc stoi za S-03 i S-04; bez niego jednak pomyłek z importu i zużytych opakowań nie da się poprawić, a wynik sprawdzenia z czasem przestaje odpowiadać szufladzie.
 - **Status:** proposed
 
@@ -172,6 +177,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
   - Czy trzy poziomy są czytelne dla kogoś, kto nie myśli kategoriami zbiorów (uwaga Socratesa przy FR-016). — Owner: autor. Block: no.
   - Czy treść zastrzeżenia o konsultacji z farmaceutą lub lekarzem spełnia wymagania prawne — patrz Open Roadmap Question 6. S-06 zmienia komunikaty przy wyniku, więc to dobry moment na ustalenie ostatecznej treści. — Owner: autor. Block: no.
   - Czy wynik ma rozróżniać „ta sama substancja czynna” i „ta sama nazwa powszechna” — baza zwraca już pole `matchedBy`, ekran go nie pokazuje. Pomysł autora z 2026-10-13 (plan `testing-check-verdict-correctness`). — Owner: autor. Block: no.
+  - Czy czytnik ekranu ogłasza werdykt raz i w całości — po zmianach z S-03 (widoczny blok bez `role="status"`, komunikat `sr-only` w `MedicineCheckResult`) nie sprawdzono tego prawdziwym czytnikiem. S-06 zmienia komunikaty przy wyniku, więc to dobry moment na ręczne sprawdzenie. Źródło: impl-review `medicine-check`, F2/F6. — Owner: autor. Block: no.
 - **Risk:** Rozszerza regułę z S-03 na leki złożone bez dorabiania wyjątków; wydzielony, bo dla leków jednoskładnikowych wszystkie poziomy dają ten sam wynik, więc pierwsze sprawdzenia w aptece nie muszą na niego czekać.
 - **Status:** proposed
 
@@ -218,6 +224,18 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Risk:** Komponent podpowiedzi obsłuży S-02, S-03 i S-04, więc jego opóźnienia przejdą na trzy ekrany; zmiany w hooku i indeksie muszą zachować regułę dopasowania z S-01 (brak testów jednostkowych — dlatego najpierw skrypt pomiarowy, a reguła sprawdzana na przykładach z planu S-01).
 - **Status:** done
 
+### S-10: Formularz dodawania zapomina wybór po zmianie nazwy
+
+- **Outcome:** gdy użytkownik zmieni wpisaną nazwę w formularzu dodawania na `/apteczka`, formularz opakowania poprzednio wybranego leku znika i nie da się dodać leku, którego nie ma już w polu — do apteczki trafia tylko lek wybrany z podpowiedzi dla bieżącego tekstu.
+- **Change ID:** kit-add-form-reset-on-edit
+- **PRD refs:** FR-003
+- **Prerequisites:** S-02
+- **Parallel with:** S-04, S-05, S-06, S-08
+- **Blockers:** —
+- **Unknowns:** —
+- **Risk:** Defekt znaleziony w Fazie 2 wdrażania testów (decyzja autora 2026-10-16, `test-plan.md` §6.6): `KitAddForm` (`src/components/kit/KitAddForm.tsx:350`) nie przekazuje `onEdit` do `MedicineSuggest`, więc po edycji tekstu bez nowego wyboru zostaje formularz wcześniejszego leku i można go dodać, myśląc, że to lek z pola. Poprawka jak w `RegistrySearch` (`onEdit` zeruje wybór) plus test komponentu według wzorca nieaktualnego stanu z `test-plan.md` §6.3. Mała i niezależna, więc może iść równolegle z każdym otwartym wycinkiem.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                   | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                |
@@ -232,6 +250,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 | S-07       | daily-registry-refresh      | Codzienne odświeżanie rejestru i widoczna data aktualizacji | no                    | FR-001, NFR (świeżość danych)        |
 | S-08       | expiry-warning              | Ostrzeżenie o kończącej się dacie ważności                  | no                    | FR-014                               |
 | S-09       | registry-search-performance | Wydajność wyszukiwania leków na słabym telefonie            | yes                   | FR-002, NFR (czas odpowiedzi)        |
+| S-10       | kit-add-form-reset-on-edit  | Formularz dodawania zapomina wybór po zmianie nazwy         | yes                   | FR-003; defekt z test-plan §6.6      |
 
 ## Open Roadmap Questions
 
@@ -243,6 +262,8 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 6. **Czy zastrzeżenie przy wyniku „ta sama substancja czynna” spełnia wymagania prawne?** — FR-012 wymaga zastrzeżenia o konsultacji z farmaceutą lub lekarzem, ale jego treści nikt nie sprawdził pod kątem prawnym: czy potrzebna jest inna formuła, zastrzeżenie o braku porady medycznej i czy samo wskazanie leku z tą samą substancją nie jest traktowane jako porada albo reklama produktu leczniczego. Tekst na ekranie różni się od sformułowania w PRD; weryfikacja ma wskazać jedną wersję (PRD Open Question 5). Owner: autor. Block: S-06 (nie blokuje planowania).
 7. **Czy obcinać spacje na początku i końcu w kluczu wariantu leku?** — pomiar na pełnym rejestrze (2026-10-08) znalazł 6 par produktów (49 produktów), których klucz różni się tylko końcową lub podwójną spacją w mocy (np. `dermovate 0,5 mg/ml` i `dermovate 0,5 mg/ml `); reguła traktuje je jako dwa leki, więc apteczka z jednym z nich odpowiada „Nie masz” dla drugiego. Autor zdecydował, że jedyną zmianą będzie obcinanie spacji na początku i końcu (osobna mała zmiana: migracja `medicine_check`, spójność z kluczem wariantu listy wyszukiwania, test). Źródło: `context/changes/testing-check-verdict-correctness/placeholder-measurement.md`. Owner: autor. Block: — (nie blokuje).
 8. **Czy któraś z 309 nazw powszechnych łączących leki o rozłącznym składzie jest ogólnikiem?** — ten sam pomiar wypisał nazwy powszechne (spoza listy ogólników), pod którymi są produkty o zupełnie różnych zbiorach substancji; reguła uznaje je za „tę samą substancję”. Lista nie została oceniona (autor odłożył ocenę). Do rozstrzygnięcia, czy któraś to prawdziwy ogólnik do dodania do listy w regule, czy ta sama substancja w innej soli lub nazwie; pomiar powtarza się poleceniem z `placeholder-measurement.sql`. Źródło: j.w. Owner: autor. Block: S-06 (nie blokuje planowania).
+9. **Czy podpowiedzi mają porządkować moce liczbowo?** — reguła S-01 porównuje moc jako tekst, więc dla tej samej nazwy „1000 mg” stoi przed „500 mg”. Test reguły (`src/lib/registry-search.test.ts`) celowo przypina tylko moce o tej samej liczbie cyfr, gdzie oba porządki są zgodne. Zmiana dotyka sortowania w `src/lib/registry-search.ts` i pliku wzorcowego `search:check`. Źródło: `test-plan.md` §6.6 (Faza 2, decyzja autora 2026-10-16). Owner: autor. Block: — (nie blokuje).
+10. **Czy reguła ogólników pomija nazwy powszechne innego kształtu?** — `medicine_check_is_generic` rozpoznaje listę i przedrostki „produkt ” / „preparat ”; nazwa w rodzaju „Species sedativae” (mieszanki ziołowe) zostaje dopasowywalna, więc dwa niezwiązane produkty z tą nazwą dałyby fałszywe „ta sama substancja”. To główna otwarta droga do takiego fałszywego wyniku; łączy się z pytaniem 8. Powtórzyć pomiar, jeśli pojawi się zgłoszenie fałszywego „ta sama substancja”. Źródło: impl-review `medicine-check` (F1, blind spot), research `testing-check-verdict-correctness` (G17). Owner: autor. Block: S-06 (nie blokuje planowania).
 
 ## Parked
 
