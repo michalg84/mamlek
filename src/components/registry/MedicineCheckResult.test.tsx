@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
+import { reply, stubFetch } from "../../../tests/helpers/fetch";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 // The texts below are pinned on purpose: the legal wording of the caution is still an open question (PRD Open
@@ -52,24 +53,6 @@ function response(items: MedicineCheckItem[], comparable = true): MedicineCheckR
     comparable,
     items,
   };
-}
-
-function reply(body: unknown, status = 200) {
-  return Promise.resolve(new Response(JSON.stringify(body), { status }));
-}
-
-/** Replaces `fetch`; each call to the check endpoint takes the next reply, the last one repeats. */
-function stubFetch(...replies: (() => Promise<Response>)[]) {
-  const fetchMock = vi.fn<typeof fetch>();
-  replies.forEach((respond, index) => {
-    if (index < replies.length - 1) {
-      fetchMock.mockImplementationOnce(respond);
-    } else {
-      fetchMock.mockImplementation(respond);
-    }
-  });
-  vi.stubGlobal("fetch", fetchMock);
-  return fetchMock;
 }
 
 describe("MedicineCheckResult", () => {

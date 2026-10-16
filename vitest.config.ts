@@ -24,6 +24,15 @@ export default defineConfig({
           setupFiles: ["./tests/setup-component.ts"],
         },
       },
+      {
+        test: {
+          // Proof of the Claude Code hooks in .claude/hooks/: real scripts and git in throwaway repos.
+          name: "hooks",
+          include: ["tests/hooks/**/*.test.ts"],
+          environment: "node",
+          testTimeout: 30_000,
+        },
+      },
     ],
   },
 });
