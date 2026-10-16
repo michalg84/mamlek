@@ -249,9 +249,9 @@ Brak — testy nie dotykają kodu produkcyjnego; cały zestaw `npm test` powinie
 
 #### Automated
 
-- [x] 1.1 `npx vitest run --project unit` przechodzi z nowym plikiem
+- [x] 1.1 `npx vitest run --project unit` przechodzi z nowym plikiem — e0bd88c
 - [x] 1.2 Ręczne sprawdzenie mutacyjne reguły wywraca testy; zmiany cofnięte
-- [x] 1.3 `npm run lint` i `npx astro check` bez nowych błędów
+- [x] 1.3 `npm run lint` i `npx astro check` bez nowych błędów — e0bd88c
 
 #### Manual
 
