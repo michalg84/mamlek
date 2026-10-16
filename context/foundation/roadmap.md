@@ -39,19 +39,20 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                   | Outcome (user can …)                                                                               | Prerequisites | PRD refs                             | Status   |
-| ---- | --------------------------- | -------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
-| F-01 | registry-copy-load          | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem      | —             | FR-001, NFR (świeżość danych)        | done     |
-| S-01 | registry-search-suggestions | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi             | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done     |
-| S-02 | add-medicine-to-kit         | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                        | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
-| S-03 | medicine-check              | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz       | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | done     |
-| S-04 | csv-kit-import              | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru     | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
-| S-05 | kit-browse-edit             | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                   | S-02          | FR-005                               | proposed |
-| S-06 | substance-match-level       | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu   | S-03          | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh      | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                   | F-01          | FR-001, NFR (świeżość danych)        | done     |
-| S-08 | expiry-warning              | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia | S-03, S-05    | FR-014                               | proposed |
-| S-09 | registry-search-performance | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu       | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
-| S-10 | kit-add-form-reset-on-edit  | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku         | S-02          | FR-003                               | proposed |
+| ID   | Change ID                     | Outcome (user can …)                                                                                 | Prerequisites | PRD refs                             | Status   |
+| ---- | ----------------------------- | ---------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
+| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem        | —             | FR-001, NFR (świeżość danych)        | done     |
+| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi               | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done     |
+| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                          | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
+| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz         | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | done     |
+| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru       | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
+| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                     | S-02          | FR-005                               | proposed |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu     | S-03          | FR-016, US-01                        | proposed |
+| S-07 | daily-registry-refresh        | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                     | F-01          | FR-001, NFR (świeżość danych)        | done     |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia   | S-03, S-05    | FR-014                               | proposed |
+| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu         | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
+| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku           | S-02          | FR-003                               | proposed |
+| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg) | S-01          | FR-002                               | proposed |
 
 ## Streams
 
@@ -64,7 +65,7 @@ Pomoc w nawigacji — grupuje pozycje, które dzielą łańcuch Prerequisites. W
 | C      | Utrzymanie apteczki | `S-05` → `S-08`                            | Dołącza do Stream A przy `S-02`; `S-08` czeka dodatkowo na `S-03`.                            |
 | D      | Świeżość rejestru   | `S-07`                                     | Dołącza do Stream A przy `F-01`; niezależny od reszty, dobry kandydat na równoległy przebieg. |
 | E      | Wydajność           | `S-09`                                     | Dołącza do Stream A przy `S-01`; usprawnia komponent podpowiedzi używany przez S-02–S-04.     |
-| F      | Poprawki            | `S-10`                                     | Dołącza do Stream A przy `S-02`; mała, niezależna poprawka defektu znalezionego w testach.    |
+| F      | Poprawki            | `S-10`, `S-11`                             | Małe, niezależne poprawki z testów: `S-10` dołącza przy `S-02`, `S-11` przy `S-01`.           |
 
 ## Baseline
 
@@ -236,21 +237,35 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Risk:** Defekt znaleziony w Fazie 2 wdrażania testów (decyzja autora 2026-10-16, `test-plan.md` §6.6): `KitAddForm` (`src/components/kit/KitAddForm.tsx:350`) nie przekazuje `onEdit` do `MedicineSuggest`, więc po edycji tekstu bez nowego wyboru zostaje formularz wcześniejszego leku i można go dodać, myśląc, że to lek z pola. Poprawka jak w `RegistrySearch` (`onEdit` zeruje wybór) plus test komponentu według wzorca nieaktualnego stanu z `test-plan.md` §6.3. Mała i niezależna, więc może iść równolegle z każdym otwartym wycinkiem.
 - **Status:** proposed
 
+### S-11: Liczbowa kolejność mocy w podpowiedziach
+
+- **Outcome:** użytkownik widzi warianty leku o tej samej nazwie w podpowiedziach w kolejności rosnącej mocy liczbowej — „500 mg” przed „1000 mg” — a nie w kolejności tekstowej.
+- **Change ID:** search-numeric-strength-order
+- **PRD refs:** FR-002
+- **Prerequisites:** S-01
+- **Parallel with:** S-04, S-05, S-06, S-08, S-10
+- **Blockers:** —
+- **Unknowns:**
+  - Jak porządkować moce, których nie da się sprowadzić do jednej liczby i jednostki — złożone („500 mg + 65 mg”), w innych jednostkach („mg/ml”, „j.m.”), z przecinkiem dziesiętnym („0,5 mg/ml”) albo bez mocy. Domyślnie: liczbowo tylko porównywalne, reszta po dotychczasowej kolejności tekstowej. — Owner: autor. Block: no.
+- **Risk:** Decyzja autora 2026-10-16 (Open Roadmap Question 9). Reguła S-01 porównuje moc jako tekst w `src/lib/registry-search.ts`, więc dla tej samej nazwy „1000 mg” stoi przed „500 mg”. Zmiana sortowania to zmiana reguły dopasowania: test reguły (`src/lib/registry-search.test.ts`) dostaje przypadki mocy o różnej liczbie cyfr, a plik wzorcowy `search:check` trzeba zapisać ponownie po świadomym przeglądzie różnic. Sortowanie działa w workerze na całej liście, więc po zmianie `npm run perf` (zapas ok. 350 ms, zob. S-04).
+- **Status:** proposed
+
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                   | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                |
-| ---------- | --------------------------- | ----------------------------------------------------------- | --------------------- | ------------------------------------ |
-| F-01       | registry-copy-load          | Wczytanie kopii Rejestru Produktów Leczniczych do bazy      | yes                   | FR-001, NFR (świeżość danych)        |
-| S-01       | registry-search-suggestions | Podpowiedzi leków z rejestru (nazwa + moc + postać)         | no                    | FR-002, US-01, NFR (czas odpowiedzi) |
-| S-02       | add-medicine-to-kit         | Dodanie leku z rejestru do apteczki domu                    | no                    | FR-003, FR-013, US-01, NFR (dostęp)  |
-| S-03       | medicine-check              | Sprawdzenie leku przeciwko apteczce (gwiazda przewodnia)    | no                    | FR-010, FR-011, FR-012, US-01        |
-| S-04       | csv-kit-import              | Import apteczki z CSV z ekranem zatwierdzenia               | no                    | FR-007, FR-008, FR-009, US-02        |
-| S-05       | kit-browse-edit             | Przegląd i edycja apteczki                                  | no                    | FR-005                               |
-| S-06       | substance-match-level       | Wybór poziomu dopasowania substancji czynnych               | no                    | FR-016, US-01                        |
-| S-07       | daily-registry-refresh      | Codzienne odświeżanie rejestru i widoczna data aktualizacji | no                    | FR-001, NFR (świeżość danych)        |
-| S-08       | expiry-warning              | Ostrzeżenie o kończącej się dacie ważności                  | no                    | FR-014                               |
-| S-09       | registry-search-performance | Wydajność wyszukiwania leków na słabym telefonie            | yes                   | FR-002, NFR (czas odpowiedzi)        |
-| S-10       | kit-add-form-reset-on-edit  | Formularz dodawania zapomina wybór po zmianie nazwy         | yes                   | FR-003; defekt z test-plan §6.6      |
+| Roadmap ID | Change ID                     | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                |
+| ---------- | ----------------------------- | ----------------------------------------------------------- | --------------------- | ------------------------------------ |
+| F-01       | registry-copy-load            | Wczytanie kopii Rejestru Produktów Leczniczych do bazy      | yes                   | FR-001, NFR (świeżość danych)        |
+| S-01       | registry-search-suggestions   | Podpowiedzi leków z rejestru (nazwa + moc + postać)         | no                    | FR-002, US-01, NFR (czas odpowiedzi) |
+| S-02       | add-medicine-to-kit           | Dodanie leku z rejestru do apteczki domu                    | no                    | FR-003, FR-013, US-01, NFR (dostęp)  |
+| S-03       | medicine-check                | Sprawdzenie leku przeciwko apteczce (gwiazda przewodnia)    | no                    | FR-010, FR-011, FR-012, US-01        |
+| S-04       | csv-kit-import                | Import apteczki z CSV z ekranem zatwierdzenia               | no                    | FR-007, FR-008, FR-009, US-02        |
+| S-05       | kit-browse-edit               | Przegląd i edycja apteczki                                  | no                    | FR-005                               |
+| S-06       | substance-match-level         | Wybór poziomu dopasowania substancji czynnych               | no                    | FR-016, US-01                        |
+| S-07       | daily-registry-refresh        | Codzienne odświeżanie rejestru i widoczna data aktualizacji | no                    | FR-001, NFR (świeżość danych)        |
+| S-08       | expiry-warning                | Ostrzeżenie o kończącej się dacie ważności                  | no                    | FR-014                               |
+| S-09       | registry-search-performance   | Wydajność wyszukiwania leków na słabym telefonie            | yes                   | FR-002, NFR (czas odpowiedzi)        |
+| S-10       | kit-add-form-reset-on-edit    | Formularz dodawania zapomina wybór po zmianie nazwy         | yes                   | FR-003; defekt z test-plan §6.6      |
+| S-11       | search-numeric-strength-order | Liczbowa kolejność mocy w podpowiedziach                    | yes                   | FR-002; Open Roadmap Question 9      |
 
 ## Open Roadmap Questions
 
@@ -262,7 +277,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 6. **Czy zastrzeżenie przy wyniku „ta sama substancja czynna” spełnia wymagania prawne?** — FR-012 wymaga zastrzeżenia o konsultacji z farmaceutą lub lekarzem, ale jego treści nikt nie sprawdził pod kątem prawnym: czy potrzebna jest inna formuła, zastrzeżenie o braku porady medycznej i czy samo wskazanie leku z tą samą substancją nie jest traktowane jako porada albo reklama produktu leczniczego. Tekst na ekranie różni się od sformułowania w PRD; weryfikacja ma wskazać jedną wersję (PRD Open Question 5). Owner: autor. Block: S-06 (nie blokuje planowania).
 7. **Czy obcinać spacje na początku i końcu w kluczu wariantu leku?** — pomiar na pełnym rejestrze (2026-10-08) znalazł 6 par produktów (49 produktów), których klucz różni się tylko końcową lub podwójną spacją w mocy (np. `dermovate 0,5 mg/ml` i `dermovate 0,5 mg/ml `); reguła traktuje je jako dwa leki, więc apteczka z jednym z nich odpowiada „Nie masz” dla drugiego. Autor zdecydował, że jedyną zmianą będzie obcinanie spacji na początku i końcu (osobna mała zmiana: migracja `medicine_check`, spójność z kluczem wariantu listy wyszukiwania, test). Źródło: `context/changes/testing-check-verdict-correctness/placeholder-measurement.md`. Owner: autor. Block: — (nie blokuje).
 8. **Czy któraś z 309 nazw powszechnych łączących leki o rozłącznym składzie jest ogólnikiem?** — ten sam pomiar wypisał nazwy powszechne (spoza listy ogólników), pod którymi są produkty o zupełnie różnych zbiorach substancji; reguła uznaje je za „tę samą substancję”. Lista nie została oceniona (autor odłożył ocenę). Do rozstrzygnięcia, czy któraś to prawdziwy ogólnik do dodania do listy w regule, czy ta sama substancja w innej soli lub nazwie; pomiar powtarza się poleceniem z `placeholder-measurement.sql`. Źródło: j.w. Owner: autor. Block: S-06 (nie blokuje planowania).
-9. **Czy podpowiedzi mają porządkować moce liczbowo?** — reguła S-01 porównuje moc jako tekst, więc dla tej samej nazwy „1000 mg” stoi przed „500 mg”. Test reguły (`src/lib/registry-search.test.ts`) celowo przypina tylko moce o tej samej liczbie cyfr, gdzie oba porządki są zgodne. Zmiana dotyka sortowania w `src/lib/registry-search.ts` i pliku wzorcowego `search:check`. Źródło: `test-plan.md` §6.6 (Faza 2, decyzja autora 2026-10-16). Owner: autor. Block: — (nie blokuje).
+9. **Czy podpowiedzi mają porządkować moce liczbowo?** — reguła S-01 porównuje moc jako tekst, więc dla tej samej nazwy „1000 mg” stoi przed „500 mg”. Test reguły (`src/lib/registry-search.test.ts`) celowo przypina tylko moce o tej samej liczbie cyfr, gdzie oba porządki są zgodne. Zmiana dotyka sortowania w `src/lib/registry-search.ts` i pliku wzorcowego `search:check`. Źródło: `test-plan.md` §6.6 (Faza 2, decyzja autora 2026-10-16). **Rozstrzygnięte 2026-10-16: tak** — wycinek S-11 (`search-numeric-strength-order`). Owner: autor. Block: — (nie blokuje).
 10. **Czy reguła ogólników pomija nazwy powszechne innego kształtu?** — `medicine_check_is_generic` rozpoznaje listę i przedrostki „produkt ” / „preparat ”; nazwa w rodzaju „Species sedativae” (mieszanki ziołowe) zostaje dopasowywalna, więc dwa niezwiązane produkty z tą nazwą dałyby fałszywe „ta sama substancja”. To główna otwarta droga do takiego fałszywego wyniku; łączy się z pytaniem 8. Powtórzyć pomiar, jeśli pojawi się zgłoszenie fałszywego „ta sama substancja”. Źródło: impl-review `medicine-check` (F1, blind spot), research `testing-check-verdict-correctness` (G17). Owner: autor. Block: S-06 (nie blokuje planowania).
 
 ## Parked

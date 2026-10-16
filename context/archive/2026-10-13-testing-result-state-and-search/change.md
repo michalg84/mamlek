@@ -1,10 +1,10 @@
 ---
 change_id: testing-result-state-and-search
 title: Faza 2 wdrażania testów - stan wyniku i wyszukiwanie (ryzyka #3, #5)
-status: impl_reviewed
+status: archived
 created: 2026-10-13
 updated: 2026-10-16
-archived_at: null
+archived_at: 2026-10-16T20:44:31Z
 ---
 
 ## Notes
