@@ -250,32 +250,32 @@ Brak — testy nie dotykają kodu produkcyjnego; cały zestaw `npm test` powinie
 #### Automated
 
 - [x] 1.1 `npx vitest run --project unit` przechodzi z nowym plikiem — e0bd88c
-- [x] 1.2 Ręczne sprawdzenie mutacyjne reguły wywraca testy; zmiany cofnięte
+- [x] 1.2 Ręczne sprawdzenie mutacyjne reguły wywraca testy; zmiany cofnięte — e0bd88c
 - [x] 1.3 `npm run lint` i `npx astro check` bez nowych błędów — e0bd88c
 
 #### Manual
 
-- [x] 1.4 Autor potwierdza, że wartości oczekiwane wynikają z reguły S-01
+- [x] 1.4 Autor potwierdza, że wartości oczekiwane wynikają z reguły S-01 — e0bd88c
 
 ### Phase 2: Zastępniki do testów komponentu
 
 #### Automated
 
-- [x] 2.1 `npm test` przechodzi; test Fazy 1 ma te same asercje
-- [x] 2.2 Test dymny `RegistrySearch` pokazuje opcje z fixture'a
-- [x] 2.3 `npm run lint` i `npx astro check` bez nowych błędów
+- [x] 2.1 `npm test` przechodzi; test Fazy 1 ma te same asercje — 2d1a754
+- [x] 2.2 Test dymny `RegistrySearch` pokazuje opcje z fixture'a — 2d1a754
+- [x] 2.3 `npm run lint` i `npx astro check` bez nowych błędów — 2d1a754
 
 ### Phase 3: Nieaktualny werdykt (komponent)
 
 #### Automated
 
-- [ ] 3.1 `npx vitest run --project component` przechodzi
-- [ ] 3.2 Ręczne sprawdzenie mutacyjne zabezpieczeń wywraca scenariusze; zmiany cofnięte
-- [ ] 3.3 `npm run lint` i `npx astro check` bez nowych błędów
+- [x] 3.1 `npx vitest run --project component` przechodzi
+- [x] 3.2 Ręczne sprawdzenie mutacyjne zabezpieczeń wywraca scenariusze; zmiany cofnięte
+- [x] 3.3 `npm run lint` i `npx astro check` bez nowych błędów
 
 #### Manual
 
-- [ ] 3.4 Autor potwierdza, że nazwy testów odpowiadają scenariuszom
+- [x] 3.4 Autor potwierdza, że nazwy testów odpowiadają scenariuszom
 
 ### Phase 4: Książka kucharska i dokumentacja
 
