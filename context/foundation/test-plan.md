@@ -69,13 +69,13 @@ Każdy wiersz to osobna faza wdrażania, która otworzy własny folder zmiany
 przez `/10x-new`. Status przechodzi od lewej do prawej przez wartości
 poniżej; orkiestrator aktualizuje Status, gdy na dysku pojawiają się artefakty.
 
-| #   | Phase name                      | Goal (one line)                                                                                                   | Risks covered | Test types                  | Status        | Change folder                                                 |
-| --- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ------------- | ------------------------------------------------------------- |
-| 1   | Check verdict correctness       | Uruchomić runner testów i dowieść, że werdykt widoczny dla użytkownika jest poprawny, od reguły po ekran          | #1, #2        | unit + database integration | complete      | context/archive/2026-10-10-testing-check-verdict-correctness/ |
-| 2   | Result state and search         | Dowieść, że ekran nigdy nie pokazuje odpowiedzi na inne pytanie, a podpowiedzi zachowują kolejność                | #3, #5        | unit + component            | change opened | context/changes/testing-result-state-and-search/              |
-| 3   | Kit access and input boundaries | Dowieść, że dane apteczki są odizolowane per konto, a nieprawidłowe dane są czysto odrzucane                      | #4, #6        | database + API integration  | not started   | —                                                             |
-| 4   | Quality-gates wiring            | Uczynić zestawy z Faz 1–3 wymaganymi lokalnie i w CI oraz dodać hook po edycji                                    | cross-cutting | gates                       | not started   | —                                                             |
-| 5   | Registry import scripts         | Dowieść, że import i jego parser zachowują każdy poprawny produkt albo głośno zawodzą, a potem dodać je do bramek | #7            | unit + database integration | not started   | —                                                             |
+| #   | Phase name                      | Goal (one line)                                                                                                   | Risks covered | Test types                  | Status      | Change folder                                                 |
+| --- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------- | --------------------------- | ----------- | ------------------------------------------------------------- |
+| 1   | Check verdict correctness       | Uruchomić runner testów i dowieść, że werdykt widoczny dla użytkownika jest poprawny, od reguły po ekran          | #1, #2        | unit + database integration | complete    | context/archive/2026-10-10-testing-check-verdict-correctness/ |
+| 2   | Result state and search         | Dowieść, że ekran nigdy nie pokazuje odpowiedzi na inne pytanie, a podpowiedzi zachowują kolejność                | #3, #5        | unit + component            | planned     | context/changes/testing-result-state-and-search/              |
+| 3   | Kit access and input boundaries | Dowieść, że dane apteczki są odizolowane per konto, a nieprawidłowe dane są czysto odrzucane                      | #4, #6        | database + API integration  | not started | —                                                             |
+| 4   | Quality-gates wiring            | Uczynić zestawy z Faz 1–3 wymaganymi lokalnie i w CI oraz dodać hook po edycji                                    | cross-cutting | gates                       | not started | —                                                             |
+| 5   | Registry import scripts         | Dowieść, że import i jego parser zachowują każdy poprawny produkt albo głośno zawodzą, a potem dodać je do bramek | #7            | unit + database integration | not started | —                                                             |
 
 **Status vocabulary** (stały — literały parsera, zostają po angielsku): `not started` → `change opened` → `researched` → `planned` → `implementing` → `complete`.
 
@@ -139,7 +139,10 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 - **Test wzorcowy**: `src/lib/medicine-check-verdict.test.ts` (`checkVerdict`, `parseMedicineCheck`).
 - **Uruchomienie lokalnie**: `npm test` (baza niepotrzebna).
 - Strażnik, który odrzuca odpowiedź niemożliwą do pokazania na ekranie, jest testowany w obie strony: każda poprawna odpowiedź przechodzi bez zmian, każde zepsute pole jest odrzucane.
-- TBD — zob. §3 Faza 2 dla wzorca dopasowania wyszukiwania.
+- **Wzorzec dopasowania wyszukiwania**: reguła `searchVariants` (`src/lib/registry-search.ts`) jest czysta, więc nie potrzebuje żadnego zastępnika. Mała, ręcznie napisana lista-fixture (20 wierszy, nazwy realistyczne, id syntetyczne, wiersze nazwane w stałej `ID`) ćwiczy każdą regułę S-01 (R1–R7); jedno `it.each` na właściwość, a wartość oczekiwana jest wyprowadzona ręcznie z reguły i opisana komentarzem z numerem R#, nigdy skopiowana z uruchomienia kodu.
+- **Test wzorcowy**: `src/lib/registry-search.test.ts` (94 testy); lista w `tests/fixtures/registry-search-list.ts`, ta sama zasila test komponentu z §6.3.
+- Limit i sumę (R6) sprawdza jawny trzeci parametr `limit`, więc nie trzeba 21 wierszy. Kolejność sortowania w polskim ćwiczy jednoznaczna para `a` < `ą` < `b`.
+- Kolejność mocy porównuje test tylko dla mocy o tej samej liczbie cyfr (200 mg, 400 mg); mocy o różnej liczbie cyfr nie przypina żadna asercja (zob. §6.6).
 
 ### 6.2 Adding a database rule test
 
@@ -153,9 +156,14 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 
 ### 6.3 Adding a component or hook test
 
-- **Istniejący wzorzec**: wyrenderuj prawdziwy komponent, podmień tylko `fetch`, sprawdzaj wyrenderowany tekst (teksty o znaczeniu prawnym są przypięte jako stałe; region live powtarza werdykt, więc widoczny tekst szukamy poza `[role=status]`).
+- **Istniejący wzorzec**: wyrenderuj prawdziwy komponent, podmień tylko `fetch` i `Worker`, sprawdzaj wyrenderowany tekst (teksty o znaczeniu prawnym są przypięte jako stałe; region live powtarza werdykt, więc widoczny tekst szukamy poza `[role=status]`).
 - **Test wzorcowy**: `src/components/registry/MedicineCheckResult.test.tsx`.
-- TBD — zob. §3 Faza 2 dla wzorca nieaktualnego werdyktu (kontrolowana asynchroniczność, asercje na tym, co wyrenderowane).
+- **Wzorzec nieaktualnego werdyktu**: ryzyko #3 dowodzi się na całym `RegistrySearch`, bo stan werdyktu żyje w czterech miejscach (wybór, odpowiedź sprawdzenia, wpisany tekst, odpowiedź workera); test pojedynczego hooka tego nie pokaże. Prawdziwe komponenty i hooki, podmieniane są tylko `fetch` i `Worker`.
+- **Kontrolowana asynchroniczność**: `stubRoutedFetch` (`tests/helpers/fetch.ts`) odpowiada na listę od razu, a każde zapytanie sprawdzenia trzyma w toku, aż test rozwiąże je dla wybranego `productId`, w dowolnej kolejności. Odroczona odpowiedź nie jest odrzucana przy przerwaniu: odpowiedź, która dociera mimo przerwanego zapytania, to mocniejszy przypadek dla obu zabezpieczeń (flaga przerwania i klucz). `FakeSearchWorker` (`tests/helpers/fake-search-worker.ts`) liczy odpowiedzi prawdziwymi `buildSearchIndex` i `searchVariants`, ale nigdy nie odpowiada w `postMessage` (jak prawdziwy worker): odpowiedzi czekają w kolejce, aż test je dostarczy (`deliver(zapytanie)`, `deliverAll()`).
+- **Bez sleepów**: odpowiedź rozwiązuje się wewnątrz `await act(async () => …)` z kilkoma obrotami mikrozadań, a dopiero potem test sprawdza, co jest na ekranie. Asercje dotyczą tylko tego, co wyrenderowane: karta „Wybrany lek”, tekst werdyktu poza `[role=status]`, opcje listy, komunikat „Brak leku o takiej nazwie w rejestrze”. A i B dostają werdykty różnego rodzaju i różne nazwy w karcie, żeby dało się je odróżnić.
+- **Pułapka**: scenariusze „A, potem B przed odpowiedzią” trzeba przeprowadzić BEZ edycji tekstu (wybierz A, ArrowDown w polu, żeby otworzyć listę dla tego samego zapytania, wybierz inny wariant). Wpisanie nowego zapytania wywołuje `onEdit`, odmontowuje `MedicineCheckResult` i omija wszystkie trzy zabezpieczenia, więc test przechodzi, choć niczego nie dowodzi.
+- **Jsdom**: potrzebna jest tylko łatka `Element.prototype.scrollIntoView` (`tests/setup-component.ts`); `performance.mark` z opcją `detail` działa w jsdom Vitesta, bez łatki.
+- **Test wzorcowy**: `src/components/registry/RegistrySearch.test.tsx` (8 scenariuszy nieaktualnego stanu i wyświetlanie mocy · postaci w opcjach).
 
 ### 6.4 Adding a test for a new API endpoint
 
@@ -177,6 +185,17 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 - **Decyzje**: zmieni się tylko obcinanie spacji na początku i końcu klucza wariantu (osobna zmiana); przegląd 309 nazw pod kątem prawdziwych zaślepek odłożony.
 - **Wnioski**: `projects` w `vitest.config.ts` działa dla runnera, ale nie dla Strykera; reguła substancji to OR zbioru nazw powszechnych i zbioru substancji, więc substancja zapisana jako jeden napis psuje tylko ścieżkę substancji.
 
+**Faza 2 — Result state and search (2026-10-16, zmiana `testing-result-state-and-search`)**
+
+- **Dostarczone**: test unit reguły dopasowania (94 testy, wartości wyprowadzone ręcznie z R1–R7); lista-fixture z 20 wierszy; wspólne pomocniki `fetch` (odpowiedź natychmiastowa i odroczona) oraz sterowany zastępnik `Worker` (odpowiedzi w kolejce, dostarczane na polecenie); łatka jsdom tylko dla `Element.prototype.scrollIntoView` (`performance.mark` z `detail` działa w jsdom, bez łatki); 8 scenariuszy nieaktualnego werdyktu i test wyświetlania mocy · postaci w opcjach (22 testy komponentu razem). Commity: e0bd88c (reguła), 2d1a754 (zastępniki), 4880146 (nieaktualny werdykt).
+- **Żadnego prawdziwego defektu** w regule ani na ścieżkach #3 na `/szukaj` nie znaleziono; wartością jest ochrona przed regresją.
+- **Sprawdzenia mutacyjne (ręczne, wszystkie cofnięte)**. Reguła: usunięcie `ł→l` wywraca 1 test, `MIN_QUERY_LENGTH=2` wywraca 6, odwrócenie kolejności poziomów wywraca 5. Komponent: usunięcie `onEdit` w `RegistrySearch` wywraca 4 scenariusze; usunięcie porównania `message.id === lastIdRef.current` razem z zerowaniem `answer` wywraca scenariusz 7.
+- **Poprawka oczekiwanego sprawdzenia**: usunięcie samego `key={selected.id}` razem z porównaniem klucza w `useMedicineCheck` zostaje ZIELONE. Przy zmianie `productId` czyszczenie efektu przerywa stare zapytanie, a `!controller.signal.aborted` w `finish`, porównanie klucza i prop `key` to trzy nakładające się zabezpieczenia. Scenariusze 4 i 5 wywraca dopiero usunięcie wszystkich trzech naraz (prop `key`, porównanie klucza, flaga przerwania); prop `key` z flagą przerwania bez porównania klucza wywraca tylko 1 test. Plan zakładał inaczej; autor przyjął korektę.
+- **Wniosek**: scenariusze 4 i 5 muszą przełączać A→B bez edycji tekstu (zob. pułapka w §6.3), inaczej omijają wszystkie zabezpieczenia.
+- **Odłożony defekt 1 (decyzja autora 2026-10-16)**: formularz dodawania na `/apteczka` — `KitAddForm` nie przekazuje `onEdit` do `MedicineSuggest`, więc po zmianie tekstu bez nowego wyboru formularz opakowania wcześniejszego leku zostaje. Do naprawy w osobnej zmianie; w tej fazie bez testów.
+- **Odłożony defekt / pytanie 2 (decyzja autora 2026-10-16)**: kolejność mocy o różnej liczbie cyfr — moc jest porównywana jako tekst, więc „1000 mg” jest przed „500 mg”. Bez asercji; test porównuje tylko moce o tej samej liczbie cyfr. Otwarte pytanie: czy chcemy kolejności liczbowej?
+- **Zamknięte pytanie**: sortowanie polskie w CI. Workflow używa Node 22 (`.github/workflows/ci.yml:16`), lokalnie v22.14.0; oficjalne buildy mają pełne ICU, `Intl.Collator("pl")` daje `a ą b l ł m`.
+
 ## 7. What We Deliberately Don't Test
 
 Wykluczenia uzgodnione podczas wdrażania (wywiad Fazy 2, P5). Przyszli
@@ -191,6 +210,7 @@ którym stoją.
 ## 8. Freshness Ledger
 
 - Strategia (§1–§5) ostatnio przejrzana: 2026-10-13 (§4 i §6 zaktualizowane przez Fazę 1; sama strategia bez zmian)
+- Książka kucharska (§6) ostatnio uzupełniona: 2026-10-16 (Faza 2: §6.1, §6.3, §6.6)
 - Wersje stacku ostatnio zweryfikowane: 2026-10-13 (Vitest 5.0.4, jsdom 29.1.1, Testing Library 16.3.3, pg 8.x)
 - Odwołania do narzędzi AI-native ostatnio zweryfikowane: 2026-10-10
 

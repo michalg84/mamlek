@@ -269,21 +269,21 @@ Brak — testy nie dotykają kodu produkcyjnego; cały zestaw `npm test` powinie
 
 #### Automated
 
-- [x] 3.1 `npx vitest run --project component` przechodzi
-- [x] 3.2 Ręczne sprawdzenie mutacyjne zabezpieczeń wywraca scenariusze; zmiany cofnięte
-- [x] 3.3 `npm run lint` i `npx astro check` bez nowych błędów
+- [x] 3.1 `npx vitest run --project component` przechodzi — 4880146
+- [x] 3.2 Ręczne sprawdzenie mutacyjne zabezpieczeń wywraca scenariusze; zmiany cofnięte — 4880146
+- [x] 3.3 `npm run lint` i `npx astro check` bez nowych błędów — 4880146
 
 #### Manual
 
-- [x] 3.4 Autor potwierdza, że nazwy testów odpowiadają scenariuszom
+- [x] 3.4 Autor potwierdza, że nazwy testów odpowiadają scenariuszom — 4880146
 
 ### Phase 4: Książka kucharska i dokumentacja
 
 #### Automated
 
-- [ ] 4.1 `npm test` przechodzi
-- [ ] 4.2 W `test-plan.md` nie zostało „TBD — zob. §3 Faza 2”
+- [x] 4.1 `npm test` przechodzi
+- [x] 4.2 W `test-plan.md` nie zostało „TBD — zob. §3 Faza 2”
 
 #### Manual
 
-- [ ] 4.3 Autor przegląda zmiany w §6 i AGENTS.md
+- [x] 4.3 Autor przegląda zmiany w §6 i AGENTS.md
