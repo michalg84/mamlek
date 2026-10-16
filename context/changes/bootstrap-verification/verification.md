@@ -13,7 +13,7 @@ audit_command: "npm audit --json"
 
 ## Hand-off
 
-Source: `context/foundation/tech-stack.md`
+Źródło: `context/foundation/tech-stack.md`
 
 ```yaml
 starter_id: 10x-astro-starter
@@ -42,35 +42,35 @@ MamLek to mobilna aplikacja webowa dla jednego gospodarstwa domowego, budowana s
 
 ## Pre-scaffold verification
 
-| Signal      | Value                                                     | Severity | Notes                                                                      |
-| ----------- | --------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
-| npm package | not run                                                   | n/a      | `cmd_template` starts with `git clone`; no `create-*` CLI                  |
-| GitHub repo | przeprogramowani/10x-astro-starter last pushed 2026-09-12 | fresh    | from card.docs_url (`gh api repos/.../pushed_at` → `2026-09-12T21:16:08Z`) |
+| Sygnał      | Wartość                                                     | Waga   | Uwagi                                                                   |
+| ----------- | ----------------------------------------------------------- | ------ | ----------------------------------------------------------------------- |
+| pakiet npm  | nie uruchomiono                                             | n/d    | `cmd_template` zaczyna się od `git clone`; brak CLI `create-*`          |
+| repo GitHub | przeprogramowani/10x-astro-starter, ostatni push 2026-09-12 | świeże | z card.docs_url (`gh api repos/.../pushed_at` → `2026-09-12T21:16:08Z`) |
 
-Local toolchain at run time (informational): node v24.19.0, npm 11.17.0, git 2.45.1.windows.1.
+Lokalne narzędzia w chwili uruchomienia (informacyjnie): node v24.19.0, npm 11.17.0, git 2.45.1.windows.1.
 
 ## Scaffold log
 
-**Resolved invocation**: `git clone https://github.com/przeprogramowani/10x-astro-starter .bootstrap-scaffold && cd .bootstrap-scaffold && npm install`
-**Strategy**: git-clone
-**Exit code**: 0
-**Files moved**: 49 project files moved into place, plus `node_modules/` (30,680 files) moved as a directory. 51 project files in the scaffold in total: 49 moved, 1 sidelined (`CLAUDE.md`), 1 append-merged (`.gitignore`).
-**Conflicts (.scaffold siblings)**: `CLAUDE.md.scaffold`
-**Resolved (2026-09-24)**: the starter's rules from `CLAUDE.md.scaffold` were merged into `CLAUDE.md` and the sibling was removed. The project rules were later moved into the tracked `AGENTS.md`; the gitignored `CLAUDE.md` imports them via `@AGENTS.md`.
-**.gitignore handling**: append-merged (cwd lines kept; scaffold lines appended under a `# from 10x-astro-starter` separator; no non-blank lines were duplicates)
-**.bootstrap-scaffold cleanup**: left in place. Every project file was moved out; only `.bootstrap-scaffold/.git/` (the upstream starter's history) remains. It was never moved into cwd, so the project's own `.git/` is untouched. Both attempts to delete it were blocked by the local tool-permission policy (the second came after the user approved deletion). Delete it manually: `rm -rf .bootstrap-scaffold` (Git Bash) or `Remove-Item -Recurse -Force .bootstrap-scaffold` (PowerShell).
-**Resolved (2026-09-24)**: `.bootstrap-scaffold/` was deleted manually after the run; it is no longer present in cwd.
+**Wykonane polecenie**: `git clone https://github.com/przeprogramowani/10x-astro-starter .bootstrap-scaffold && cd .bootstrap-scaffold && npm install`
+**Strategia**: git-clone
+**Kod wyjścia**: 0
+**Przeniesione pliki**: 49 plików projektu przeniesionych na miejsce plus `node_modules/` (30 680 plików) przeniesione jako katalog. W szkielecie było łącznie 51 plików projektu: 49 przeniesionych, 1 odłożony obok (`CLAUDE.md`), 1 scalony przez dopisanie (`.gitignore`).
+**Konflikty (pliki obok z sufiksem .scaffold)**: `CLAUDE.md.scaffold`
+**Rozwiązane (2026-09-24)**: reguły startera z `CLAUDE.md.scaffold` zostały scalone z `CLAUDE.md`, a plik obok usunięty. Reguły projektu przeniesiono później do śledzonego `AGENTS.md`; ignorowany przez git `CLAUDE.md` importuje je przez `@AGENTS.md`.
+**Obsługa .gitignore**: scalony przez dopisanie (linie z cwd zachowane; linie szkieletu dopisane pod separatorem `# from 10x-astro-starter`; żadna niepusta linia nie była duplikatem)
+**Sprzątanie .bootstrap-scaffold**: zostawiony na miejscu. Wszystkie pliki projektu zostały przeniesione; został tylko `.bootstrap-scaffold/.git/` (historia startera). Nigdy nie trafił do cwd, więc własny `.git/` projektu jest nietknięty. Obie próby usunięcia zablokowała lokalna polityka uprawnień narzędzi (druga po tym, jak użytkownik zgodził się na usunięcie). Usuń ręcznie: `rm -rf .bootstrap-scaffold` (Git Bash) albo `Remove-Item -Recurse -Force .bootstrap-scaffold` (PowerShell).
+**Rozwiązane (2026-09-24)**: `.bootstrap-scaffold/` usunięty ręcznie po przebiegu; nie ma go już w cwd.
 
-**Order deviation**: the git-clone strategy deletes `.bootstrap-scaffold/.git/` before the move-up. The deletion was blocked, so `.git/` was left out of the move-up instead. The files that ended up in cwd are the same.
+**Odstępstwo od kolejności**: strategia git-clone usuwa `.bootstrap-scaffold/.git/` przed przeniesieniem plików w górę. Usunięcie zostało zablokowane, więc zamiast tego `.git/` pominięto przy przenoszeniu. Pliki, które trafiły do cwd, są takie same.
 
-**Top-level move log**:
+**Dziennik przenoszenia (najwyższy poziom)**:
 
-- `.gitignore`: append-merged
-- `CLAUDE.md` → `CLAUDE.md.scaffold` (existing wins)
-- moved: `.env.example`, `.github/`, `.husky/`, `.nvmrc`, `.prettierrc.json`, `.vscode/`, `AGENTS.md`, `astro.config.mjs`, `components.json`, `eslint.config.js`, `node_modules/`, `package.json`, `package-lock.json`, `public/`, `README.md`, `scripts/`, `src/`, `supabase/`, `tsconfig.json`, `wrangler.jsonc`
-- `context/**`: none shipped by the scaffold, so nothing dropped
+- `.gitignore`: scalony przez dopisanie
+- `CLAUDE.md` → `CLAUDE.md.scaffold` (wygrywa istniejący)
+- przeniesione: `.env.example`, `.github/`, `.husky/`, `.nvmrc`, `.prettierrc.json`, `.vscode/`, `AGENTS.md`, `astro.config.mjs`, `components.json`, `eslint.config.js`, `node_modules/`, `package.json`, `package-lock.json`, `public/`, `README.md`, `scripts/`, `src/`, `supabase/`, `tsconfig.json`, `wrangler.jsonc`
+- `context/**`: szkielet nic nie dostarczył, więc nic nie pominięto
 
-**Scaffold project files (51, excluding `node_modules/` and `.git/`)**:
+**Pliki projektu w szkielecie (51, bez `node_modules/` i `.git/`)**:
 
 ```
 .env.example
@@ -126,7 +126,7 @@ tsconfig.json
 wrangler.jsonc
 ```
 
-**Install output (tail)**:
+**Wynik instalacji (koniec)**:
 
 ```
 added 648 packages, and audited 649 packages in 34s
@@ -134,7 +134,7 @@ added 648 packages, and audited 649 packages in 34s
 found 0 vulnerabilities
 ```
 
-**Install warnings (stderr)**:
+**Ostrzeżenia instalacji (stderr)**:
 
 ```
 npm warn allow-scripts 3 packages have install scripts not yet covered by allowScripts:
@@ -144,37 +144,37 @@ npm warn allow-scripts   esbuild@0.28.1 (postinstall: node install.js)
 npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
 ```
 
-These postinstall scripts did not run. If `astro dev` / `astro build` or `wrangler` fails with a missing-binary error, review and approve them with `npm approve-scripts esbuild workerd` and reinstall.
-**Resolved (2026-09-24)**: no action needed — `npm run build`, `npm run dev` and the auth smoke test all run locally, and CI (`npm ci`, build, smoke) passes.
+Te skrypty postinstall się nie wykonały. Jeśli `astro dev` / `astro build` albo `wrangler` zgłosi brak pliku binarnego, przejrzyj je i zatwierdź przez `npm approve-scripts esbuild workerd`, a potem zainstaluj ponownie.
+**Rozwiązane (2026-09-24)**: nic nie trzeba robić — `npm run build`, `npm run dev` i test smoke logowania działają lokalnie, a CI (`npm ci`, build, smoke) przechodzi.
 
-**Toolchain note**: `.nvmrc` pins node `22.14.0`, but local node is `v24.19.0`. The install succeeded. Switch to Node 22 if you want parity with CI.
-**Resolved (2026-09-24)**: local node switched to `v22.14.0`, matching `.nvmrc`.
+**Uwaga o narzędziach**: `.nvmrc` przypina node `22.14.0`, a lokalny node to `v24.19.0`. Instalacja się powiodła. Przełącz się na Node 22, jeśli chcesz zgodności z CI.
+**Rozwiązane (2026-09-24)**: lokalny node przełączony na `v22.14.0`, zgodnie z `.nvmrc`.
 
 ## Post-scaffold audit
 
-**Tool**: `npm audit --json` (exit code 0)
-**Summary**: 0 CRITICAL, 0 HIGH, 0 MODERATE, 0 LOW (0 INFO)
-**Direct vs transitive**: 0/0/0/0 direct of total 0/0/0/0 (direct deps per `package.json`: 20 dependencies + 18 devDependencies; audited tree: 804 dependencies (377 prod, 269 dev, 167 optional))
+**Narzędzie**: `npm audit --json` (kod wyjścia 0)
+**Podsumowanie**: 0 CRITICAL, 0 HIGH, 0 MODERATE, 0 LOW (0 INFO)
+**Bezpośrednie a przechodnie**: 0/0/0/0 bezpośrednich z łącznie 0/0/0/0 (bezpośrednie zależności według `package.json`: 20 dependencies + 18 devDependencies; sprawdzone drzewo: 804 zależności (377 prod, 269 dev, 167 optional))
 
 #### CRITICAL findings
 
-None.
+Brak.
 
 #### HIGH findings
 
-None.
+Brak.
 
 #### MODERATE findings
 
-None.
+Brak.
 
 #### LOW / INFO findings
 
-None.
+Brak.
 
 ## Hints recorded but not acted on
 
-| Hint                    | Value                |
+| Wskazówka               | Wartość              |
 | ----------------------- | -------------------- |
 | bootstrapper_confidence | first-class          |
 | quality_override        | false                |
@@ -192,20 +192,20 @@ None.
 
 ## Next steps
 
-Next: a future skill will set up agent context (CLAUDE.md, AGENTS.md). For now, your project is scaffolded and verified — happy hacking.
+Dalej: przyszły skill przygotuje kontekst dla agenta (CLAUDE.md, AGENTS.md). Na razie projekt ma szkielet i jest zweryfikowany — miłego kodowania.
 
-Useful manual steps in the meantime:
+Przydatne ręczne kroki w międzyczasie:
 
-- ~~Delete the leftover `.bootstrap-scaffold/` directory (it holds only the upstream starter's `.git/`). Do this before `git add .`, or git will record it as an embedded repository.~~ Done — deleted before the first commit.
-- ~~The repo already has its own git history (no `git init` needed). Review `git status` before committing, and check that `.env` and `node_modules/` are ignored (they are, via the merged `.gitignore`).~~ Done — scaffold committed as `e127c0e`; `.env`, `.dev.vars`, `node_modules/`, `dist/` confirmed ignored.
-- ~~Review `CLAUDE.md.scaffold` against your existing `CLAUDE.md` and decide what to keep. Note that your `.gitignore` ignores `CLAUDE.md` but not `CLAUDE.md.scaffold`.~~ Done — merged and removed; project rules now live in the tracked `AGENTS.md`.
-- ~~Address audit findings per your project's risk tolerance. There are none at bootstrap time.~~ Nothing to address — `npm audit` re-run after the scaffold still reports 0 findings.
+- ~~Usuń pozostały katalog `.bootstrap-scaffold/` (zawiera tylko `.git/` startera). Zrób to przed `git add .`, inaczej git zapisze go jako osadzone repozytorium.~~ Zrobione — usunięty przed pierwszym commitem.
+- ~~Repo ma już własną historię git (`git init` niepotrzebny). Przejrzyj `git status` przed commitem i sprawdź, czy `.env` i `node_modules/` są ignorowane (są, przez scalony `.gitignore`).~~ Zrobione — szkielet zacommitowany jako `e127c0e`; potwierdzone, że `.env`, `.dev.vars`, `node_modules/`, `dist/` są ignorowane.
+- ~~Porównaj `CLAUDE.md.scaffold` z istniejącym `CLAUDE.md` i zdecyduj, co zostawić. Uwaga: `.gitignore` ignoruje `CLAUDE.md`, ale nie `CLAUDE.md.scaffold`.~~ Zrobione — scalony i usunięty; reguły projektu są teraz w śledzonym `AGENTS.md`.
+- ~~Zajmij się wynikami audytu zgodnie z tolerancją ryzyka projektu. W chwili tworzenia szkieletu nie ma żadnych.~~ Nie ma czym się zajmować — `npm audit` powtórzony po utworzeniu szkieletu nadal zgłasza 0 wyników.
 
-Follow-ups applied after the run (2026-09-24), outside the scaffold itself:
+Poprawki po przebiegu (2026-09-24), poza samym szkieletem:
 
-- Added `.gitattributes` (`* text=auto eol=lf`) and normalized line endings. `core.autocrlf=true` had produced CRLF files, and lint failed with 1,086 prettier errors.
-- Pointed the CI workflow at `main` instead of `master`.
-- Enabled the husky pre-commit hook (`prepare: husky`; the hook still runs `npx lint-staged`).
-- Started local Supabase and filled `.env` / `.dev.vars` with the local URL and anon key. The auth smoke test passes 8/8.
-- Renamed the project from `10x-astro-starter` to `mamlek` in `package.json`, `package-lock.json`, `wrangler.jsonc` and the Supabase `project_id`.
-- Bumped CI actions to Node 24-based majors (`checkout` v7, `setup-node` v7, `supabase/setup-cli` v3). CI is green.
+- Dodany `.gitattributes` (`* text=auto eol=lf`) i znormalizowane końce linii. `core.autocrlf=true` dało pliki z CRLF, a lint padał z 1086 błędami prettiera.
+- Workflow CI skierowany na `main` zamiast `master`.
+- Włączony hook pre-commit huskiego (`prepare: husky`; hook nadal uruchamia `npx lint-staged`).
+- Uruchomiony lokalny Supabase, a `.env` / `.dev.vars` uzupełnione lokalnym URL-em i kluczem anon. Test smoke logowania przechodzi 8/8.
+- Projekt przemianowany z `10x-astro-starter` na `mamlek` w `package.json`, `package-lock.json`, `wrangler.jsonc` i `project_id` Supabase.
+- Akcje CI podbite do głównych wersji opartych na Node 24 (`checkout` v7, `setup-node` v7, `supabase/setup-cli` v3). CI jest zielone.
