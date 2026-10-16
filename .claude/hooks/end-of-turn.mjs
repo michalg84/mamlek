@@ -14,6 +14,10 @@ const SCANNED = new Set([".astro", ".tsx"]);
 // A change to one of these can change the typecheck result even without a changed source file.
 const TYPE_INPUTS = /^(tsconfig.*\.json|package(-lock)?\.json|astro\.config\.[cm]?[jt]s)$/;
 const ENV = { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" };
+// Claude Code kills the hook at the 120 s timeout in settings.json and lets the agent finish without a word, so the
+// checks stop earlier and say so. Override only in the proof tests.
+const BUDGET_MS = Number(process.env.END_OF_TURN_BUDGET_MS) || 100_000;
+const deadline = Date.now() + BUDGET_MS;
 // astro check colours its output whatever NO_COLOR says; the agent reads plain text.
 const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
@@ -57,7 +61,11 @@ if (roots.size === 0) {
 function run(root, bin, args) {
   const entry = path.join(root, bin);
   if (!existsSync(entry)) return { ok: false, out: `${bin} not found in ${root}: run npm install.` };
-  const result = spawnSync(process.execPath, [entry, ...args], { cwd: root, encoding: "utf8", env: ENV });
+  const timeout = Math.max(deadline - Date.now(), 1);
+  const result = spawnSync(process.execPath, [entry, ...args], { cwd: root, encoding: "utf8", env: ENV, timeout });
+  if (result.error?.code === "ETIMEDOUT") {
+    return { ok: false, out: `${bin} did not finish within the ${BUDGET_MS / 1000} s budget of this hook.` };
+  }
   const out = `${result.stdout ?? ""}${result.stderr ?? ""}${result.error ? String(result.error) : ""}`
     .replace(ANSI, "")
     .trim();
@@ -67,8 +75,9 @@ function run(root, bin, args) {
 const report = [];
 for (const root of roots) {
   // Changed and new files, also those rewritten through a shell command (no per-edit hook ever saw them).
-  const listed = `${git(root, ["diff", "--name-only", "HEAD"]) ?? ""}\n${git(root, ["ls-files", "-o", "--exclude-standard"]) ?? ""}`;
-  const changed = [...new Set(listed.split(/\r?\n/).filter(Boolean))];
+  // -z: names exactly as on disk (without it git quotes non-ASCII names, e.g. Polish ones, and they would be skipped).
+  const listed = `${git(root, ["diff", "--name-only", "-z", "HEAD"]) ?? ""}\0${git(root, ["ls-files", "-o", "-z", "--exclude-standard"]) ?? ""}`;
+  const changed = [...new Set(listed.split("\0").filter(Boolean))];
   if (changed.length === 0) continue;
 
   const existing = changed.filter((f) => existsSync(path.join(root, f)));
@@ -76,7 +85,8 @@ for (const root of roots) {
   const scanned = existing.filter((f) => SCANNED.has(path.extname(f)));
 
   if (linted.length > 0) {
-    const eslint = run(root, "node_modules/eslint/bin/eslint.js", ["--quiet", ...linted]);
+    // `--`: a file name starting with "-" is a file, not an option.
+    const eslint = run(root, "node_modules/eslint/bin/eslint.js", ["--quiet", "--", ...linted]);
     if (!eslint.ok) report.push(`ESLint errors in changed files (${root}):\n${eslint.out}`);
   }
   if (scanned.length > 0) {
@@ -86,7 +96,8 @@ for (const root of roots) {
       report.push(`ui:scan found literal values in changed views — use the role classes (${root}):\n${scan.out}`);
   }
   // Whole-project typecheck, as CI runs it (astro check also covers .astro files and syncs generated types).
-  if (linted.length > 0 || changed.some((f) => TYPE_INPUTS.test(f))) {
+  // Deleted source files count too: removing a module breaks the files that import it.
+  if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f))) {
     const check = run(root, "node_modules/astro/bin/astro.mjs", ["check"]);
     if (!check.ok) report.push(`astro check fails (${root}):\n${check.out}`);
   }

@@ -7,7 +7,8 @@ import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-const FORMATTED = new Set([".ts", ".tsx", ".astro", ".json", ".css", ".md"]);
+// JS files too: ESLint lints them with the Prettier rule, so an unformatted edit would send the agent back at Stop.
+const FORMATTED = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".astro", ".json", ".css", ".md"]);
 
 let raw = "";
 for await (const chunk of process.stdin) raw += chunk;

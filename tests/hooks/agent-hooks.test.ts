@@ -26,7 +26,10 @@ process.exit(bad ? 1 : 0);
   "node_modules/astro/bin/astro.mjs": `
 import fs from "node:fs";
 fs.appendFileSync(process.env.STUB_LOG, "astro " + process.argv.slice(2).join(" ") + "\\n");
-const bad = fs.readdirSync("src", { recursive: true }).map(String).filter((f) => fs.statSync("src/" + f).isFile() && fs.readFileSync("src/" + f, "utf8").includes("TYPE_ERROR"));
+const sources = fs.readdirSync("src", { recursive: true }).map(String).filter((f) => fs.statSync("src/" + f).isFile());
+// SLOW: hangs like a type check that never ends.
+if (sources.some((f) => fs.readFileSync("src/" + f, "utf8").includes("SLOW"))) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30000);
+const bad = sources.filter((f) => fs.readFileSync("src/" + f, "utf8").includes("TYPE_ERROR"));
 // Coloured like the real astro check, which ignores NO_COLOR.
 for (const f of bad) console.log("\\u001b[96msrc/" + f + "\\u001b[0m:1:7 - \\u001b[91merror\\u001b[0m ts(2322): Type 'string' is not assignable to type 'number'.");
 process.exit(bad.length ? 1 : 0);
@@ -117,7 +120,7 @@ function runHook(
   sb: Sandbox,
   script: "end-of-turn.mjs" | "format.mjs",
   input: unknown,
-  options: { cwd?: string; projectDir?: string; scriptRoot?: string } = {},
+  options: { cwd?: string; projectDir?: string; scriptRoot?: string; env?: NodeJS.ProcessEnv } = {},
 ): HookResult {
   const result = spawnSync(process.execPath, [path.join(options.scriptRoot ?? sb.root, ".claude", "hooks", script)], {
     cwd: options.cwd ?? sb.root,
@@ -130,6 +133,7 @@ function runHook(
       TEMP: sb.tmp,
       TMPDIR: sb.tmp,
       CLAUDE_PROJECT_DIR: options.projectDir ?? sb.root,
+      ...options.env,
     },
   });
   return { code: result.status, stdout: result.stdout, stderr: result.stderr };
@@ -190,6 +194,22 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).not.toContain("\u001b[");
   });
 
+  it("checks a changed file with a non-ASCII name", () => {
+    const sb = sandbox();
+    write(sb.root, "src/żółw.ts", "const unused = 1; // LINT_ERROR\n");
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("src/żółw.ts");
+  });
+
+  it("blocks and says so when a check does not finish within the hook's budget", () => {
+    const sb = sandbox();
+    write(sb.root, "src/ok.ts", "export const ok = 2; // SLOW\n");
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root), { env: { END_OF_TURN_BUDGET_MS: "1500" } });
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("did not finish within the 1.5 s budget");
+  });
+
   it("blocks on a ui:scan hit in a changed view", () => {
     const sb = sandbox();
     write(sb.root, "src/View.tsx", 'export const View = () => <p className="text-blue-100">UI_HIT</p>;\n');
@@ -207,12 +227,26 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(sb.calls()).toBe("");
   });
 
-  it("ignores a changed file that was deleted", () => {
+  it("does not lint a deleted file, but still checks the project that may import it", () => {
     const sb = sandbox();
     rmSync(path.join(sb.root, "src/ok.ts"));
     const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
     expect(r.code).toBe(0);
     expect(sb.calls()).not.toContain("eslint");
+    expect(sb.calls()).toContain("astro check");
+  });
+
+  it("blocks when a deletion leaves a type error in the project", () => {
+    const sb = sandbox();
+    // The committed importer stands for a file that stops compiling once its dependency is gone: the astro stub
+    // reports its marker. The turn only deletes the dependency, so no changed file is left to lint.
+    write(sb.root, "src/uses-ok.ts", "import { ok } from './ok'; export const twice = ok * 2; // TYPE_ERROR\n");
+    git(sb.root, "add", "-A");
+    git(sb.root, "commit", "-q", "-m", "add importer");
+    rmSync(path.join(sb.root, "src/ok.ts"));
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("astro check fails");
   });
 
   it.each([
@@ -296,6 +330,14 @@ describe("format.mjs (PostToolUse Write|Edit)", () => {
   it("formats the edited file only", () => {
     const sb = sandbox();
     const file = write(sb.root, "src/ok.ts", "export const ok = 3;\n");
+    const r = runHook(sb, "format.mjs", edit(sb.root, file));
+    expect(r.code).toBe(0);
+    expect(sb.calls()).toContain(`prettier --write --ignore-unknown --log-level warn ${file}`);
+  });
+
+  it("formats an edited JavaScript module too", () => {
+    const sb = sandbox();
+    const file = write(sb.root, "scripts/tool.mjs", "export const tool = 1;\n");
     const r = runHook(sb, "format.mjs", edit(sb.root, file));
     expect(r.code).toBe(0);
     expect(sb.calls()).toContain(`prettier --write --ignore-unknown --log-level warn ${file}`);
