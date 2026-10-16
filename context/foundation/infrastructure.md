@@ -111,8 +111,8 @@ Zweryfikowane dla wersji z repozytorium: `@astrojs/cloudflare` 14.x (tylko Worke
 
 ## Out of Scope
 
-The following were not evaluated in this research:
+Tego nie oceniano w tym badaniu:
 
-- Docker image configuration
-- CI/CD pipeline setup
-- Production-scale architecture (multi-region, HA, DR)
+- konfiguracja obrazu Dockera
+- konfiguracja potoku CI/CD
+- architektura w skali produkcyjnej (wiele regionów, HA, DR)

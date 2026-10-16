@@ -14,9 +14,9 @@ milestone_status: open
 
 # Roadmap: MamLek
 
-> Derived from `context/foundation/prd.md` (v2) + auto-researched codebase baseline.
-> Edit-in-place; archive when superseded.
-> Slices below are listed in dependency order. The "At a glance" table is the index.
+> Wyprowadzone z `context/foundation/prd.md` (v2) + automatycznie zbadanego stanu wyjściowego kodu.
+> Edytuj w miejscu; archiwizuj, gdy zostanie zastąpione.
+> Wycinki poniżej są ułożone w kolejności zależności. Tabela "At a glance" jest spisem treści.
 
 ## Milestone
 
@@ -54,7 +54,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## Streams
 
-Navigation aid — groups items that share a Prerequisites chain. Canonical ordering still lives in the dependency graph below; this table is the proposed reading order across parallel tracks.
+Pomoc w nawigacji — grupuje pozycje, które dzielą łańcuch Prerequisites. Wiążąca kolejność nadal żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania równoległych ścieżek.
 
 | Stream | Theme               | Chain                                      | Note                                                                                          |
 | ------ | ------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
@@ -66,8 +66,8 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 
 ## Baseline
 
-What's already in place in the codebase as of `2026-09-29` (auto-researched + user-confirmed).
-Foundations below assume these are present and do NOT re-scaffold them.
+Co już jest w kodzie na dzień `2026-09-29` (zbadane automatycznie + potwierdzone przez użytkownika).
+Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 
 - **Frontend:** present — Astro 7 SSR z wyspami React 19, Tailwind 4, shadcn/ui (na razie tylko przycisk); układ mobilny jeszcze nieweryfikowany (`src/layouts/Layout.astro`, `src/components/`).
 - **Backend / API:** partial — tylko endpointy logowania (`src/pages/api/auth/*`); brak endpointów domenowych i warstwy serwisów.

@@ -6,60 +6,65 @@ cloudflare_account: michalgalka84@gmail.com
 workers_dev_subdomain: mig-app
 ---
 
-# First production deploy
+# Pierwsze wdrożenie produkcyjne
 
-First manual deployment of the bootstrapped scaffold (Supabase auth + protected
-`/dashboard`, no product features yet) to Cloudflare Workers, following the
-platform decision in `context/foundation/infrastructure.md`.
+Pierwsze ręczne wdrożenie wygenerowanego szkieletu (logowanie przez Supabase +
+chroniony `/dashboard`, jeszcze bez funkcji produktu) na Cloudflare Workers,
+zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`.
 
-## What was done
+## Co zostało zrobione
 
-1. Cloudflare account confirmed, upgraded to Workers Paid plan.
-2. `npx wrangler login` — authenticated as `michalgalka84@gmail.com`.
-3. New Supabase cloud project created in the **Frankfurt (eu-central-1)** region,
-   email confirmation left **on** (stricter than the local dev stack default).
-4. Worker secrets set via `wrangler secret put` (values typed at the interactive
-   prompt, never pasted into a file or chat):
+1. Potwierdzone konto Cloudflare, przejście na plan Workers Paid.
+2. `npx wrangler login` — uwierzytelnienie jako `michalgalka84@gmail.com`.
+3. Nowy projekt Supabase w chmurze w regionie **Frankfurt (eu-central-1)**,
+   potwierdzanie e-maila zostawione **włączone** (surowiej niż domyślnie w
+   lokalnym stosie deweloperskim).
+4. Sekrety Workera ustawione przez `wrangler secret put` (wartości wpisane w
+   interaktywnym prompcie, nigdy nie wklejone do pliku ani czatu):
    - `SUPABASE_URL`
-   - `SUPABASE_KEY` (new-style `sb_publishable_...` key, not the legacy JWT anon key)
-5. `npm run build`, then `npx wrangler deploy`.
-   - The adapter auto-provisioned a `SESSION` KV namespace (`mamlek-session`) and
-     an `IMAGES` binding on first deploy — resolves the "unknown unknown" flagged
-     in `infrastructure.md`'s risk register; no manual namespace creation needed.
-   - First deploy failed until a `workers.dev` subdomain was registered for the
-     account (one-time, dashboard-only action — no `wrangler` subcommand for it).
-   - Changed the account's default `workers.dev` subdomain via **Workers & Pages
-     → Overview → Your subdomain → Change** to `mig-app` before going further.
-6. Verified end-to-end:
+   - `SUPABASE_KEY` (klucz nowego typu `sb_publishable_...`, nie dawny klucz anon JWT)
+5. `npm run build`, potem `npx wrangler deploy`.
+   - Adapter przy pierwszym wdrożeniu sam utworzył przestrzeń KV `SESSION`
+     (`mamlek-session`) i powiązanie `IMAGES` — to rozwiązuje „nieznaną
+     niewiadomą” z rejestru ryzyk w `infrastructure.md`; ręczne tworzenie
+     przestrzeni nie jest potrzebne.
+   - Pierwsze wdrożenie kończyło się błędem, dopóki konto nie miało
+     zarejestrowanej subdomeny `workers.dev` (jednorazowa czynność tylko w
+     panelu — `wrangler` nie ma do tego polecenia).
+   - Przed dalszymi krokami domyślna subdomena `workers.dev` konta zmieniona na
+     `mig-app` przez **Workers & Pages → Overview → Your subdomain → Change**.
+6. Sprawdzone od początku do końca:
    - `GET /` → 200
-   - `GET /dashboard` (unauthenticated) → 302 to `/auth/signin`
-   - Real sign-up → email confirmation → sign-in → landed on `/dashboard`, proving
-     the deployed Worker reaches the cloud Supabase project.
-   - `wrangler deployments list` shows both deploys recorded (rollback available
-     via `wrangler rollback <VERSION_ID>`).
+   - `GET /dashboard` (bez logowania) → 302 na `/auth/signin`
+   - Prawdziwa rejestracja → potwierdzenie e-maila → logowanie → wejście na
+     `/dashboard`, co dowodzi, że wdrożony Worker łączy się z projektem
+     Supabase w chmurze.
+   - `wrangler deployments list` pokazuje oba zapisane wdrożenia (cofnięcie
+     możliwe przez `wrangler rollback <VERSION_ID>`).
 
-## Secrets (values not recorded here)
+## Sekrety (wartości nie są tu zapisane)
 
-| Secret         | Where it lives                      |
-| -------------- | ----------------------------------- |
-| `SUPABASE_URL` | Cloudflare Worker secret (`mamlek`) |
-| `SUPABASE_KEY` | Cloudflare Worker secret (`mamlek`) |
+| Sekret         | Gdzie jest                           |
+| -------------- | ------------------------------------ |
+| `SUPABASE_URL` | Sekret Workera Cloudflare (`mamlek`) |
+| `SUPABASE_KEY` | Sekret Workera Cloudflare (`mamlek`) |
 
-## Follow-up: CI auto-deploy-on-merge
+## Dalszy krok: automatyczne wdrożenie po merge'u w CI
 
-`ci.yml` now has a `deploy` job (gated on `ci` + `smoke` passing, triggered on
-every push to `main`) that runs `npm run build` then `cloudflare/wrangler-action@v4`
-with a scoped `CLOUDFLARE_API_TOKEN` repo secret. Manual `wrangler deploy` from a
-local machine remains available as a fallback.
+`ci.yml` ma teraz job `deploy` (uruchamiany po przejściu `ci` i `smoke`, przy
+każdym pushu do `main`), który wykonuje `npm run build`, a potem
+`cloudflare/wrangler-action@v4` z ograniczonym sekretem repozytorium
+`CLOUDFLARE_API_TOKEN`. Ręczne `wrangler deploy` z lokalnej maszyny zostaje
+jako wyjście awaryjne.
 
-## Follow-up: wrangler upgrade
+## Dalszy krok: aktualizacja wranglera
 
-`wrangler` bumped `4.131.1` → `4.142.0` (`package.json` + lockfile) to unblock
-Worker Previews. Lint, `astro check`, and build verified green after the bump;
-smoke test not re-run (local Supabase/Docker wasn't up, and the change doesn't
-touch auth/middleware/Supabase code).
+`wrangler` podbity z `4.131.1` do `4.142.0` (`package.json` + lockfile), żeby
+odblokować Worker Previews. Po podbiciu lint, `astro check` i build przechodzą;
+test smoke nie był powtórzony (lokalny Supabase/Docker nie był uruchomiony, a
+zmiana nie dotyka kodu logowania, middleware ani Supabase).
 
-## Explicitly not done in this pass
+## Świadomie pominięte w tym przebiegu
 
-- The daily registry-import GitHub Actions job (PRD FR-001) — no product code
-  for it exists yet.
+- Codzienny job GitHub Actions importujący rejestr (PRD FR-001) — nie ma
+  jeszcze dla niego kodu produktu.
