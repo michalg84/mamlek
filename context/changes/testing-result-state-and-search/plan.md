@@ -281,9 +281,9 @@ Brak — testy nie dotykają kodu produkcyjnego; cały zestaw `npm test` powinie
 
 #### Automated
 
-- [x] 4.1 `npm test` przechodzi
+- [x] 4.1 `npm test` przechodzi — da951d5
 - [x] 4.2 W `test-plan.md` nie zostało „TBD — zob. §3 Faza 2”
 
 #### Manual
 
-- [x] 4.3 Autor przegląda zmiany w §6 i AGENTS.md
+- [x] 4.3 Autor przegląda zmiany w §6 i AGENTS.md — da951d5
