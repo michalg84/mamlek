@@ -2,7 +2,7 @@
 deployed_at: 2026-09-27
 platform_decision: context/foundation/infrastructure.md
 worker_url: https://mamlek.mig-app.workers.dev
-cloudflare_account: michalgalka84@gmail.com
+cloudflare_account: konto autora
 workers_dev_subdomain: mig-app
 ---
 
@@ -15,7 +15,7 @@ zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`.
 ## Co zostało zrobione
 
 1. Potwierdzone konto Cloudflare, przejście na plan Workers Paid.
-2. `npx wrangler login` — uwierzytelnienie jako `michalgalka84@gmail.com`.
+2. `npx wrangler login` — uwierzytelnienie na koncie Cloudflare autora.
 3. Nowy projekt Supabase w chmurze w regionie **Frankfurt (eu-central-1)**,
    potwierdzanie e-maila zostawione **włączone** (surowiej niż domyślnie w
    lokalnym stosie deweloperskim).
