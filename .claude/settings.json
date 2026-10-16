@@ -6,9 +6,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\" 2>/dev/null || true",
+            "command": "node \"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")/.claude/hooks/format.mjs\"",
             "timeout": 30,
             "statusMessage": "Formatting with Prettier..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")/.claude/hooks/end-of-turn.mjs\"",
+            "timeout": 120,
+            "statusMessage": "Checking this turn's changes (lint, ui:scan, astro check)..."
           }
         ]
       }
