@@ -113,7 +113,7 @@ async function openSearch() {
    * editing the text: the worker answers that query, ArrowDown reopens the list, the click selects.
    */
   async function pickOther(optionText: string) {
-    await deliver(input.getAttribute("value") ?? "");
+    await deliver((input as HTMLInputElement).value);
     fireEvent.keyDown(input, { key: "ArrowDown" });
     pick(optionText);
   }
@@ -121,6 +121,8 @@ async function openSearch() {
   /**
    * The check endpoint answers `productId` now. No timers: the pending work (reading the body, state updates) is
    * drained with microtask turns inside `act`, so everything the answer can cause has happened when this returns.
+   * 50 is a generous bound (reading the body and the updates take a few promise hops each); every "nothing changed"
+   * assertion below is followed by an answer that must show, which proves the drain is long enough.
    */
   async function answerCheck(productId: number, body: MedicineCheckResponse) {
     await act(async () => {
@@ -166,8 +168,10 @@ describe("RegistrySearch", () => {
     fireEvent.change(input, { target: { value: "ibuprom" } });
     expect(screen.queryAllByRole("option")).toHaveLength(0);
 
-    await Promise.resolve();
-    Worker.last?.deliverAll();
+    await act(async () => {
+      Worker.last?.deliverAll();
+      await Promise.resolve();
+    });
 
     const options = await screen.findAllByRole("option");
     expect(options.map((option) => option.textContent)).toEqual([
@@ -220,7 +224,8 @@ describe("RegistrySearch", () => {
       // The request was abandoned, but its answer still arrives.
       await screenUnderTest.answerCheck(A_ID, A_ANSWER);
 
-      expect(screenUnderTest.checks.pendingChecks(A_ID)).toBe(0);
+      // Only the abandoned request was made: the edit did not ask about A again.
+      expect(screenUnderTest.checks.checkRequests()).toEqual([A_ID]);
       expect(card()).toBeNull();
       expect(verdictsOnScreen()).toEqual([]);
       expect(screen.queryByText(LOADING)).toBeNull();
@@ -316,6 +321,7 @@ describe("RegistrySearch", () => {
 
       screenUnderTest.type("zzz");
       // The previous results stay until the new answer arrives; the message must not describe the old query.
+      expect(optionTexts()).toHaveLength(3);
       expect(screen.queryByText(NO_MATCH)).toBeNull();
 
       await screenUnderTest.deliver("zzz");

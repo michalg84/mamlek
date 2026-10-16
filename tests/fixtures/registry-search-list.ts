@@ -21,7 +21,8 @@ export const ID = {
   noSpaTablet: 8,
 
   // Equal-length names that differ only in the Polish order (A, Ą, B), a shorter name and a longer name that
-  // sorts alphabetically before "Gripex B". Ids are in reverse of the expected order.
+  // sorts alphabetically before "Gripex B". The ids of the first four are in reverse of the expected order, so the
+  // id never decides it.
   gripex: 23,
   gripexA: 22,
   gripexAOgonek: 21,

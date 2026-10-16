@@ -63,14 +63,18 @@ export class FakeSearchWorker {
     return this.queue.map((message) => message.query);
   }
 
-  /** Delivers the oldest queued answer to the query with this exact text; throws when none is queued. */
+  /**
+   * Delivers the oldest queued answer to the query with this exact text, and every older answer before it: the real
+   * worker answers in order, so a newer answer can never overtake an older one. Throws when none is queued.
+   */
   deliver(query: string) {
     const position = this.queue.findIndex((message) => message.query === query);
     if (position < 0) {
       throw new Error(`No queued worker answer for query "${query}" (queued: ${this.pendingQueries().join(", ")})`);
     }
-    const [message] = this.queue.splice(position, 1);
-    this.emit(message);
+    for (const message of this.queue.splice(0, position + 1)) {
+      this.emit(message);
+    }
   }
 
   /** Delivers every queued answer, oldest first. */

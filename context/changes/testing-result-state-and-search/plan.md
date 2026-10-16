@@ -168,6 +168,7 @@ A i B dostają werdykty różnego rodzaju (np. „Masz ten lek · 1 opakowanie�
 
 - `npx vitest run --project component` przechodzi
 - Ręczne sprawdzenie mutacyjne (każde osobno, potem cofnięte): usunięcie `onEdit` w `RegistrySearch` wywraca scenariusze 1–3; usunięcie `key={selected.id}` razem z porównaniem klucza w `useMedicineCheck` wywraca scenariusz 4 lub 5; usunięcie porównania `message.id === lastIdRef.current` razem z zerowaniem `answer` wywraca scenariusz 7
+  - Nota z przeglądu (2026-10-16): drugie sprawdzenie w tym brzmieniu zostaje zielone, bo trzecie zabezpieczenie (`!controller.signal.aborted` w `finish`) samo odrzuca spóźnioną odpowiedź; scenariusze 4/5 wywraca dopiero usunięcie wszystkich trzech. Korekta przyjęta przez autora, zapisana w `test-plan.md` §6.6.
 - `npm run lint` i `npx astro check` bez nowych błędów
 
 #### Manual Verification:
@@ -282,7 +283,7 @@ Brak — testy nie dotykają kodu produkcyjnego; cały zestaw `npm test` powinie
 #### Automated
 
 - [x] 4.1 `npm test` przechodzi — da951d5
-- [x] 4.2 W `test-plan.md` nie zostało „TBD — zob. §3 Faza 2”
+- [x] 4.2 W `test-plan.md` nie zostało „TBD — zob. §3 Faza 2” — da951d5
 
 #### Manual
 
