@@ -153,12 +153,12 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 - **Istniejący wzorzec**: syntetyczne wiersze wstawiane w jednej transakcji, która zawsze jest wycofywana.
 - **Test wzorcowy**: `tests/db/medicine-check.test.ts` (fixture'y w `tests/db/medicine-check-fixtures.ts`).
 - **Uruchomienie lokalnie**: `npm run test:db` z `DATABASE_URL` ustawionym na lokalną bazę, po `npx supabase db reset`.
-- **Dane syntetyczne**: identyfikatory zaczynają się od 9 000 000 001, id opakowania to id produktu + 1000, każdy przypadek dostaje własne konto, savepoint na test; `connectLocal` rzuca błąd (nigdy nie pomija) bez lokalnego `DATABASE_URL`.
+- **Dane syntetyczne**: identyfikatory zaczynają się od 9 000 000 001, id opakowania to id produktu + 1000, w teście reguły każdy przypadek dostaje własne konto, savepoint na test; `connectLocal` rzuca błąd (nigdy nie pomija) bez lokalnego `DATABASE_URL`.
 - **Przez kod ekranu**: każda odpowiedź reguły przechodzi przez `parseMedicineCheck` i `checkVerdict`, więc zmiana nazwy pola albo werdykt, który zamienia dopasowanie w „nie masz”, wywraca się tutaj, a nie na ekranie.
 - **Znane ograniczenia** (inna sól z inną nazwą powszechną, substancja zapisana jako jeden napis) są przypięte testami, których nazwy to mówią, a nie pominięte.
-- **Wzorzec izolacji dwóch użytkowników** (`tests/db/kit-access.test.ts`): dwa syntetyczne konta A i B na grupę przypadków. Rolę przełączają `actAs(client, userId)`, `actAsAnon(client)` i `actAsOwner(client)` z `tests/db/medicine-check-fixtures.ts`; instrukcję, która ma zostać odrzucona, uruchamia `expectSqlError(client, sql, params, kod)` we własnym savepoincie (błąd SQL przerywa transakcję, a rolę ustaw PRZED wewnętrznym savepointem, bo `rollback to savepoint` cofa też późniejsze `set local`).
+- **Wzorzec izolacji dwóch użytkowników** (`tests/db/kit-access.test.ts`): jedna para syntetycznych kont A i B na cały plik; przypadki są niezależne dzięki savepointowi na test. Rolę przełączają `actAs(client, userId)`, `actAsAnon(client)` i `actAsOwner(client)` z `tests/db/medicine-check-fixtures.ts`; instrukcję, która ma zostać odrzucona, uruchamia `expectSqlError(client, sql, params, kod)` we własnym savepoincie (błąd SQL przerywa transakcję, a rolę ustaw PRZED wewnętrznym savepointem, bo `rollback to savepoint` cofa też późniejsze `set local`).
 - **Dwie postacie odrzucenia RLS**: `select`, `update` i `delete` cudzych wierszy nie rzucają błędu, tylko dotykają 0 wierszy — asercja to `rowCount === 0` ORAZ wiersz odczytany jako właściciel (`actAsOwner`) nienaruszony. `insert` z cudzym `user_id`, `update` zmieniający `user_id` na cudzy, brak grantu (`anon`, `truncate`) rzucają `42501`.
-- **Test, który nie przechodzi „bo nic nie widać”**: do każdej grupy należy kontrola, że właściciel widzi swój wiersz.
+- **Test, który nie przechodzi „bo nic nie widać”**: plik zawiera co najmniej jedną kontrolę, że właściciel widzi swój wiersz; bez niej „0 wierszy” dla drugiego konta niczego nie dowodzi.
 - **Przyjęta luka F2** (limit opakowania, wycofane opakowanie i precyzja `day` istnieją tylko w API; właściciel może je zapisać przez API danych): przypięta testami o nazwach zaczynających się od `known gap (Parked, F2):`. Gdy luka zostanie zamknięta w bazie, te testy mają się wywrócić i trzeba je odwrócić, nie usuwać.
 - **Strażnik `security definer`**: żadna funkcja w `public` nie ma `prosecdef = true`, a lista wyjątków jest pusta. Reguła: nowa funkcja na danych użytkownika jest `security invoker` albo świadomym, uzasadnionym wyjątkiem w tym teście — dopisanie wyjątku to decyzja, nie poprawka testu.
 
@@ -183,7 +183,8 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 - **Dane graniczne z bazy**: opakowanie z liczbowym rozmiarem, bez rozmiaru, wycofane i opakowanie wycofanego produktu wybierają zapytania do rejestru (`DATABASE_URL`, tylko odczyt), a brak rekordu to błąd, nie pominięcie. Działa i na fixture'ach z CI (v1, v1, v2), i na pełnym rejestrze.
 - **Anonim przed walidacją**: anonimowe żądanie dostaje 401 niezależnie od treści i `Content-Type` (kolejność w trasach: 503 → 401 → 415 → 400 → 201).
 - **Dla S-05 (edycja i usuwanie)**: dodać trasy edycji i usuwania do OBU plików — nieprawidłowe dane i granice do `kit-input.test.ts`, cudzy wiersz (404/403 i wiersz nienaruszony u właściciela) do `kit-access.test.ts` — oraz przypadki na poziomie danych, jeśli zmieni się migracja.
-- **Limit logowań**: każdy przebieg zakłada kilka kont, a lokalny Supabase ma limit 30 rejestracji na 5 minut; błąd rejestracji mówi to wprost.
+- **Tylko lokalnie**: `BASE_URL` spoza localhost jest odrzucany, a po zalogowaniu pomocnik sprawdza, że konto jest w lokalnym `auth.users` — inaczej serwer działa na innej bazie i liczenie wierszy niczego by nie dowodziło.
+- **Limit logowań**: każdy przebieg zakłada 4 konta (8 żądań), a lokalny Supabase pozwala na 30 rejestracji i logowań razem na 5 minut, więc mieszczą się ok. 3 przebiegi; błędy rejestracji i logowania podpowiadają tę przyczynę (logowanie także włączone potwierdzanie e-maili).
 
 ### 6.5 Adding a test for the registry import or parser
 

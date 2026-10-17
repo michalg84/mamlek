@@ -1,7 +1,7 @@
 ---
 change_id: testing-kit-access-and-input-boundaries
 title: Test rollout Phase 3 — kit access isolation and input boundaries
-status: implemented
+status: impl_reviewed
 created: 2026-10-17
 updated: 2026-10-17
 archived_at: null

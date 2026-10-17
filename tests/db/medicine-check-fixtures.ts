@@ -1,12 +1,13 @@
-// Fixtures for the medicine check rule tests: synthetic registry products, accounts and kit items inserted in one
-// transaction that the test file always rolls back, so nothing is left behind and the result does not depend on the
-// registry contents (any migrated local database works, with fixtures or with the full registry).
+// Shared helpers of the database and API tests (the name predates the kit tests): the local-only connection, switching
+// to an account or `anon`, statements expected to be refused, and the fixtures of the rule tests — synthetic registry
+// products, accounts and kit items inserted in one transaction that the test file always rolls back, so nothing is
+// left behind and the result does not depend on the registry contents (any migrated local database works).
 import { URL } from "node:url";
 import pg from "pg";
 import { expect } from "vitest";
 
 // Local databases only: the rows are rolled back, but the inserts would still fire triggers and take locks elsewhere.
-const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+export const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 /** Connects to the local database named by `DATABASE_URL`; throws (never skips) when it is missing or not local. */
 export async function connectLocal(): Promise<pg.Client> {

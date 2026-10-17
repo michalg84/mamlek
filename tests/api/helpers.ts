@@ -1,10 +1,15 @@
 // Helpers of the API tests: a session over cookies (its own copy of scripts/smoke.mjs, which stays dependency-free),
 // raw HTTP requests, boundary data picked from the local registry, and the checks every rejected request goes through.
-import { connectLocal } from "../db/medicine-check-fixtures";
+import { connectLocal, LOCAL_HOSTS } from "../db/medicine-check-fixtures";
 
 // Vitest itself sets BASE_URL to "/" (Vite's base path), so only an absolute URL counts as the caller's choice.
 const fromEnv = process.env.BASE_URL;
 export const BASE_URL = fromEnv?.startsWith("http") ? fromEnv.replace(/\/$/, "") : "http://localhost:4321";
+
+// Local servers only: the suite signs up accounts and writes kit rows, and checks them in the local database.
+if (!LOCAL_HOSTS.has(new URL(BASE_URL).hostname)) {
+  throw new Error(`BASE_URL must point to a local server (got ${BASE_URL})`);
+}
 
 export type Jar = Map<string, string>;
 
@@ -80,17 +85,28 @@ export async function signUpAndSignIn(label: string): Promise<{ email: string; j
       contentType: "application/x-www-form-urlencoded",
       jar,
     });
+  const limit =
+    "the limit of 30 sign-ups and sign-ins per 5 minutes (supabase/config.toml; wait a few minutes or restart Supabase)";
+  // With e-mail confirmation on, sign-up still succeeds and only sign-in is refused ("Email not confirmed").
+  const confirmation = "e-mail confirmation being on (enable_confirmations in supabase/config.toml)";
   const signUp = await form("/api/auth/signup");
   if (signUp.status !== 302 || signUp.location !== "/auth/confirm-email") {
     throw new Error(
       `Sign-up of ${email} failed (status ${signUp.status}, location "${signUp.location}"). ` +
-        "Locally the cause is usually the limit of 30 sign-ups and sign-ins per 5 minutes (supabase/config.toml) " +
-        "or e-mail confirmation being on; wait a few minutes or restart Supabase.",
+        `Locally the cause is usually ${limit}.`,
     );
   }
   const signIn = await form("/api/auth/signin");
   if (signIn.status !== 302 || signIn.location !== "/szukaj") {
-    throw new Error(`Sign-in of ${email} failed (status ${signIn.status}, location "${signIn.location}")`);
+    throw new Error(
+      `Sign-in of ${email} failed (status ${signIn.status}, location "${signIn.location}"). ` +
+        `Locally the cause is usually ${confirmation} or ${limit}.`,
+    );
+  }
+  // A local server can still use a cloud Supabase; then every row count below would read the wrong database.
+  const [account] = await query<{ n: number }>("select count(*)::int as n from auth.users where email = $1", [email]);
+  if (account.n !== 1) {
+    throw new Error(`${email} is not in the local auth.users: the server at ${BASE_URL} does not use DATABASE_URL`);
   }
   return { email, jar };
 }
@@ -117,6 +133,9 @@ async function one<T extends object>(what: string, sql: string): Promise<T> {
 // Active = the pack and its product are not withdrawn. A pack "with a size" has exactly one `units` entry whose count
 // is a positive integer (the rule of POST /api/kit: the quantity may not exceed it).
 const SIZE_SHAPE = `jsonb_array_length(pk.units) = 1 and btrim(coalesce(pk.units->0->>'count', '')) ~ '^[0-9]+$'`;
+// Certainly without a size for the app whatever the whitespace (its trim also strips tabs and NBSP, btrim does not):
+// not exactly one entry, or a count with no digit at all.
+const UNSIZED_SHAPE = `(jsonb_array_length(pk.units) <> 1 or coalesce(pk.units->0->>'count', '') !~ '[0-9]')`;
 
 export interface BoundaryData {
   /** An active pack with a size, its size and its product. */
@@ -142,7 +161,7 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
     "active pack without a numeric size",
     `select pk.id::float8 as package_id
        from registry_packages pk join registry_products p on p.id = pk.product_id
-      where pk.removed_at is null and p.removed_at is null and not (${SIZE_SHAPE})
+      where pk.removed_at is null and p.removed_at is null and ${UNSIZED_SHAPE}
       order by pk.id limit 1`,
   );
   const withdrawnPackage = await one<{ package_id: number }>(
@@ -174,6 +193,12 @@ export async function kitRowCount(email: string): Promise<number> {
   return row.n;
 }
 
+/** The id (uuid) of the account with this e-mail, as the database stores it in `kit_items.user_id`. */
+export async function userIdOf(email: string): Promise<string> {
+  const [row] = await query<{ id: string }>("select id::text from auth.users where email = $1", [email]);
+  return row.id;
+}
+
 // --- Checks ------------------------------------------------------------------------------------------------------
 
 // Traces of the server's inside: table names, database error text, stack frames. The `issues` of a 400 (field path and
@@ -187,6 +212,16 @@ const INTERNALS = [
   /\n\s+at /,
   /PostgrestError/i,
 ];
+
+/** Text as Astro writes it into a page (the same escaping as `scripts/smoke.mjs`). */
+export function escapeHtml(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
 
 /** Throws when the response body contains anything from the inside of the server. */
 export function expectNoInternals(body: string): void {

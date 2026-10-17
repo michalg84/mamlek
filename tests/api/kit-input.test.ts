@@ -29,8 +29,8 @@ let jar: Jar;
 let data: BoundaryData;
 
 beforeAll(async () => {
-  ({ email, jar } = await signUpAndSignIn("input"));
   data = await loadBoundaryData();
+  ({ email, jar } = await signUpAndSignIn("input"));
 });
 
 /** Sends the request and asserts the three things every rejected request must satisfy. */
@@ -70,11 +70,12 @@ describe("POST /api/kit: wrong request shape", () => {
     await expectRejected(400, () => sendJson(KIT, { packageId: data.sized.packageId, [key]: "x" }, jar));
   });
 
-  it("an oversized body gets a 4xx", async () => {
-    const reply = await sendJson(KIT, { packageId: data.sized.packageId, padding: "x".repeat(100_000) }, jar);
-    expect(reply.status).toBeGreaterThanOrEqual(400);
-    expect(reply.status).toBeLessThan(500);
-    expectNoInternals(reply.body);
+  // The route has no size limit of its own: the unknown key is what rejects it. The case proves that a large body is
+  // read and refused without a 500 or a write, not that size itself is checked.
+  it("an oversized body (100 kB in an unknown key) gets 400 and writes nothing", async () => {
+    await expectRejected(400, () =>
+      sendJson(KIT, { packageId: data.sized.packageId, padding: "x".repeat(100_000) }, jar),
+    );
   });
 });
 

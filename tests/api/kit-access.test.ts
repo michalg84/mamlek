@@ -3,12 +3,14 @@
 // the owner of a row is the session and never the request, and one account never sees another account's kit.
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+  escapeHtml,
   expectNoInternals,
   kitRowCount,
   loadBoundaryData,
   send,
   sendJson,
   signUpAndSignIn,
+  userIdOf,
   type BoundaryData,
   type Jar,
 } from "./helpers";
@@ -51,10 +53,11 @@ describe("without a session", () => {
 });
 
 describe("account B against the kit of account A", () => {
-  it("B cannot name A as the owner of a new row", async () => {
+  // A's real id, so that the case still means something if the body ever accepts an owner field.
+  it.each([["userId"], ["user_id"]])("B cannot name A as the owner of a new row (%s = A's id)", async (key) => {
     const before = await kitRowCount(a.email);
 
-    const reply = await sendJson(KIT, { packageId: data.sized.packageId, userId: a.email }, b.jar);
+    const reply = await sendJson(KIT, { packageId: data.sized.packageId, [key]: await userIdOf(a.email) }, b.jar);
 
     expect(reply.status).toBe(400);
     expect(await kitRowCount(a.email)).toBe(before);
@@ -77,12 +80,19 @@ describe("account B against the kit of account A", () => {
     const added = await sendJson(KIT, { packageId: data.sized.packageId }, a.jar);
     expect(added.status).toBe(201);
     const { id } = JSON.parse(added.body) as { id: number };
+    const name = escapeHtml(data.sized.productName).toLowerCase();
+
+    // Positive control: the owner does see the confirmation and the name, so their absence below means something.
+    const own = await send(`/apteczka?dodano=${id}`, { jar: a.jar });
+    expect(own.status).toBe(200);
+    expect(own.body).toContain("Dodano:");
+    expect(own.body.toLowerCase()).toContain(name);
 
     const page = await send(`/apteczka?dodano=${id}`, { jar: c.jar });
 
     expect(page.status).toBe(200);
     expect(page.body).not.toContain("Dodano:");
-    expect(page.body.toLowerCase()).not.toContain(data.sized.productName.toLowerCase());
+    expect(page.body.toLowerCase()).not.toContain(name);
     expect(page.body).toContain("Apteczka jest pusta");
   });
 });
