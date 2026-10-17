@@ -377,24 +377,24 @@ Podpięcie `test:api` do joba `smoke` i opisanie nowych zestawów oraz wzorców 
 
 #### Automated
 
-- [x] 2.1 Lokalnie z fixture'ami, `npm run preview` i `DATABASE_URL`: `npm run test:api` przechodzi
-- [x] 2.2 `npm test` nie uruchamia plików z `tests/api/`
-- [x] 2.3 `npm run lint` przechodzi
-- [x] 2.4 `npx astro check` przechodzi
+- [x] 2.1 Lokalnie z fixture'ami, `npm run preview` i `DATABASE_URL`: `npm run test:api` przechodzi — c9b89be
+- [x] 2.2 `npm test` nie uruchamia plików z `tests/api/` — c9b89be
+- [x] 2.3 `npm run lint` przechodzi — c9b89be
+- [x] 2.4 `npx astro check` przechodzi — c9b89be
 
 #### Manual
 
-- [x] 2.5 Sprawdzenia mutacyjne tras wywracają właściwe przypadki (`.strict()`, rozmiar opakowania, kolejność 401, granica 100000)
-- [x] 2.6 Przy wyłączonym lokalnym Supabase `test:api` kończy się czytelnym błędem
+- [x] 2.5 Sprawdzenia mutacyjne tras wywracają właściwe przypadki (`.strict()`, rozmiar opakowania, kolejność 401, granica 100000) — c9b89be
+- [x] 2.6 Przy wyłączonym lokalnym Supabase `test:api` kończy się czytelnym błędem — c9b89be
 
 ### Phase 3: CI i dokumentacja
 
 #### Automated
 
-- [ ] 3.1 `npm run lint` przechodzi
-- [ ] 3.2 `npx prettier --check` na zmienionych plikach Markdown i YAML przechodzi
+- [x] 3.1 `npm run lint` przechodzi
+- [x] 3.2 `npx prettier --check` na zmienionych plikach Markdown i YAML przechodzi
 - [ ] 3.3 Job `smoke` w CI na PR przechodzi, z przebiegiem `test:api` i nowymi przypadkami `test:db` w logu
 
 #### Manual
 
-- [ ] 3.4 Autor potwierdza, że według §6.2 i §6.4 dopisałby test dla nowej trasy S-05
+- [x] 3.4 Autor potwierdza, że według §6.2 i §6.4 dopisałby test dla nowej trasy S-05

@@ -59,11 +59,14 @@ jobs:
           printf 'SUPABASE_URL=%s\nSUPABASE_KEY=%s\n' "$API_URL" "$ANON_KEY" > .env
           cp .env .dev.vars
       - run: npm run build
-      - name: Run smoke test against production preview
+      - name: Run smoke and API tests against production preview
         run: |
+          source supabase.env
+          export DATABASE_URL="$DB_URL"
           npm run preview -- --port 4321 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:4321/ && break; sleep 1; done
           BASE_URL=http://localhost:4321 npm run smoke
+          BASE_URL=http://localhost:4321 npm run test:api
       - if: always()
         run: supabase stop --no-backup
 
