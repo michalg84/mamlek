@@ -364,28 +364,28 @@ Podpięcie `test:api` do joba `smoke` i opisanie nowych zestawów oraz wzorców 
 
 #### Automated
 
-- [x] 1.1 `npx supabase db reset`, potem `npm run test:db` przechodzi: nowe przypadki i dotychczasowe 35 bez zmian
-- [x] 1.2 `npm run lint` przechodzi
-- [x] 1.3 `npx astro check` przechodzi
+- [x] 1.1 `npx supabase db reset`, potem `npm run test:db` przechodzi: nowe przypadki i dotychczasowe 35 bez zmian — 67a6d3b
+- [x] 1.2 `npm run lint` przechodzi — 67a6d3b
+- [x] 1.3 `npx astro check` przechodzi — 67a6d3b
 
 #### Manual
 
-- [x] 1.4 Sprawdzenia mutacyjne na lokalnej bazie wywracają właściwe przypadki (select using true, grant anon, medicine_check security definer, update bez with check)
+- [x] 1.4 Sprawdzenia mutacyjne na lokalnej bazie wywracają właściwe przypadki (select using true, grant anon, medicine_check security definer, update bez with check) — 67a6d3b
 - [x] 1.5 Nazwy przypadków F2 czytane bez kodu jasno mówią, że to przyjęta luka
 
 ### Phase 2: Granice i dostęp przez API aplikacji
 
 #### Automated
 
-- [ ] 2.1 Lokalnie z fixture'ami, `npm run preview` i `DATABASE_URL`: `npm run test:api` przechodzi
-- [ ] 2.2 `npm test` nie uruchamia plików z `tests/api/`
-- [ ] 2.3 `npm run lint` przechodzi
-- [ ] 2.4 `npx astro check` przechodzi
+- [x] 2.1 Lokalnie z fixture'ami, `npm run preview` i `DATABASE_URL`: `npm run test:api` przechodzi
+- [x] 2.2 `npm test` nie uruchamia plików z `tests/api/`
+- [x] 2.3 `npm run lint` przechodzi
+- [x] 2.4 `npx astro check` przechodzi
 
 #### Manual
 
-- [ ] 2.5 Sprawdzenia mutacyjne tras wywracają właściwe przypadki (`.strict()`, rozmiar opakowania, kolejność 401, granica 100000)
-- [ ] 2.6 Przy wyłączonym lokalnym Supabase `test:api` kończy się czytelnym błędem
+- [x] 2.5 Sprawdzenia mutacyjne tras wywracają właściwe przypadki (`.strict()`, rozmiar opakowania, kolejność 401, granica 100000)
+- [x] 2.6 Przy wyłączonym lokalnym Supabase `test:api` kończy się czytelnym błędem
 
 ### Phase 3: CI i dokumentacja
 

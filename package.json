@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "vitest run --config vitest.db.config.ts",
+    "test:api": "vitest run --config vitest.api.config.ts",
     "smoke": "node scripts/smoke.mjs",
     "roadmap:sync": "node scripts/roadmap-sync.mjs",
     "registry:import": "node scripts/registry-import.mjs",
