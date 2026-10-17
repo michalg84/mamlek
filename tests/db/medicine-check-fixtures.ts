@@ -3,6 +3,7 @@
 // registry contents (any migrated local database works, with fixtures or with the full registry).
 import { URL } from "node:url";
 import pg from "pg";
+import { expect } from "vitest";
 
 // Local databases only: the rows are rolled back, but the inserts would still fire triggers and take locks elsewhere.
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -157,11 +158,46 @@ export class World {
 
 /** Calls the RPC as the API role `authenticated`, signed in as the given synthetic account. */
 export async function checkAs(client: pg.Client, userId: string, productId: number): Promise<unknown> {
-  await client.query("select set_config('request.jwt.claims', $1, true)", [
-    JSON.stringify({ sub: userId, role: "authenticated" }),
-  ]);
+  await actAs(client, userId);
   const { rows } = await client.query<{ value: unknown }>("select public.medicine_check($1::bigint) as value", [
     productId,
   ]);
   return rows[0].value;
+}
+
+/** Switches the transaction to the API role `authenticated`, signed in as the given synthetic account. */
+export async function actAs(client: pg.Client, userId: string): Promise<void> {
+  await client.query("set local role authenticated");
+  await client.query("select set_config('request.jwt.claims', $1, true)", [
+    JSON.stringify({ sub: userId, role: "authenticated" }),
+  ]);
+}
+
+/** Switches the transaction to the API role `anon`: no session, as an anonymous caller of the data API. */
+export async function actAsAnon(client: pg.Client): Promise<void> {
+  await client.query("set local role anon");
+  await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ role: "anon" })]);
+}
+
+/** Back to the table owner (RLS does not apply), to read the state a rejected operation must have left untouched. */
+export async function actAsOwner(client: pg.Client): Promise<void> {
+  await client.query("reset role");
+}
+
+/**
+ * Runs a statement that must be rejected with the given SQLSTATE, in its own savepoint so the failure does not abort
+ * the surrounding transaction. Set the role and claims BEFORE calling: the rollback to the savepoint would undo them.
+ */
+export async function expectSqlError(client: pg.Client, sql: string, params: unknown[], code: string): Promise<void> {
+  await client.query("savepoint expect_error");
+  try {
+    await client.query(sql, params);
+  } catch (error) {
+    expect((error as { code?: string }).code, `SQLSTATE of: ${sql}`).toBe(code);
+    return;
+  } finally {
+    await client.query("rollback to savepoint expect_error");
+    await client.query("release savepoint expect_error");
+  }
+  throw new Error(`Expected SQLSTATE ${code}, but the statement succeeded: ${sql}`);
 }
