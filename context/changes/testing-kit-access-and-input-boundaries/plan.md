@@ -391,10 +391,10 @@ Podpięcie `test:api` do joba `smoke` i opisanie nowych zestawów oraz wzorców 
 
 #### Automated
 
-- [x] 3.1 `npm run lint` przechodzi
-- [x] 3.2 `npx prettier --check` na zmienionych plikach Markdown i YAML przechodzi
-- [ ] 3.3 Job `smoke` w CI na PR przechodzi, z przebiegiem `test:api` i nowymi przypadkami `test:db` w logu
+- [x] 3.1 `npm run lint` przechodzi — 0092c36
+- [x] 3.2 `npx prettier --check` na zmienionych plikach Markdown i YAML przechodzi — 0092c36
+- [x] 3.3 Job `smoke` w CI na PR przechodzi, z przebiegiem `test:api` i nowymi przypadkami `test:db` w logu — 0092c36
 
 #### Manual
 
-- [x] 3.4 Autor potwierdza, że według §6.2 i §6.4 dopisałby test dla nowej trasy S-05
+- [x] 3.4 Autor potwierdza, że według §6.2 i §6.4 dopisałby test dla nowej trasy S-05 — 0092c36
