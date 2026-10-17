@@ -29,3 +29,17 @@
 - **Problem**: wszystko w jednym długim poleceniu przekroczyło limit 300 s i przeszło w tło; zawieszony krok trzymał turę ponad godzinę (1 h 7 min), choć te same kroki uruchomione osobno kończą się w krótkim czasie. Mutacje edytują kod produkcyjny, więc równoległy lint, astro check lub vitest zobaczyłby zepsuty kod.
 - **Rule**: Lint, astro check i pełny vitest (tylko odczyt) uruchamiaj równolegle jako osobne polecenia w tle, każde z własnym limitem czasu. Sprawdzenia mutacyjne wykonuj dopiero po ich zakończeniu, pojedynczo, każdą osobnym krótkim poleceniem z przywróceniem pliku (git checkout --) zaraz po niej. Nigdy nie łącz ich w jednym poleceniu i po pierwszym przekroczeniu limitu nie czekaj na zawieszone polecenie w tle, tylko uruchom kroki od nowa osobno.
 - **Applies to**: implement, impl-review
+
+## Werdykt bramki bierz z kodu wyjścia polecenia, nie potoku
+
+- **Context**: każde polecenie bramki (lint, astro check, vitest, test:db/test:api) uruchamiane przez agenta i skracane przez pipe (`| tail`, `| grep`, `| head`)
+- **Problem**: kod wyjścia potoku to kod ostatniego polecenia (`tail`), więc bramka z błędami wygląda na zieloną; 2026-10-17 lint z 232 błędami Prettiera przeszedł jako PASS i omal nie trafił do commita.
+- **Rule**: Werdykt bramki bierz z kodu wyjścia samego polecenia, nie potoku: uruchamiaj je bez pipe albo z `set -o pipefail`/`echo $?` przed skróceniem wyniku; krótkie podsumowanie błędów (np. `-f json`) to dodatek, nie werdykt.
+- **Applies to**: implement, impl-review
+
+## Lokalny serwer uruchamiaj po bramkach i ponów raz przed uznaniem awarii
+
+- **Context**: uruchamianie lokalnego serwera aplikacji przez agenta (`npm run dev`, `npm run preview`) do test:api, smoke, ui:shots, perf albo sprawdzeń mutacyjnych
+- **Problem**: Astro 7 w powłoce agenta przechodzi w tryb tła i czeka na serwer tylko 30 s; start na zimno po przebudowie zależności Vite trwa 24–29 s, więc obok lintu i astro check przekracza limit, a agent bierze to za awarię i porzuca lokalny przebieg testów.
+- **Rule**: Uruchamiaj lokalny serwer dopiero po zakończeniu lintu, astro check i vitest, nigdy równolegle z nimi; gdy start przekroczy 30 s, sprawdź `npx astro dev logs` i ponów raz, zanim uznasz serwer za zepsuty, a po testach zatrzymaj go (`npx astro dev stop`).
+- **Applies to**: implement, impl-review
