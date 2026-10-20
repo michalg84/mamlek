@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
 
+# The job ids `ci` and `smoke` are the required status checks of the `main` ruleset (.github/rulesets/main.json):
+# renaming either job requires updating the ruleset, or every PR to main waits for a check that never reports.
 jobs:
   ci:
     runs-on: ubuntu-latest

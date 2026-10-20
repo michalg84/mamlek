@@ -446,23 +446,23 @@ PR z celowo zepsutymi testami pokazuje czerwone `ci` i `smoke` oraz zablokowany 
 
 #### Automated
 
-- [x] 2.1 `npm test` zielony (przypadki `post-edit.mjs` i kontrola poleceń z `settings.json`)
-- [x] 2.2 Lint czysty: `npm run lint`
-- [x] 2.3 Prawdziwy skrypt na przykładowym payloadzie: błąd ESLint → kod 2, po cofnięciu → kod 0
-- [x] 2.4 `grep -rn "format.mjs" .claude AGENTS.md README.md tests` — brak trafień
+- [x] 2.1 `npm test` zielony (przypadki `post-edit.mjs` i kontrola poleceń z `settings.json`) — 5633ef8
+- [x] 2.2 Lint czysty: `npm run lint` — 5633ef8
+- [x] 2.3 Prawdziwy skrypt na przykładowym payloadzie: błąd ESLint → kod 2, po cofnięciu → kod 0 — 5633ef8
+- [x] 2.4 `grep -rn "format.mjs" .claude AGENTS.md README.md tests` — brak trafień — 5633ef8
 
 #### Manual
 
-- [x] 2.5 Agent na żywej sesji dostaje błąd ESLint zaraz po edycji i go poprawia
+- [x] 2.5 Agent na żywej sesji dostaje błąd ESLint zaraz po edycji i go poprawia — 5633ef8
 
 ### Phase 3: Przygotowanie do upublicznienia
 
 #### Automated
 
-- [ ] 3.1 `secrets-scan.md` z wynikiem skanu i rozstrzygnięciem każdego trafienia
-- [ ] 3.2 `.github/rulesets/main.json` to poprawny JSON
+- [x] 3.1 `secrets-scan.md` z wynikiem skanu i rozstrzygnięciem każdego trafienia
+- [x] 3.2 `.github/rulesets/main.json` to poprawny JSON
 - [ ] 3.3 `git log -1 --format=%ae` na commicie tej zmiany = adres noreply
-- [ ] 3.4 Lint i typy czyste: `npm run lint`, `npx astro check`
+- [x] 3.4 Lint i typy czyste: `npm run lint`, `npx astro check`
 - [ ] 3.5 PR z Phase 1–3 ma zielone checki `ci` i `smoke`, krok Vitest widoczny w logu `ci`
 
 #### Manual
