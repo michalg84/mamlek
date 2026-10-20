@@ -11,7 +11,7 @@ Setup, scripts, CI and deployment: see @README.md.
 - **React**: no Next.js directives ("use client" etc.). Extract hooks to `src/components/hooks/`.
 - **Services/helpers** go in `src/lib/` (or `src/lib/services/` for extracted business logic).
 - **Shared types** (entities, DTOs) go in `src/types.ts`.
-- **Protected `main`**: the ruleset in `.github/rulesets/main.json` requires a PR (merge commits only) with the `ci` and `smoke` checks green, with no bypass. Never push to `main` directly or work around a rejected merge; renaming a CI job requires updating the ruleset.
+- **Protected `main`**: the ruleset in `.github/rulesets/main.json` requires a PR (merge commits only) with the `ci` and `smoke` checks green, with no bypass. Never push to `main` directly or work around a rejected merge; renaming a CI job requires updating the ruleset. Skills that commit on the current branch (e.g. `/10x-archive`, which never branches or pushes itself) must not commit on `main`: switch to `chore/archive-<change-id>` (or another `<type>/<name>` branch) first, then ship the commit with `/ship`.
 
 ## UI
 
