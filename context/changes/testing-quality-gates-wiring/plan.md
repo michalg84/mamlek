@@ -463,36 +463,36 @@ PR z celowo zepsutymi testami pokazuje czerwone `ci` i `smoke` oraz zablokowany 
 - [x] 3.2 `.github/rulesets/main.json` to poprawny JSON — 8759a60
 - [x] 3.3 `git log -1 --format=%ae` na commicie tej zmiany = adres noreply — 8759a60
 - [x] 3.4 Lint i typy czyste: `npm run lint`, `npx astro check` — 8759a60
-- [ ] 3.5 PR z Phase 1–3 ma zielone checki `ci` i `smoke`, krok Vitest widoczny w logu `ci`
+- [x] 3.5 PR z Phase 1–3 ma zielone checki `ci` i `smoke`, krok Vitest widoczny w logu `ci` — 347f0d2
 
 #### Manual
 
-- [ ] 3.6 Autor akceptuje rozstrzygnięcia w `secrets-scan.md`
-- [ ] 3.7 Autor merguje PR z Phase 1–3 (repo jeszcze prywatne)
+- [x] 3.6 Autor akceptuje rozstrzygnięcia w `secrets-scan.md` — 347f0d2
+- [x] 3.7 Autor merguje PR z Phase 1–3 (repo jeszcze prywatne) — 347f0d2
 
 ### Phase 4: Upublicznienie i ruleset
 
 #### Automated
 
-- [ ] 4.1 `gh repo view --json visibility` → `PUBLIC`
-- [ ] 4.2 `gh api repos/michalg84/mamlek/rulesets` zwraca ruleset `main` z `enforcement: active`
-- [ ] 4.3 `rules/branches/main` zawiera `pull_request`, `required_status_checks` (`ci`, `smoke`), `non_fast_forward`, `deletion`
-- [ ] 4.4 Push pustego commita wprost na `main` odrzucony przez ruleset
+- [x] 4.1 `gh repo view --json visibility` → `PUBLIC`
+- [x] 4.2 `gh api repos/michalg84/mamlek/rulesets` zwraca ruleset `main` z `enforcement: active`
+- [x] 4.3 `rules/branches/main` zawiera `pull_request`, `required_status_checks` (`ci`, `smoke`), `non_fast_forward`, `deletion`
+- [x] 4.4 Push pustego commita wprost na `main` odrzucony przez ruleset
 
 #### Manual
 
-- [ ] 4.5 Autor potwierdza publiczne repo i ruleset w ustawieniach
+- [x] 4.5 Autor potwierdza publiczne repo i ruleset w ustawieniach
 
 ### Phase 5: Dowód blokady i zamknięcie bramek
 
 #### Automated
 
-- [ ] 5.1 PR-dowód: `ci` i `smoke` czerwone, w logach nazwy zepsutych testów
-- [ ] 5.2 PR-dowód: `mergeStateStatus` = `BLOCKED`, `gh pr merge` odrzucony
-- [ ] 5.3 PR-dowód zamknięty, gałąź usunięta
+- [x] 5.1 PR-dowód: `ci` i `smoke` czerwone, w logach nazwy zepsutych testów
+- [x] 5.2 PR-dowód: `mergeStateStatus` = `BLOCKED`, `gh pr merge` odrzucony
+- [x] 5.3 PR-dowód zamknięty, gałąź usunięta
 - [ ] 5.4 PR z test-planem: zielone `ci` i `smoke`, zmergowany
-- [ ] 5.5 Brak „required after §3 Phase 4” w test-planie
+- [x] 5.5 Brak „required after §3 Phase 4” w test-planie
 
 #### Manual
 
-- [ ] 5.6 Autor widzi czerwone checki i zablokowany merge na stronie PR-dowodu
+- [x] 5.6 Autor widzi czerwone checki i zablokowany merge na stronie PR-dowodu
