@@ -1,0 +1,38 @@
+{
+  "$comment": "Model and effort per 10x-cli skill. Applied to .claude/skills/<name>/SKILL.md by `node .claude/scripts/skill-models.mjs apply`; stripped before every `10x-cli get` so the CLI sees unmodified files. An empty entry ({}) means: run on the session model, on purpose; a 10x-* skill missing from this list is new and gets reported by lesson-get.mjs.",
+  "skills": {
+    "10x-shape": { "model": "opus", "effort": "high" },
+    "10x-prd": { "model": "opus", "effort": "high" },
+    "10x-roadmap": { "model": "opus", "effort": "high" },
+    "10x-frame": { "model": "opus", "effort": "high" },
+    "10x-research": { "model": "opus", "effort": "high" },
+    "10x-plan": { "model": "opus", "effort": "high" },
+    "10x-plan-review": { "model": "opus", "effort": "high" },
+    "10x-impl-review": { "model": "opus", "effort": "high" },
+    "10x-test-plan": { "model": "opus", "effort": "high" },
+
+    "10x-implement": { "model": "sonnet", "effort": "high" },
+    "10x-tdd": { "model": "sonnet", "effort": "high" },
+    "10x-e2e": { "model": "sonnet", "effort": "medium" },
+    "10x-ui": { "model": "sonnet", "effort": "medium" },
+    "10x-configure-hook": { "model": "sonnet", "effort": "medium" },
+    "10x-lesson": { "model": "sonnet", "effort": "low" },
+
+    "10x-new": { "model": "haiku", "effort": "low" },
+    "10x-archive": { "model": "haiku", "effort": "low" },
+    "10x-status": { "model": "haiku", "effort": "low" },
+    "10x-init": { "model": "haiku", "effort": "low" },
+
+    "10x-agents-md": {},
+    "10x-bootstrapper": {},
+    "10x-e2e-setup": {},
+    "10x-health-check": {},
+    "10x-idea-check": {},
+    "10x-infra-research": {},
+    "10x-observability-audit": {},
+    "10x-ray": {},
+    "10x-rule-review": {},
+    "10x-stack-assess": {},
+    "10x-tech-stack-selector": {}
+  }
+}
