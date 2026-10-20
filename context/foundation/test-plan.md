@@ -6,7 +6,7 @@
 >
 > Odświeżanie: uruchom ponownie `/10x-test-plan --refresh`, gdy plan się zestarzeje (zob. §8).
 >
-> Ostatnia aktualizacja: 2026-10-17 (backport z researchu Fazy 3 do §2: źródło #4, wskazówki #4 i #6)
+> Ostatnia aktualizacja: 2026-10-20 (Faza 4: §5 bramki wymagane i podpięte, §6.6, §7 harmonogram rejestru)
 
 ## 1. Strategy
 
@@ -121,16 +121,18 @@ Pełny zestaw bramek, które muszą przejść, zanim zmiana trafi na produkcję.
 wdrożenia tej fazy; wcześniej ma status `planned`. Wartości w kolumnach
 „Where” i „Required?” zostają po angielsku, bo czyta je `/10x-configure-hook`.
 
-| Gate                             | Where              | Required?                    | Catches                                                  |
-| -------------------------------- | ------------------ | ---------------------------- | -------------------------------------------------------- |
-| lint + type check + `ui:scan`    | local + CI         | required (wired)             | błędy składni, typów i odejścia od tokenów projektu      |
-| build                            | CI                 | required (wired)             | kod, który nie buduje się dla runtime'u Workera          |
-| database rule and import checks  | CI on PR           | required (wired)             | regresje reguły sprawdzenia, RLS na regule, importu      |
-| auth-flow smoke                  | CI on PR           | required (wired)             | zepsute logowanie, chronione ścieżki, lista wyszukiwania |
-| unit + component                 | local + CI         | required after §3 Phase 4    | regresje logiki werdyktu, stanu wyniku i wyszukiwania    |
-| kit access and input integration | CI on PR           | required after §3 Phase 4    | dostęp między kontami, przyjęte nieprawidłowe dane       |
-| post-edit hook                   | local (agent loop) | recommended after §3 Phase 4 | regresje w chwili edycji                                 |
-| registry import and parser tests | local + CI         | required after §3 Phase 5    | produkty zgubione lub zepsute przy imporcie              |
+| Gate                             | Where              | Required?                 | Catches                                                  |
+| -------------------------------- | ------------------ | ------------------------- | -------------------------------------------------------- |
+| lint + type check + `ui:scan`    | local + CI         | required (wired)          | błędy składni, typów i odejścia od tokenów projektu      |
+| build                            | CI                 | required (wired)          | kod, który nie buduje się dla runtime'u Workera          |
+| database rule and import checks  | CI on PR           | required (wired)          | regresje reguły sprawdzenia, RLS na regule, importu      |
+| auth-flow smoke                  | CI on PR           | required (wired)          | zepsute logowanie, chronione ścieżki, lista wyszukiwania |
+| unit + component                 | local + CI         | required (wired)          | regresje logiki werdyktu, stanu wyniku i wyszukiwania    |
+| kit access and input integration | CI on PR           | required (wired)          | dostęp między kontami, przyjęte nieprawidłowe dane       |
+| post-edit hook                   | local (agent loop) | recommended (wired)       | regresje w chwili edycji                                 |
+| registry import and parser tests | local + CI         | required after §3 Phase 5 | produkty zgubione lub zepsute przy imporcie              |
+
+„Required” w CI oznacza check wymagany przez ruleset na `main` (`.github/rulesets/main.json`: PR wymagany, checki `ci` i `smoke`, bez obejść), od 2026-10-20; czerwony check blokuje merge, a push wprost na `main` jest odrzucany.
 
 ## 6. Cookbook Patterns
 
@@ -223,6 +225,14 @@ wejdzie odpowiednia faza wdrażania; do tego czasu brzmi „TBD — zob. §3 Faz
 - **Decyzje autora (2026-10-17)**: `issues` zod zostaje w odpowiedzi 400 (testy pilnują tylko braku wnętrza serwera); luka F2 (twarda granica opakowania i daty w bazie) zostaje w roadmapie Parked i jest przypięta testami.
 - **Wnioski**: Vitest ustawia własne `BASE_URL` (`/`), więc pomocnik liczy za wybór wywołującego tylko bezwzględny adres; `astro preview` nadaje się do `test:api`, w odróżnieniu od pomiarów `perf` (zob. AGENTS.md).
 
+**Faza 4 — Quality-gates wiring (2026-10-20, zmiana `testing-quality-gates-wiring`)**
+
+- **Dostarczone**: krok `npx vitest run --project unit --project component` w jobie `ci` (czerwony test blokuje też deploy) i w `/ci-check`; pre-commit `vitest related --run --passWithNoTests` na plikach w stage; hook Stop uruchamia cały zestaw unit + component, gdy tura zmieniła kod lub konfigurację testów (exit 2, jedna ponowna próba); hook po edycji `post-edit.mjs` (Prettier, potem ESLint `--quiet` edytowanego pliku, exit 2 do agenta); repo publiczne i ruleset `main` z wymaganymi checkami `ci` i `smoke`, skanowanie sekretów z blokadą pushu. Commity: 10f3033 (testy w bramkach), 5633ef8 (lint po edycji), 8759a60 (przygotowanie do upublicznienia); PR #44.
+- **Dowód blokady (PR #45, zamknięty bez merge'a)**: jedna odwrócona asercja w `src/lib/registry-search.test.ts` i jedna w `tests/db/kit-access.test.ts` → `ci` czerwone na kroku Vitest (2 failed), `smoke` czerwone na `test:db` (1 failed), `mergeStateStatus` = `BLOCKED`, `gh pr merge` odrzucony („the base branch policy prohibits the merge”). Push pustego commita wprost na `main` odrzucony (`GH013`: wymagany PR i 2 wymagane checki). Lokalnie: pre-commit odrzucił commit z zepsutym testem i przepuścił sam plik `.astro`; oba hooki agenta sprawdzone na żywej sesji Claude Code (komunikat „Unit/component tests fail” na końcu tury, błąd ESLint zaraz po edycji).
+- **Pomiary**: unit + component lokalnie ok. 3 s na ciepło (116 testów); job `ci` na PR #44 1 min 38 s, `smoke` 3 min 34 s; hook po edycji 5–8 s (ESLint z typami), limit 60 s i budżet skryptu 50 s.
+- **Decyzje autora (2026-10-20)**: repo publiczne bez przepisywania historii (stary adres e-mail zostaje w metadanych 133 commitów, nowe commity z adresem noreply; skan gitleaks v8.30.1 bez trafień: `context/changes/testing-quality-gates-wiring/secrets-scan.md`); testy bez hooka po edycji (agent widzi je na końcu tury); pre-commit z `related`, nie z całym zestawem; projekt `hooks` zostaje lokalny; ruleset bez listy obejść (w awarii CI autor wyłącza go na chwilę).
+- **Wnioski**: hooki z tym samym matcherem działają równolegle, więc lint po edycji jest w tym samym skrypcie co Prettier, po nim; `vitest related` bez `--passWithNoTests` odrzucałby commit plików bez testów; przekroczenie budżetu hooka po edycji kończy się kodem 1 (widzi je użytkownik), bo agent nie naprawi wolnego narzędzia, a plik sprawdza jeszcze hook Stop.
+
 ## 7. What We Deliberately Don't Test
 
 Wykluczenia uzgodnione podczas wdrażania (wywiad Fazy 2, P5). Przyszli
@@ -231,14 +241,14 @@ którym stoją.
 
 - **Skrypty narzędziowe `roadmap:sync`, `perf`, `ui:shots`** — pomoce dla programisty bez skutków dla użytkownika. Ocenić ponownie, jeśli któryś zacznie blokować CI albo wdrożenie. (Źródło: wywiad Fazy 2, P5.)
 - **Logowanie i wylogowanie** — bez nowych testów; pracę wykonuje Supabase, a istniejący przebieg `smoke` nadal pokrywa ten przepływ. Ocenić ponownie, jeśli zmieni się metoda logowania (PRD Open Question 2). (Źródło: wywiad Fazy 2, P5.)
-- **Harmonogram odświeżania rejestru** — odświeżanie, które przestaje działać, wyłapuje e-mail o nieudanym przebiegu i data stanu na `/szukaj`, a nie test. Ocenić ponownie, jeśli repozytorium stanie się publiczne. (Źródło: rejestr ryzyk w `infrastructure.md`.)
+- **Harmonogram odświeżania rejestru** — odświeżanie, które przestaje działać, wyłapuje e-mail o nieudanym przebiegu i data stanu na `/szukaj`, a nie test. Ocenione ponownie 2026-10-20: repozytorium jest publiczne od tego dnia, więc GitHub wyłączy harmonogram po 60 dniach bez commitów (bez e-maila o nieudanym przebiegu); ryzyko przyjęte, sygnał to data stanu na `/szukaj`, ponowne włączenie: Actions → Registry import → Enable workflow. Zabezpieczenie (keepalive) odłożone. (Źródło: rejestr ryzyk w `infrastructure.md`, Faza 4.)
 - **Test przez prawdziwe PostgREST z JWT** (supabase-js + klucz anon) — uprząż SQL z przełączaniem roli i `request.jwt.claims` sprawdza te same polityki i granty, bez zmian w CI i bez kont, których nie da się posprzątać. Ocenić ponownie, jeśli dojdzie logika w warstwie PostgREST (np. widoki, nagłówki) albo klucz anon zacznie być używany w przeglądarce. (Źródło: plan Fazy 3.)
 - **Import CSV (S-04)** — jeszcze nie zbudowany, więc nie ma czego chronić. Dodać przez `--refresh`, gdy S-04 wejdzie. (Źródło: roadmapa S-04, status proposed.)
 
 ## 8. Freshness Ledger
 
-- Strategia (§1–§5) ostatnio przejrzana: 2026-10-13 (§4 i §6 zaktualizowane przez Fazę 1; sama strategia bez zmian)
-- Książka kucharska (§6) ostatnio uzupełniona: 2026-10-17 (Faza 3: §6.2, §6.4, §6.6, §7)
+- Strategia (§1–§5) ostatnio przejrzana: 2026-10-20 (Faza 4: statusy bramek w §5 i znaczenie „required”; sama strategia bez zmian)
+- Książka kucharska (§6) ostatnio uzupełniona: 2026-10-20 (Faza 4: §6.6, §7)
 - Wersje stacku ostatnio zweryfikowane: 2026-10-13 (Vitest 5.0.4, jsdom 29.1.1, Testing Library 16.3.3, pg 8.x)
 - Odwołania do narzędzi AI-native ostatnio zweryfikowane: 2026-10-10
 
