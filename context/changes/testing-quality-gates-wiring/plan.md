@@ -431,29 +431,29 @@ PR z celowo zepsutymi testami pokazuje czerwone `ci` i `smoke` oraz zablokowany 
 
 #### Automated
 
-- [x] 1.1 Cały zestaw lokalnie zielony: `npm test` (unit, component, hooks — z nowymi przypadkami Stop)
-- [x] 1.2 Lint czysty: `npm run lint`
-- [x] 1.3 Typy czyste: `npx astro check`
-- [x] 1.4 Celowo zepsuty test unit daje exit ≠ 0 z `npx vitest run --project unit --project component`
-- [x] 1.5 Commit z celowo zepsutym testem w stage zostaje odrzucony przez pre-commit
-- [x] 1.6 Commit samego pliku `.astro` bez powiązanych testów przechodzi przez pre-commit
+- [x] 1.1 Cały zestaw lokalnie zielony: `npm test` (unit, component, hooks — z nowymi przypadkami Stop) — 10f3033
+- [x] 1.2 Lint czysty: `npm run lint` — 10f3033
+- [x] 1.3 Typy czyste: `npx astro check` — 10f3033
+- [x] 1.4 Celowo zepsuty test unit daje exit ≠ 0 z `npx vitest run --project unit --project component` — 10f3033
+- [x] 1.5 Commit z celowo zepsutym testem w stage zostaje odrzucony przez pre-commit — 10f3033
+- [x] 1.6 Commit samego pliku `.astro` bez powiązanych testów przechodzi przez pre-commit — 10f3033
 
 #### Manual
 
-- [x] 1.7 Agent na żywej sesji dostaje „Unit/component tests fail” na końcu tury i poprawia test
+- [x] 1.7 Agent na żywej sesji dostaje „Unit/component tests fail” na końcu tury i poprawia test — 10f3033
 
 ### Phase 2: Lint po edycji
 
 #### Automated
 
-- [ ] 2.1 `npm test` zielony (przypadki `post-edit.mjs` i kontrola poleceń z `settings.json`)
-- [ ] 2.2 Lint czysty: `npm run lint`
-- [ ] 2.3 Prawdziwy skrypt na przykładowym payloadzie: błąd ESLint → kod 2, po cofnięciu → kod 0
-- [ ] 2.4 `grep -rn "format.mjs" .claude AGENTS.md README.md tests` — brak trafień
+- [x] 2.1 `npm test` zielony (przypadki `post-edit.mjs` i kontrola poleceń z `settings.json`)
+- [x] 2.2 Lint czysty: `npm run lint`
+- [x] 2.3 Prawdziwy skrypt na przykładowym payloadzie: błąd ESLint → kod 2, po cofnięciu → kod 0
+- [x] 2.4 `grep -rn "format.mjs" .claude AGENTS.md README.md tests` — brak trafień
 
 #### Manual
 
-- [ ] 2.5 Agent na żywej sesji dostaje błąd ESLint zaraz po edycji i go poprawia
+- [x] 2.5 Agent na żywej sesji dostaje błąd ESLint zaraz po edycji i go poprawia
 
 ### Phase 3: Przygotowanie do upublicznienia
 

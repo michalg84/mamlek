@@ -41,7 +41,7 @@ function git(cwd, args) {
 }
 
 // Checkouts to sweep: the session's (payload cwd follows EnterWorktree, $CLAUDE_PROJECT_DIR does not) plus every
-// checkout format.mjs registered for this session (edits in a sibling worktree).
+// checkout post-edit.mjs registered for this session (edits in a sibling worktree).
 const cwd = typeof payload.cwd === "string" && payload.cwd ? payload.cwd : process.cwd();
 const sid = String(payload.session_id ?? "").replace(/[^A-Za-z0-9_-]/g, "");
 const registry = sid ? path.join(os.tmpdir(), "claude-hooks", `${sid}.roots`) : null;
