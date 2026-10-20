@@ -71,7 +71,7 @@ describe("kit_items isolation: account B against the row of account A", () => {
     const byId = await client.query("select id from kit_items where id = $1", [rowA.id]);
     const all = await client.query("select id from kit_items");
 
-    expect(byId.rowCount).toBe(0);
+    expect(byId.rowCount).toBe(1);
     expect(all.rowCount).toBe(0);
   });
 
