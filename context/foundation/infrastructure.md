@@ -70,7 +70,7 @@ MamLek trafił na plan Free Cloudflare, bo „to jedno gospodarstwo”. W testac
 
 ### Unknown Unknowns
 
-- GitHub wyłącza zaplanowane workflowy w **publicznych** repozytoriach po 60 dniach bez aktywności, a uruchomienia z harmonogramu bywają opóźniane lub pomijane przy obciążeniu. Repozytorium jest dziś prywatne (limit 2000 darmowych minut Actions miesięcznie), ale upublicznienie go uruchamia to ryzyko. Dotyczy wprost wymagania „dane rejestru nie starsze niż 7 dni”. **Decyzja 2026-10-20:** repo staje się publiczne w Fazie 4 wdrażania testów (`testing-quality-gates-wiring`), ryzyko przyjęte. Sygnał: data `Stan rejestru na …` na `/szukaj`; ponowne włączenie harmonogramu: Actions → Registry import → Enable workflow.
+- GitHub wyłącza zaplanowane workflowy w **publicznych** repozytoriach po 60 dniach bez aktywności, a uruchomienia z harmonogramu bywają opóźniane lub pomijane przy obciążeniu. Repozytorium jest dziś prywatne (limit 2000 darmowych minut Actions miesięcznie), ale upublicznienie go uruchamia to ryzyko. Dotyczy wprost wymagania „dane rejestru nie starsze niż 7 dni”. **Decyzja 2026-10-20:** repo jest publiczne od 2026-10-20 — Faza 4 wdrażania testów (`testing-quality-gates-wiring`), ryzyko przyjęte. Sygnał: data `Stan rejestru na …` na `/szukaj`; ponowne włączenie harmonogramu: Actions → Registry import → Enable workflow.
 - Polecenia Pages i Workers nie są wymienne: adapter Astro porzucił Pages w wersji 13, właściwe polecenia to `wrangler deploy` i `wrangler rollback`, nie `wrangler pages deploy`.
 - Adres podglądu dla każdego PR (Worker Previews) wymaga wrangler ≥ 4.135, a repozytorium ma 4.131.
 - Logi Workers na planie Free są trzymane 3 dni — incydent z weekendu może zniknąć do wtorku.

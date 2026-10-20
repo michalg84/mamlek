@@ -20,7 +20,7 @@
             "type": "command",
             "command": "node \"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")/.claude/hooks/end-of-turn.mjs\"",
             "timeout": 120,
-            "statusMessage": "Checking this turn's changes (lint, ui:scan, astro check)..."
+            "statusMessage": "Checking this turn's changes (lint, ui:scan, astro check, unit + component tests)..."
           }
         ]
       }

@@ -45,7 +45,10 @@ function git(dir, args) {
 const root = git(path.dirname(file), ["rev-parse", "--show-toplevel"]);
 if (!root) process.exit(0);
 const repo = git(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-const sessionRepo = git(cwd, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+// A cwd git cannot read (e.g. an MSYS /c/... path) falls back to the directory the hook runs in, the session cwd.
+const sessionRepo =
+  git(cwd, ["rev-parse", "--path-format=absolute", "--git-common-dir"]) ??
+  git(process.cwd(), ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
 if (!repo || repo !== sessionRepo) process.exit(0);
 
 // Registered before the checks, so Stop sweeps the checkout even when this hook sends the agent back.

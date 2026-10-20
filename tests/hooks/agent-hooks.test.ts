@@ -382,6 +382,14 @@ describe("post-edit.mjs (PostToolUse Write|Edit)", () => {
     expect(sb.calls()).toBe(`prettier --write --ignore-unknown --log-level warn ${file}\neslint ${file}\n`);
   });
 
+  it("falls back to the directory it runs in when git cannot read the payload cwd", () => {
+    const sb = sandbox();
+    const file = write(sb.root, "src/ok.ts", "export const ok = 3;\n");
+    const r = runHook(sb, "post-edit.mjs", edit(path.join(sb.tmp, "no", "such", "dir"), file));
+    expect(r.code).toBe(0);
+    expect(sb.calls()).toContain(`eslint ${file}`);
+  });
+
   it("formats and lints an edited JavaScript module too", () => {
     const sb = sandbox();
     const file = write(sb.root, "scripts/tool.mjs", "export const tool = 1;\n");
@@ -515,6 +523,21 @@ describe(".claude/settings.json commands", () => {
         expect(r.stderr, command).toBe("");
         expect(r.status, command).toBe(0);
       }
+    }
+  });
+
+  it("give each script a budget below its timeout, so the harness never kills it silently", () => {
+    const settings = JSON.parse(readFileSync(path.join(SOURCE, ".claude", "settings.json"), "utf8")) as {
+      hooks: Record<string, { hooks: { command: string; timeout: number }[] }[]>;
+    };
+    const commands = Object.values(settings.hooks).flatMap((groups) => groups.flatMap((g) => g.hooks));
+    for (const { command, timeout } of commands) {
+      const script = /hooks\/([\w-]+\.mjs)/.exec(command)?.[1] ?? "";
+      expect(script, command).not.toBe("");
+      const source = readFileSync(path.join(SOURCE, ".claude", "hooks", script), "utf8");
+      const budget = /const BUDGET_MS = .*\|\| ([\d_]+);/.exec(source)?.[1] ?? "";
+      expect(budget, script).not.toBe("");
+      expect(Number(budget.replaceAll("_", "")), script).toBeLessThan(timeout * 1000);
     }
   });
 });

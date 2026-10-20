@@ -487,12 +487,12 @@ PR z celowo zepsutymi testami pokazuje czerwone `ci` i `smoke` oraz zablokowany 
 
 #### Automated
 
-- [x] 5.1 PR-dowód: `ci` i `smoke` czerwone, w logach nazwy zepsutych testów
-- [x] 5.2 PR-dowód: `mergeStateStatus` = `BLOCKED`, `gh pr merge` odrzucony
-- [x] 5.3 PR-dowód zamknięty, gałąź usunięta
-- [ ] 5.4 PR z test-planem: zielone `ci` i `smoke`, zmergowany
-- [x] 5.5 Brak „required after §3 Phase 4” w test-planie
+- [x] 5.1 PR-dowód: `ci` i `smoke` czerwone, w logach nazwy zepsutych testów — 95b86dd
+- [x] 5.2 PR-dowód: `mergeStateStatus` = `BLOCKED`, `gh pr merge` odrzucony — 95b86dd
+- [x] 5.3 PR-dowód zamknięty, gałąź usunięta — 95b86dd
+- [x] 5.4 PR z test-planem: zielone `ci` i `smoke`, zmergowany — 95b86dd
+- [x] 5.5 Brak „required after §3 Phase 4” w test-planie — 95b86dd
 
 #### Manual
 
-- [x] 5.6 Autor widzi czerwone checki i zablokowany merge na stronie PR-dowodu
+- [x] 5.6 Autor widzi czerwone checki i zablokowany merge na stronie PR-dowodu — 95b86dd
