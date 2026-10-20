@@ -1,10 +1,10 @@
 ---
 change_id: testing-quality-gates-wiring
 title: Test rollout Phase 4 — make the Phase 1–3 suites required gates and add the post-edit hook
-status: impl_reviewed
+status: archived
 created: 2026-10-17
 updated: 2026-10-20
-archived_at: null
+archived_at: 2026-10-20T10:58:26Z
 ---
 
 ## Notes
