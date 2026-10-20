@@ -13,6 +13,19 @@
         ]
       }
     ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel 2>/dev/null || echo \"$CLAUDE_PROJECT_DIR\")/.claude/hooks/pr-status.mjs\" --hook",
+            "timeout": 15,
+            "statusMessage": "Checking open pull requests..."
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
