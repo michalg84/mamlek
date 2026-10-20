@@ -140,25 +140,26 @@ Ask exactly one question with AskUserQuestion (in Polish):
 
 **"PR jest gotowy: <url>. Co zrobić z mergem?"**
 
-1. **Zmerguj teraz** — merge immediately without waiting for CI.
-2. **Poczekaj na CI i zmerguj** — merge only once every check is green.
-3. **Zmerguję sam** — leave the PR open.
+1. **Poczekaj na CI i zmerguj** — recommended; merge only once every check is green.
+2. **Zmerguję sam** — leave the PR open.
+
+`main` has a ruleset (`.github/rulesets/main.json`): a merge needs green `ci` and `smoke`, so there is no "merge now" option. A rejected merge is a signal, not an error to work around — never retry with `--admin` or any other bypass.
 
 Then:
 
-- **Merge now:**
-  ```bash
-  gh pr merge --merge --delete-branch
-  ```
 - **Wait for CI:**
   ```bash
   gh pr checks --watch --fail-fast
   ```
-  Run it in the background if it may exceed the tool timeout (CI here takes several minutes) and wait for it to finish. All checks green → merge as above. Any check failed → do not merge; show which check failed and the link, and stop.
-  If the PR has no checks at all, say so and merge.
+  Run it in the background if it may exceed the tool timeout (CI here takes several minutes) and wait for it to finish. All checks green → merge:
+  ```bash
+  gh pr merge --merge --delete-branch
+  ```
+  Any check failed → do not merge; show which check failed and the link, and stop.
+  If the PR has no checks at all, something is wrong with the workflow: do not merge, say so and stop.
 - **User merges:** stop here; repeat the PR URL.
 
-The repo uses merge commits (`Merge pull request #…`), hence `--merge`.
+The repo uses merge commits (`Merge pull request #…`) and the ruleset allows only those, hence `--merge`.
 
 ## 7. After a merge
 

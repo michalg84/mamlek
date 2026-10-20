@@ -1,7 +1,8 @@
 // Proof of the Claude Code hooks in .claude/hooks/ (configured in .claude/settings.json): each case pipes a hook
 // payload into the real script, inside a throwaway git repo, and checks the exit code and the channel the agent
-// reads (Stop: exit 2 + stderr). Git and the scripts are real; ESLint, astro, ui:scan and Prettier are stubs that
-// log their calls and fail on a marker (LINT_ERROR, TYPE_ERROR, UI_HIT), so the suite needs no install or network.
+// reads (Stop and PostToolUse: exit 2 + stderr). Git and the scripts are real; ESLint, astro, Vitest, ui:scan and
+// Prettier are stubs that log their calls and fail on a marker (LINT_ERROR, TYPE_ERROR, TEST_FAIL, UI_HIT, SYNTAX_ERROR),
+// so the suite needs no install or network.
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -16,6 +17,8 @@ const STUBS: Record<string, string> = {
 const fs = require("fs");
 const files = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 fs.appendFileSync(process.env.STUB_LOG, "eslint " + files.join(" ") + "\\n");
+// LINT_SLOW: hangs like a cold type-aware lint.
+if (files.some((f) => fs.readFileSync(f, "utf8").includes("LINT_SLOW"))) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30000);
 let bad = false;
 for (const f of files) if (fs.readFileSync(f, "utf8").includes("LINT_ERROR")) {
   console.log(f + "\\n  1:7  error  'unused' is assigned a value but never used  @typescript-eslint/no-unused-vars");
@@ -34,8 +37,23 @@ const bad = sources.filter((f) => fs.readFileSync("src/" + f, "utf8").includes("
 for (const f of bad) console.log("\\u001b[96msrc/" + f + "\\u001b[0m:1:7 - \\u001b[91merror\\u001b[0m ts(2322): Type 'string' is not assignable to type 'number'.");
 process.exit(bad.length ? 1 : 0);
 `,
+  "node_modules/vitest/vitest.mjs": `
+import fs from "node:fs";
+fs.appendFileSync(process.env.STUB_LOG, "vitest " + process.argv.slice(2).join(" ") + "\\n");
+const sources = fs.readdirSync("src", { recursive: true }).map(String).filter((f) => fs.statSync("src/" + f).isFile());
+const bad = sources.filter((f) => fs.readFileSync("src/" + f, "utf8").includes("TEST_FAIL"));
+for (const f of bad) console.log(" FAIL  src/" + f + " > rule > rejects the input\\nAssertionError: expected 1 to be 2");
+process.exit(bad.length ? 1 : 0);
+`,
   "node_modules/prettier/bin/prettier.cjs": `
-require("fs").appendFileSync(process.env.STUB_LOG, "prettier " + process.argv.slice(2).join(" ") + "\\n");
+const fs = require("fs");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.STUB_LOG, "prettier " + args.join(" ") + "\\n");
+const file = args[args.length - 1];
+if (fs.readFileSync(file, "utf8").includes("SYNTAX_ERROR")) {
+  console.error("[error] " + file + ": SyntaxError: ';' expected. (1:14)");
+  process.exit(2);
+}
 `,
 };
 const UI_SCAN_STUB = `
@@ -118,7 +136,7 @@ interface HookResult {
 
 function runHook(
   sb: Sandbox,
-  script: "end-of-turn.mjs" | "format.mjs",
+  script: "end-of-turn.mjs" | "post-edit.mjs",
   input: unknown,
   options: { cwd?: string; projectDir?: string; scriptRoot?: string; env?: NodeJS.ProcessEnv } = {},
 ): HookResult {
@@ -171,6 +189,7 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).toBe("");
     expect(sb.calls()).toContain("eslint src/ok.ts");
     expect(sb.calls()).toContain("astro check");
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
   });
 
   it("blocks with exit 2 on a lint error written straight to disk, naming the file", () => {
@@ -192,6 +211,28 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).toContain("astro check fails");
     expect(r.stderr).toContain("src/ok.ts:1:7 - error ts(2322)");
     expect(r.stderr).not.toContain("\u001b[");
+  });
+
+  it("blocks on a failing unit/component test, naming the test", () => {
+    const sb = sandbox();
+    write(sb.root, "src/x.test.ts", "it('rejects the input', () => {}); // TEST_FAIL\n");
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("Unit/component tests fail");
+    expect(r.stderr).toContain("FAIL  src/x.test.ts");
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
+  });
+
+  it("runs the tests when only the test setup changed, but not for an uncovered file", () => {
+    const sb = sandbox();
+    write(sb.root, "tests/fixtures/data.json", "{}\n");
+    expect(runHook(sb, "end-of-turn.mjs", stop(sb.root)).code).toBe(0);
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
+
+    const other = sandbox();
+    write(other.root, "README.md", "# changed\n");
+    expect(runHook(other, "end-of-turn.mjs", stop(other.root)).code).toBe(0);
+    expect(other.calls()).not.toContain("vitest");
   });
 
   it("checks a changed file with a non-ASCII name", () => {
@@ -234,6 +275,8 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.code).toBe(0);
     expect(sb.calls()).not.toContain("eslint");
     expect(sb.calls()).toContain("astro check");
+    // A deleted module can break the tests that import it, so the suite runs too.
+    expect(sb.calls()).toContain("vitest run");
   });
 
   it("blocks when a deletion leaves a type error in the project", () => {
@@ -290,6 +333,7 @@ describe("end-of-turn.mjs (Stop)", () => {
   it.each([
     ["ESLint", "node_modules/eslint/bin/eslint.js"],
     ["astro", "node_modules/astro/bin/astro.mjs"],
+    ["Vitest", "node_modules/vitest/vitest.mjs"],
   ])("fails visibly (exit 2) when %s is not installed", (_name, bin) => {
     const sb = sandbox();
     rmSync(path.join(sb.root, bin));
@@ -297,6 +341,7 @@ describe("end-of-turn.mjs (Stop)", () => {
     const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
     expect(r.code).toBe(2);
     expect(r.stderr).toContain(`${bin} not found`);
+    expect(r.stderr).toContain("run npm install");
   });
 
   it("checks the session's checkout, not a stale CLAUDE_PROJECT_DIR holding an error", () => {
@@ -307,13 +352,14 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.code).toBe(0);
   });
 
-  it("sweeps a sibling worktree that format.mjs registered for the session, then clears the registry", () => {
+  it("sweeps a sibling worktree that post-edit.mjs registered for the session, then clears the registry", () => {
     const sb = sandbox();
     const wt = path.join(sb.tmp, "wt");
     git(sb.root, "worktree", "add", "-q", wt, "-b", "side");
     installStubs(wt);
     const bad = write(wt, "src/bad.ts", "const unused = 1; // LINT_ERROR\n");
-    expect(runHook(sb, "format.mjs", edit(sb.root, bad)).code).toBe(0);
+    // post-edit.mjs already sends the agent back, but registers the worktree first, so Stop sweeps it too.
+    expect(runHook(sb, "post-edit.mjs", edit(sb.root, bad)).code).toBe(2);
 
     const blocked = runHook(sb, "end-of-turn.mjs", stop(sb.root));
     expect(blocked.code).toBe(2);
@@ -326,26 +372,70 @@ describe("end-of-turn.mjs (Stop)", () => {
   });
 });
 
-describe("format.mjs (PostToolUse Write|Edit)", () => {
-  it("formats the edited file only", () => {
+describe("post-edit.mjs (PostToolUse Write|Edit)", () => {
+  it("formats and lints the edited file only", () => {
     const sb = sandbox();
     const file = write(sb.root, "src/ok.ts", "export const ok = 3;\n");
-    const r = runHook(sb, "format.mjs", edit(sb.root, file));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file));
     expect(r.code).toBe(0);
-    expect(sb.calls()).toContain(`prettier --write --ignore-unknown --log-level warn ${file}`);
+    expect(r.stderr).toBe("");
+    expect(sb.calls()).toBe(`prettier --write --ignore-unknown --log-level warn ${file}\neslint ${file}\n`);
   });
 
-  it("formats an edited JavaScript module too", () => {
+  it("formats and lints an edited JavaScript module too", () => {
     const sb = sandbox();
     const file = write(sb.root, "scripts/tool.mjs", "export const tool = 1;\n");
-    const r = runHook(sb, "format.mjs", edit(sb.root, file));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file));
     expect(r.code).toBe(0);
     expect(sb.calls()).toContain(`prettier --write --ignore-unknown --log-level warn ${file}`);
+    expect(sb.calls()).toContain(`eslint ${file}`);
+  });
+
+  it("sends a lint error of the edited file to the agent (exit 2), after formatting it", () => {
+    const sb = sandbox();
+    const file = write(sb.root, "src/bad.ts", "const unused = 1; // LINT_ERROR\n");
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain(`ESLint errors in ${file}`);
+    expect(r.stderr).toContain("no-unused-vars");
+    const calls = sb.calls();
+    expect(calls.indexOf("prettier ")).toBeGreaterThanOrEqual(0);
+    expect(calls.indexOf("prettier ")).toBeLessThan(calls.indexOf("eslint "));
+  });
+
+  it("sends a Prettier syntax error to the agent (exit 2) without linting", () => {
+    const sb = sandbox();
+    const file = write(sb.root, "src/broken.ts", "export const = 1; // SYNTAX_ERROR\n");
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain(`Prettier could not format ${file}`);
+    expect(r.stderr).toContain("SyntaxError");
+    expect(sb.calls()).not.toContain("eslint");
+  });
+
+  it.each([
+    ["Markdown", "docs/notes.md", "# notes LINT_ERROR\n"],
+    ["JSON", "data/x.json", '{ "LINT_ERROR": 1 }\n'],
+  ])("only formats an edited %s file, without ESLint", (_name, rel, content) => {
+    const sb = sandbox();
+    const file = write(sb.root, rel, content);
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file));
+    expect(r.code).toBe(0);
+    expect(sb.calls()).toContain("prettier ");
+    expect(sb.calls()).not.toContain("eslint");
+  });
+
+  it("stops and says so (exit 1) when ESLint does not finish within the hook's budget", () => {
+    const sb = sandbox();
+    const file = write(sb.root, "src/ok.ts", "export const ok = 3; // LINT_SLOW\n");
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, file), { env: { POST_EDIT_BUDGET_MS: "1500" } });
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain("ESLint did not finish within the 1.5 s budget");
   });
 
   it("resolves a relative path against the payload cwd", () => {
     const sb = sandbox();
-    const r = runHook(sb, "format.mjs", edit(path.join(sb.root, "src"), "ok.ts"), { cwd: os.tmpdir() });
+    const r = runHook(sb, "post-edit.mjs", edit(path.join(sb.root, "src"), "ok.ts"), { cwd: os.tmpdir() });
     expect(r.code).toBe(0);
     expect(sb.calls()).toContain(path.join(sb.root, "src", "ok.ts"));
   });
@@ -355,7 +445,7 @@ describe("format.mjs (PostToolUse Write|Edit)", () => {
     ["a nonexistent file", (root: string) => path.join(root, "src", "missing.ts")],
   ])("skips %s", (_name, target) => {
     const sb = sandbox();
-    const r = runHook(sb, "format.mjs", edit(sb.root, target(sb.root)));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, target(sb.root)));
     expect(r.code).toBe(0);
     expect(sb.calls()).toBe("");
   });
@@ -366,7 +456,7 @@ describe("format.mjs (PostToolUse Write|Edit)", () => {
     ["a tool call without a path", JSON.stringify({ tool_name: "Bash", tool_input: { command: "ls" } })],
   ])("tolerates %s", (_name, input) => {
     const sb = sandbox();
-    const r = runHook(sb, "format.mjs", input);
+    const r = runHook(sb, "post-edit.mjs", input);
     expect(r.code).toBe(0);
     expect(sb.calls()).toBe("");
   });
@@ -374,7 +464,7 @@ describe("format.mjs (PostToolUse Write|Edit)", () => {
   it("skips a file of another repository", () => {
     const sb = sandbox();
     const other = sandbox();
-    const r = runHook(sb, "format.mjs", edit(sb.root, path.join(other.root, "src", "ok.ts")));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, path.join(other.root, "src", "ok.ts")));
     expect(r.code).toBe(0);
     expect(sb.calls()).toBe("");
   });
@@ -382,9 +472,18 @@ describe("format.mjs (PostToolUse Write|Edit)", () => {
   it("fails visibly when Prettier is not installed", () => {
     const sb = sandbox();
     rmSync(path.join(sb.root, "node_modules/prettier/bin/prettier.cjs"));
-    const r = runHook(sb, "format.mjs", edit(sb.root, path.join(sb.root, "src", "ok.ts")));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, path.join(sb.root, "src", "ok.ts")));
     expect(r.code).toBe(1);
     expect(r.stderr).toContain("Prettier not found");
+  });
+
+  it("fails visibly when ESLint is not installed", () => {
+    const sb = sandbox();
+    rmSync(path.join(sb.root, "node_modules/eslint/bin/eslint.js"));
+    const r = runHook(sb, "post-edit.mjs", edit(sb.root, path.join(sb.root, "src", "ok.ts")));
+    expect(r.code).toBe(1);
+    expect(r.stderr).toContain("ESLint not found");
+    expect(r.stderr).toContain("run npm install");
   });
 });
 

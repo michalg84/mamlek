@@ -78,11 +78,13 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix"
+      "eslint --fix",
+      "vitest related --run --passWithNoTests --project unit --project component"
     ],
     "*.{astro,tsx}": [
       "eslint --fix",
-      "node scripts/ui-scan.mjs"
+      "node scripts/ui-scan.mjs",
+      "vitest related --run --passWithNoTests --project unit --project component"
     ],
     "*.{json,css,md}": [
       "prettier --write"

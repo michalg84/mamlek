@@ -1,6 +1,6 @@
 ---
 name: ci-check
-description: Verify local changes the way CI does — astro sync, lint, astro check, build, and optionally the auth smoke test. Use before declaring work done, after dependency upgrades, or when the user asks to "run CI locally", "verify", or "check the build".
+description: Verify local changes the way CI does — astro sync, lint, astro check, unit + component tests, build, and optionally the auth smoke test. Use before declaring work done, after dependency upgrades, or when the user asks to "run CI locally", "verify", or "check the build".
 ---
 
 Run the same sequence as the `ci` job in `.github/workflows/ci.yml`, in order, stopping at the first failure:
@@ -8,7 +8,8 @@ Run the same sequence as the `ci` job in `.github/workflows/ci.yml`, in order, s
 1. `npx astro sync` — regenerates `astro:env` / content types; `astro check` gives false errors without it.
 2. `npm run lint` — type-checked ESLint (also enforces Prettier). If it fails on formatting only, run `npm run lint:fix` once and re-run.
 3. `npx astro check`
-4. `npm run build`
+4. `npx vitest run --project unit --project component` — unit and component tests (the `hooks` project stays local, run `npm test` for it too when you changed a hook).
+5. `npm run build`
 
 Then decide on the smoke test (mirrors the CI `smoke` job):
 

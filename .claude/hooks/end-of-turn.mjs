@@ -1,9 +1,10 @@
 // Stop hook: before the agent finishes, sweep every file this turn changed with the gate that is wired in
 // test-plan.md §5 ("lint + type check + ui:scan"): ESLint on the changed files, ui:scan on the changed views,
-// then `astro check` over the whole project. One retry: when Claude is already continuing because of this hook
-// (stop_hook_active, or Cursor's loop_count), it is let through and the commit gate catches the rest.
+// then `astro check` over the whole project and the whole unit + component test suite (about 3 s). One retry: when
+// Claude is already continuing because of this hook (stop_hook_active, or Cursor's loop_count), it is let through and
+// the commit gate catches the rest.
 // Exit 2 + stderr is the only combination Claude sees at Stop. Node, not bash: this host has no jq.
-// Unit + component tests are not run here: test-plan.md makes them "required after §3 Phase 4".
+// The tests are part of the gate (test-plan.md §3 Phase 4): they run when the turn changed source code or test setup.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -13,6 +14,8 @@ const LINTED = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".astro"])
 const SCANNED = new Set([".astro", ".tsx"]);
 // A change to one of these can change the typecheck result even without a changed source file.
 const TYPE_INPUTS = /^(tsconfig.*\.json|package(-lock)?\.json|astro\.config\.[cm]?[jt]s)$/;
+// The test setup the unit + component projects read: a change here can turn a test red without a changed source file.
+const TEST_INPUTS = /^(vitest\.config\.ts|tests\/setup-component\.ts|tests\/(fixtures|helpers)\/.+)$/;
 const ENV = { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" };
 // Claude Code kills the hook at the 120 s timeout in settings.json and lets the agent finish without a word, so the
 // checks stop earlier and say so. Override only in the proof tests.
@@ -38,7 +41,7 @@ function git(cwd, args) {
 }
 
 // Checkouts to sweep: the session's (payload cwd follows EnterWorktree, $CLAUDE_PROJECT_DIR does not) plus every
-// checkout format.mjs registered for this session (edits in a sibling worktree).
+// checkout post-edit.mjs registered for this session (edits in a sibling worktree).
 const cwd = typeof payload.cwd === "string" && payload.cwd ? payload.cwd : process.cwd();
 const sid = String(payload.session_id ?? "").replace(/[^A-Za-z0-9_-]/g, "");
 const registry = sid ? path.join(os.tmpdir(), "claude-hooks", `${sid}.roots`) : null;
@@ -100,6 +103,12 @@ for (const root of roots) {
   if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f))) {
     const check = run(root, "node_modules/astro/bin/astro.mjs", ["check"]);
     if (!check.ok) report.push(`astro check fails (${root}):\n${check.out}`);
+  }
+  // The whole suite, not only the tests of the changed files: it takes seconds and a deleted or renamed module breaks
+  // tests that import it. The hooks project is left to `npm test` and the hook proof itself.
+  if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f) || TEST_INPUTS.test(f))) {
+    const tests = run(root, "node_modules/vitest/vitest.mjs", ["run", "--project", "unit", "--project", "component"]);
+    if (!tests.ok) report.push(`Unit/component tests fail (${root}):\n${tests.out}`);
   }
 }
 

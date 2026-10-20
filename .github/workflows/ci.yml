@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
 
+# The job ids `ci` and `smoke` are the required status checks of the `main` ruleset (.github/rulesets/main.json):
+# renaming either job requires updating the ruleset, or every PR to main waits for a check that never reports.
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -20,6 +22,7 @@ jobs:
       - run: npm run lint
       - run: npm run ui:scan
       - run: npx astro check
+      - run: npx vitest run --project unit --project component
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
