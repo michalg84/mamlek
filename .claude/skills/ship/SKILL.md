@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Commit the current changes, push the branch and open a GitHub pull request in one go (offering to split unrelated changes into separate PRs), then ask how to merge it. Use whenever the user wants to ship work out of the working tree — "commit", "push", "zrób commit", "wypchnij", "zrób PR", "otwórz PR", "commit i push", "ship it", "wrzuć to na GitHuba", "zmerguj" — even if they only name one of the steps. Not for the phase commits inside /10x-implement, /10x-tdd or /10x-e2e, which have their own commit ritual.
+description: Commit the current changes, push the branch and open a GitHub pull request in one go (offering to split unrelated changes into separate PRs), then turn on GitHub auto-merge and return without waiting for CI. Use whenever the user wants to ship work out of the working tree — "commit", "push", "zrób commit", "wypchnij", "zrób PR", "otwórz PR", "commit i push", "ship it", "wrzuć to na GitHuba", "zmerguj" — even if they only name one of the steps. Not for the phase commits inside /10x-implement, /10x-tdd or /10x-e2e, which have their own commit ritual.
 model: haiku
 effort: low
 allowed-tools:
@@ -10,7 +10,19 @@ allowed-tools:
 
 # Ship
 
-Take the working tree to an open PR, then let the user choose how it gets merged. The user wants this to be hands-off: they do not review commit messages or branch names. You ask at most two kinds of question: whether to split unrelated changes into separate PRs (step 1a, only when there are several groups), and the merge choice for each PR (step 6) — merging is the one irreversible step, so it stays the user's call.
+Take the working tree to an open PR with GitHub auto-merge turned on, and return right away — GitHub merges once the required `ci` and `smoke` checks are green, so nobody waits for CI. The user wants this to be hands-off: they do not review commit messages or branch names. You ask at most one kind of question: whether to split unrelated changes into separate PRs (step 1a, only when there are several groups).
+
+## 0. Sync and clean up
+
+```bash
+git fetch --prune
+git branch --show-current          # on main: git pull --ff-only
+git branch -vv | grep ': gone]'     # branches whose PR was merged (GitHub deletes the remote branch)
+gh pr list --author @me --state open --json number,title,url,autoMergeRequest,statusCheckRollup
+```
+
+- Delete each `gone` branch with `git branch -d <branch>` — never `-D`; one that `-d` refuses stays and is named in the final report. Never delete the current branch.
+- From the PR list, name in the final report every PR with a failed check (it will not merge by itself) or with green checks but no `autoMergeRequest` (waiting for a manual merge). Information only — do not touch those PRs.
 
 ## 1. Look at the state
 
@@ -54,7 +66,7 @@ Options:
 
 If the user picks "Other" and describes a different grouping, follow it.
 
-**Splitting**: ship each group separately, one after another, by running steps 2–6 for that group only. Start each group from an up-to-date `main` (`git switch main` — the other groups' uncommitted changes travel along untouched), stage only that group's paths with `git add -- <paths>` (never `git add -A` here), and ask the merge question for each PR as it is created. If a group depends on another (e.g. a doc that describes code in another group), ship the dependency first and say so.
+**Splitting**: ship each group separately, one after another, by running steps 2–6 for that group only. Start each group from an up-to-date `main` (`git switch main` — the other groups' uncommitted changes travel along untouched), stage only that group's paths with `git add -- <paths>` (never `git add -A` here), and turn on auto-merge for each PR as it is created. If a group depends on another (e.g. a doc that describes code in another group), ship the dependency first and say so.
 
 **Together**: one branch, but still one commit per group, so history stays readable.
 
@@ -134,41 +146,28 @@ EOF
 
 Show the PR URL.
 
-## 6. Ask how to merge
+## 6. Turn on auto-merge
 
-Ask exactly one question with AskUserQuestion (in Polish):
+```bash
+gh pr merge --auto --merge
+```
 
-**"PR jest gotowy: <url>. Co zrobić z mergem?"**
+No question: auto-merge is the user's standing choice, and the ruleset on `main` (`.github/rulesets/main.json`) lets the merge happen only after `ci` and `smoke` are green. A red check leaves the PR open; the SessionStart hook (`.claude/hooks/pr-status.mjs`) and the status line report it, and step 0 of the next `/ship` lists it.
 
-1. **Poczekaj na CI i zmerguj** — recommended; merge only once every check is green.
-2. **Zmerguję sam** — leave the PR open.
-
-`main` has a ruleset (`.github/rulesets/main.json`): a merge needs green `ci` and `smoke`, so there is no "merge now" option. A rejected merge is a signal, not an error to work around — never retry with `--admin` or any other bypass.
-
-Then:
-
-- **Wait for CI:**
-  ```bash
-  gh pr checks --watch --fail-fast
-  ```
-  Run it in the background if it may exceed the tool timeout (CI here takes several minutes) and wait for it to finish. All checks green → merge:
-  ```bash
-  gh pr merge --merge --delete-branch
-  ```
-  Any check failed → do not merge; show which check failed and the link, and stop.
-  If the PR has no checks at all, something is wrong with the workflow: do not merge, say so and stop.
-- **User merges:** stop here; repeat the PR URL.
+- Skip this step when the user said in the request that they will merge themselves.
+- If `gh` rejects `--auto` (auto-merge disabled, PR not mergeable), do not work around it: report the error and leave the PR open. Never use `--admin` or any other bypass, and do not wait for CI instead.
+- No `--delete-branch`: GitHub deletes the remote branch after the merge (repo setting), and step 0 of a later `/ship` deletes the local one.
 
 The repo uses merge commits (`Merge pull request #…`) and the ruleset allows only those, hence `--merge`.
 
-## 7. After a merge
+## 7. Back to main
 
 ```bash
 git switch main
-git pull --ff-only
-git branch -d <branch>   # if --delete-branch did not already remove it locally
 ```
+
+No `git pull` here — the merge has not happened yet; step 0 of the next `/ship` pulls it in.
 
 ## Final report
 
-Two to four short lines, in Polish: commit subject(s) with short SHA, branch, PR URL, and the merge result (merged / waiting for the user / CI failed: <check>). Mention any file you left out on purpose.
+Two to four short lines, in Polish: commit subject(s) with short SHA, branch, PR URL, and the merge state — "auto-merge włączony: GitHub zmerguje po zielonych `ci` i `smoke`; czerwony check zostawi PR otwarty" (or why auto-merge was not turned on). Add the PRs flagged in step 0 and any branch `git branch -d` refused. Mention any file you left out on purpose.

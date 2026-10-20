@@ -495,6 +495,97 @@ describe("post-edit.mjs (PostToolUse Write|Edit)", () => {
   });
 });
 
+// gh stub for pr-status.mjs: logs the call and answers with the PR list in GH_PRS, or fails when GH_PRS is "fail".
+const GH_STUB = `
+const fs = require("fs");
+fs.appendFileSync(process.env.STUB_LOG, "gh " + process.argv.slice(2).join(" ") + "\\n");
+if (process.env.GH_PRS === "fail") { console.error("gh: not logged in"); process.exit(1); }
+console.log(process.env.GH_PRS ?? "[]");
+`;
+
+const RED_PR = {
+  number: 50,
+  title: "fix: something",
+  url: "https://github.com/o/r/pull/50",
+  autoMergeRequest: { mergeMethod: "MERGE" },
+  statusCheckRollup: [
+    { __typename: "CheckRun", name: "ci", status: "COMPLETED", conclusion: "SUCCESS" },
+    { __typename: "CheckRun", name: "smoke", status: "COMPLETED", conclusion: "FAILURE" },
+  ],
+};
+const GREEN_MANUAL_PR = {
+  number: 51,
+  title: "docs: other",
+  url: "https://github.com/o/r/pull/51",
+  autoMergeRequest: null,
+  statusCheckRollup: [{ __typename: "CheckRun", name: "ci", status: "COMPLETED", conclusion: "SUCCESS" }],
+};
+const PENDING_PR = {
+  number: 52,
+  title: "chore: third",
+  url: "https://github.com/o/r/pull/52",
+  autoMergeRequest: { mergeMethod: "MERGE" },
+  statusCheckRollup: [{ __typename: "CheckRun", name: "ci", status: "IN_PROGRESS", conclusion: null }],
+};
+
+describe("pr-status.mjs (SessionStart and status line)", () => {
+  function prStatus(sb: Sandbox, mode: "--hook" | "--line", prs: unknown[] | "fail"): HookResult {
+    const stub = write(sb.tmp, "gh-stub.cjs", GH_STUB);
+    const result = spawnSync(process.execPath, [path.join(sb.root, ".claude", "hooks", "pr-status.mjs"), mode], {
+      cwd: sb.root,
+      input: "{}",
+      encoding: "utf8",
+      env: {
+        ...baseEnv(),
+        STUB_LOG: sb.log,
+        TMP: sb.tmp,
+        TEMP: sb.tmp,
+        TMPDIR: sb.tmp,
+        PR_STATUS_GH: stub,
+        GH_PRS: prs === "fail" ? "fail" : JSON.stringify(prs),
+      },
+    });
+    return { code: result.status, stdout: result.stdout, stderr: result.stderr };
+  }
+
+  it("tells the agent about a PR with a red check and one waiting for a manual merge", () => {
+    const sb = sandbox();
+    const r = prStatus(sb, "--hook", [RED_PR, GREEN_MANUAL_PR, PENDING_PR]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain("#50");
+    expect(r.stdout).toContain("smoke failed");
+    expect(r.stdout).toContain(RED_PR.url);
+    expect(r.stdout).toContain("#51");
+    expect(r.stdout).not.toContain("#52");
+    expect(sb.calls()).toContain("gh pr list --author @me --state open");
+  });
+
+  it("says nothing when no PR needs attention", () => {
+    const sb = sandbox();
+    const r = prStatus(sb, "--hook", [PENDING_PR]);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe("");
+  });
+
+  it("never blocks the session when gh fails", () => {
+    const sb = sandbox();
+    const r = prStatus(sb, "--hook", "fail");
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe("");
+    expect(r.stderr).toBe("");
+  });
+
+  it("status line reads the cache the hook wrote, without calling gh itself", () => {
+    const sb = sandbox();
+    prStatus(sb, "--hook", [RED_PR, GREEN_MANUAL_PR, PENDING_PR]);
+    writeFileSync(sb.log, "");
+    const r = prStatus(sb, "--line", []);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe("PR:1❌ 1⚠ 1⏳");
+    expect(sb.calls()).toBe("");
+  });
+});
+
 describe(".claude/settings.json commands", () => {
   // Claude Code runs hook commands with Git Bash on Windows, sh elsewhere.
   function shell(): string {
@@ -518,7 +609,12 @@ describe(".claude/settings.json commands", () => {
           cwd,
           input: "{}",
           encoding: "utf8",
-          env: { ...baseEnv(), STUB_LOG: sb.log, CLAUDE_PROJECT_DIR: path.join(sb.tmp, "nonexistent") },
+          env: {
+            ...baseEnv(),
+            STUB_LOG: sb.log,
+            CLAUDE_PROJECT_DIR: path.join(sb.tmp, "nonexistent"),
+            PR_STATUS_GH: write(sb.tmp, "gh-stub.cjs", GH_STUB),
+          },
         });
         expect(r.stderr, command).toBe("");
         expect(r.status, command).toBe(0);
