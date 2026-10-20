@@ -20,6 +20,7 @@ jobs:
       - run: npm run lint
       - run: npm run ui:scan
       - run: npx astro check
+      - run: npx vitest run --project unit --project component
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

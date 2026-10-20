@@ -1,7 +1,8 @@
 // Proof of the Claude Code hooks in .claude/hooks/ (configured in .claude/settings.json): each case pipes a hook
 // payload into the real script, inside a throwaway git repo, and checks the exit code and the channel the agent
-// reads (Stop: exit 2 + stderr). Git and the scripts are real; ESLint, astro, ui:scan and Prettier are stubs that
-// log their calls and fail on a marker (LINT_ERROR, TYPE_ERROR, UI_HIT), so the suite needs no install or network.
+// reads (Stop: exit 2 + stderr). Git and the scripts are real; ESLint, astro, Vitest, ui:scan and Prettier are stubs that
+// log their calls and fail on a marker (LINT_ERROR, TYPE_ERROR, TEST_FAIL, UI_HIT), so the suite needs no install or
+// network.
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
@@ -32,6 +33,14 @@ if (sources.some((f) => fs.readFileSync("src/" + f, "utf8").includes("SLOW"))) A
 const bad = sources.filter((f) => fs.readFileSync("src/" + f, "utf8").includes("TYPE_ERROR"));
 // Coloured like the real astro check, which ignores NO_COLOR.
 for (const f of bad) console.log("\\u001b[96msrc/" + f + "\\u001b[0m:1:7 - \\u001b[91merror\\u001b[0m ts(2322): Type 'string' is not assignable to type 'number'.");
+process.exit(bad.length ? 1 : 0);
+`,
+  "node_modules/vitest/vitest.mjs": `
+import fs from "node:fs";
+fs.appendFileSync(process.env.STUB_LOG, "vitest " + process.argv.slice(2).join(" ") + "\\n");
+const sources = fs.readdirSync("src", { recursive: true }).map(String).filter((f) => fs.statSync("src/" + f).isFile());
+const bad = sources.filter((f) => fs.readFileSync("src/" + f, "utf8").includes("TEST_FAIL"));
+for (const f of bad) console.log(" FAIL  src/" + f + " > rule > rejects the input\\nAssertionError: expected 1 to be 2");
 process.exit(bad.length ? 1 : 0);
 `,
   "node_modules/prettier/bin/prettier.cjs": `
@@ -171,6 +180,7 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).toBe("");
     expect(sb.calls()).toContain("eslint src/ok.ts");
     expect(sb.calls()).toContain("astro check");
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
   });
 
   it("blocks with exit 2 on a lint error written straight to disk, naming the file", () => {
@@ -192,6 +202,28 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).toContain("astro check fails");
     expect(r.stderr).toContain("src/ok.ts:1:7 - error ts(2322)");
     expect(r.stderr).not.toContain("\u001b[");
+  });
+
+  it("blocks on a failing unit/component test, naming the test", () => {
+    const sb = sandbox();
+    write(sb.root, "src/x.test.ts", "it('rejects the input', () => {}); // TEST_FAIL\n");
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain("Unit/component tests fail");
+    expect(r.stderr).toContain("FAIL  src/x.test.ts");
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
+  });
+
+  it("runs the tests when only the test setup changed, but not for an uncovered file", () => {
+    const sb = sandbox();
+    write(sb.root, "tests/fixtures/data.json", "{}\n");
+    expect(runHook(sb, "end-of-turn.mjs", stop(sb.root)).code).toBe(0);
+    expect(sb.calls()).toContain("vitest run --project unit --project component");
+
+    const other = sandbox();
+    write(other.root, "README.md", "# changed\n");
+    expect(runHook(other, "end-of-turn.mjs", stop(other.root)).code).toBe(0);
+    expect(other.calls()).not.toContain("vitest");
   });
 
   it("checks a changed file with a non-ASCII name", () => {
@@ -234,6 +266,8 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.code).toBe(0);
     expect(sb.calls()).not.toContain("eslint");
     expect(sb.calls()).toContain("astro check");
+    // A deleted module can break the tests that import it, so the suite runs too.
+    expect(sb.calls()).toContain("vitest run");
   });
 
   it("blocks when a deletion leaves a type error in the project", () => {
@@ -290,6 +324,7 @@ describe("end-of-turn.mjs (Stop)", () => {
   it.each([
     ["ESLint", "node_modules/eslint/bin/eslint.js"],
     ["astro", "node_modules/astro/bin/astro.mjs"],
+    ["Vitest", "node_modules/vitest/vitest.mjs"],
   ])("fails visibly (exit 2) when %s is not installed", (_name, bin) => {
     const sb = sandbox();
     rmSync(path.join(sb.root, bin));
@@ -297,6 +332,7 @@ describe("end-of-turn.mjs (Stop)", () => {
     const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
     expect(r.code).toBe(2);
     expect(r.stderr).toContain(`${bin} not found`);
+    expect(r.stderr).toContain("run npm install");
   });
 
   it("checks the session's checkout, not a stale CLAUDE_PROJECT_DIR holding an error", () => {
