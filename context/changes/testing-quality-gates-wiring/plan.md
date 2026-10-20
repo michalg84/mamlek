@@ -459,10 +459,10 @@ PR z celowo zepsutymi testami pokazuje czerwone `ci` i `smoke` oraz zablokowany 
 
 #### Automated
 
-- [x] 3.1 `secrets-scan.md` z wynikiem skanu i rozstrzygnięciem każdego trafienia
-- [x] 3.2 `.github/rulesets/main.json` to poprawny JSON
-- [ ] 3.3 `git log -1 --format=%ae` na commicie tej zmiany = adres noreply
-- [x] 3.4 Lint i typy czyste: `npm run lint`, `npx astro check`
+- [x] 3.1 `secrets-scan.md` z wynikiem skanu i rozstrzygnięciem każdego trafienia — 8759a60
+- [x] 3.2 `.github/rulesets/main.json` to poprawny JSON — 8759a60
+- [x] 3.3 `git log -1 --format=%ae` na commicie tej zmiany = adres noreply — 8759a60
+- [x] 3.4 Lint i typy czyste: `npm run lint`, `npx astro check` — 8759a60
 - [ ] 3.5 PR z Phase 1–3 ma zielone checki `ci` i `smoke`, krok Vitest widoczny w logu `ci`
 
 #### Manual
