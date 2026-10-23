@@ -35,10 +35,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  rmSync(workDir, { recursive: true, force: true });
-  // Undefined when beforeAll failed before the database existed.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  await scratch?.drop();
+  try {
+    // Undefined when beforeAll failed before the database existed.
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    await scratch?.drop();
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
 });
 
 beforeEach(async () => {
@@ -178,6 +181,14 @@ describe("a bad file is rejected: exit code 1, a message, the database unchanged
   });
 });
 
+describe("--dry-run", () => {
+  it("rejects a file without human products, like the import does", () => {
+    const run = runImport(scratch.url, writeFile(xmlDoc("")), { dryRun: true });
+    expect(run.stderr).toMatch(/^Registry import failed: the dump contains no human products/);
+    expect(run.status).toBe(1);
+  });
+});
+
 describe("the 90% share is checked on both sides of the boundary", () => {
   it("10 of 11 products is imported and the missing one is marked removed", async () => {
     const run = runImport(scratch.url, writeFile(v1Without("Oxbryta")));
@@ -221,7 +232,10 @@ describe("a dump larger than one batch (1 000 products)", () => {
     expect(log.rows).toEqual([{ products_active: TOTAL, substances: TOTAL, packages_active: TOTAL }]);
   });
 
-  it("a bad last product rolls back the batches already loaded", async () => {
+  // The batches only go into `on commit drop` temp tables and the real tables are written after parsing ends, so this
+  // proves the exit code and the untouched database after a parse error behind full batches. The rollback of work
+  // already written to the real tables is proved by the impossible snapshot date case in the bad-files table.
+  it("a parse error behind full batches exits 1 and leaves the database unchanged", async () => {
     const before = await fingerprint(scratch.client);
     const run = runImport(scratch.url, writeFile(bigDump("  ")));
     expect(run.stderr).toMatch(/^Registry import failed: product 2001 has an empty nazwaProduktu/);
@@ -328,6 +342,8 @@ describe("a good file lands untouched (tests/fixtures/rpl-real-shapes.xml)", () 
 });
 
 describe("the scratch database covers every registry migration", () => {
+  // Limit: a registry migration that mentions `auth.` (e.g. an RLS policy using auth.uid()) matches too and would stay
+  // out of REGISTRY_MIGRATIONS unnoticed; when adding such a migration, read this list by hand.
   it("each migration outside the list depends on auth or kit_items", () => {
     const others = readdirSync(MIGRATIONS_DIR).filter((file) => !REGISTRY_MIGRATIONS.includes(file));
     expect(others.length).toBeGreaterThan(0);

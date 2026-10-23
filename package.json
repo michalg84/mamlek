@@ -80,7 +80,7 @@
     "*.{ts,astro,tsx}": [
       "eslint --fix",
       "node scripts/ui-scan.mjs",
-      "vitest related --run --passWithNoTests --project unit --project component"
+      "vitest related --run --passWithNoTests --project unit --project component --project registry"
     ],
     "*.mjs": [
       "eslint --fix",

@@ -253,6 +253,12 @@ Nowe testy trafiają do bramek, dowodzimy ich siły sprawdzeniami mutacyjnymi i 
 
 **Implementation Note**: After completing this phase and all automated verification passes, pause here for manual confirmation from the human that the manual testing was successful before proceeding to the next phase. Phase blocks use plain bullets — the corresponding `- [ ]` checkboxes for these items live in the `## Progress` section at the bottom of the plan.
 
+#### Addendum (2026-10-23, z przeglądu implementacji)
+
+- lint-staged dla fixture'ów XML uruchamia `node scripts/test-registry.mjs` zamiast `vitest run --project registry`: lint-staged dokleja ścieżki staged plików, a vitest bierze je za filtr i nie znajduje testów (commit a635930). Intencja bez zmian: staged XML uruchamia cały projekt `registry`.
+- Wpis `*.{ts,astro,tsx}` dostał też `--project registry` w `vitest related`, żeby commit samych `tests/registry/*` uruchamiał testy rejestru.
+- Test `--dry-run` z plikiem bez produktów dodany do `registry-import.test.ts`; asercja `removed_at` w teście 10 z 11 produktów zostaje (jedna asercja, bez nowego zachowania do testowania).
+
 ---
 
 ## Testing Strategy
