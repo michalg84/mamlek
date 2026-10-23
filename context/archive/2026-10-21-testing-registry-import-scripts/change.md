@@ -1,10 +1,10 @@
 ---
 change_id: testing-registry-import-scripts
 title: Registry import scripts dowodzą, że import zachowuje każdy poprawny produkt
-status: impl_reviewed
+status: archived
 created: 2026-10-21
 updated: 2026-10-23
-archived_at: null
+archived_at: 2026-10-23T14:39:00Z
 ---
 
 ## Notes
