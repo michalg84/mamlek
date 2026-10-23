@@ -82,6 +82,11 @@
       "node scripts/ui-scan.mjs",
       "vitest related --run --passWithNoTests --project unit --project component"
     ],
+    "*.mjs": [
+      "eslint --fix",
+      "vitest related --run --passWithNoTests --project registry"
+    ],
+    "{scripts/fixtures,tests/fixtures}/*.xml": "vitest run --project registry",
     "*.{json,css,md}": [
       "prettier --write"
     ]

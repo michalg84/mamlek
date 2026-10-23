@@ -313,31 +313,31 @@ Brak migracji bazy. Zmiany w parserze i imporcie wchodzą do dziennego importu p
 
 #### Automated
 
-- [x] 2.1 Testy importera przechodzą na lokalnej bazie: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
-- [x] 2.2 Test pliku bez produktów jest czerwony przed zmianą w `registry-import.mjs`, zielony po niej
-- [x] 2.3 `npm run test:db` nie zmienił stanu bazy `postgres` (11 aktywnych produktów, 3 wpisy w `registry_imports`): sprawdzenie zapytaniem przed i po
-- [x] 2.4 Po przebiegu nie została baza testowa: `docker exec supabase_db_mamlek psql -U postgres -Atc "select count(*) from pg_database where datname = 'registry_import_test'"` zwraca 0
-- [x] 2.5 Fixture'y CI przechodzą import: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` (kod 0)
-- [x] 2.6 Testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry`
-- [x] 2.7 Lint i typy przechodzą: `npm run lint`, `npx astro check`
+- [x] 2.1 Testy importera przechodzą na lokalnej bazie: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db` — a805cb0
+- [x] 2.2 Test pliku bez produktów jest czerwony przed zmianą w `registry-import.mjs`, zielony po niej — a805cb0
+- [x] 2.3 `npm run test:db` nie zmienił stanu bazy `postgres` (11 aktywnych produktów, 3 wpisy w `registry_imports`): sprawdzenie zapytaniem przed i po — a805cb0
+- [x] 2.4 Po przebiegu nie została baza testowa: `docker exec supabase_db_mamlek psql -U postgres -Atc "select count(*) from pg_database where datname = 'registry_import_test'"` zwraca 0 — a805cb0
+- [x] 2.5 Fixture'y CI przechodzą import: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` (kod 0) — a805cb0
+- [x] 2.6 Testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry` — a805cb0
+- [x] 2.7 Lint i typy przechodzą: `npm run lint`, `npx astro check` — a805cb0
 
 #### Manual
 
-- [x] 2.8 Przegląd tabeli złych plików: każdy z kształtów z ryzyka #7 (błędny, pusty, zduplikowany, nieoczekiwany) ma przypadek, który autor uznaje za reprezentatywny
-- [x] 2.9 Jeśli któreś zaobserwowane zachowanie bazy odbiega od `research.md` (komunikat klucza głównego, SQLSTATE), autor potwierdza zaktualizowane oczekiwanie
+- [x] 2.8 Przegląd tabeli złych plików: każdy z kształtów z ryzyka #7 (błędny, pusty, zduplikowany, nieoczekiwany) ma przypadek, który autor uznaje za reprezentatywny — a805cb0
+- [x] 2.9 Jeśli któreś zaobserwowane zachowanie bazy odbiega od `research.md` (komunikat klucza głównego, SQLSTATE), autor potwierdza zaktualizowane oczekiwanie — a805cb0
 
 ### Phase 3: Bramki, CI, mutacje i dokumentacja
 
 #### Automated
 
-- [ ] 3.1 Pełny zestaw bez bazy przechodzi: `npx vitest run --project unit --project component --project registry`
-- [ ] 3.2 Dowód hooków przechodzi: `npx vitest run --project hooks`
-- [ ] 3.3 Testy bazy przechodzą: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
-- [ ] 3.4 Lint całego repo oraz wszystkich `*.mjs` bez błędów: `npm run lint`
-- [ ] 3.5 Typy przechodzą: `npx astro check`
-- [ ] 3.6 Każda z mutacji (a)–(f) czerwona w oczekiwanym teście, po każdej `git checkout --` przywraca plik (`git status --short scripts/` bez zmian poza zamierzonymi)
-- [ ] 3.7 Przykładowy commit z dotkniętym `*.mjs` uruchamia `eslint` i `vitest related --project registry` (sprawdzenie na stagingu próbnej zmiany, potem cofnięcie)
-- [ ] 3.8 Odsyłacze w `test-plan.md` §3/§5/§6.5/§6.6 wskazują istniejące pliki i polecenia
+- [x] 3.1 Pełny zestaw bez bazy przechodzi: `npx vitest run --project unit --project component --project registry`
+- [x] 3.2 Dowód hooków przechodzi: `npx vitest run --project hooks`
+- [x] 3.3 Testy bazy przechodzą: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
+- [x] 3.4 Lint całego repo oraz wszystkich `*.mjs` bez błędów: `npm run lint`
+- [x] 3.5 Typy przechodzą: `npx astro check`
+- [x] 3.6 Każda z mutacji (a)–(f) czerwona w oczekiwanym teście, po każdej `git checkout --` przywraca plik (`git status --short scripts/` bez zmian poza zamierzonymi)
+- [x] 3.7 Przykładowy commit z dotkniętym `*.mjs` uruchamia `eslint` i `vitest related --project registry` (sprawdzenie na stagingu próbnej zmiany, potem cofnięcie)
+- [x] 3.8 Odsyłacze w `test-plan.md` §3/§5/§6.5/§6.6 wskazują istniejące pliki i polecenia
 
 #### Manual
 
