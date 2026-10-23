@@ -2,6 +2,7 @@
 // freely, a baseline state in it, the importer run as a child process (the real path with exit codes) and a
 // fingerprint of the whole registry state, so "the database is unchanged" is a comparison, not a hope.
 // The database named by DATABASE_URL (the local CI state v1, v1, v2) is only used to create and drop the scratch one.
+// The scratch database has a fixed name and is force-dropped at the start: run one `test:db` at a time per server.
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { URL, fileURLToPath } from "node:url";
@@ -73,13 +74,16 @@ export interface ImportRun {
   stderr: string;
 }
 
-/** Runs `node scripts/registry-import.mjs --file <file>` against `url`; a failing import is a result, not a throw. */
-export function runImport(url: string, file: string): ImportRun {
-  const run = spawnSync(process.execPath, [IMPORT_SCRIPT, "--file", file], {
+/**
+ * Runs `node scripts/registry-import.mjs --file <file>` against `url` (`dryRun` adds `--dry-run`: parse only);
+ * a failing import is a result, not a throw. The timeout stays below the 60 s test timeout.
+ */
+export function runImport(url: string, file: string, { dryRun = false } = {}): ImportRun {
+  const run = spawnSync(process.execPath, [IMPORT_SCRIPT, "--file", file, ...(dryRun ? ["--dry-run"] : [])], {
     cwd: REPO_ROOT,
     env: { ...process.env, DATABASE_URL: url },
     encoding: "utf8",
-    timeout: 120_000,
+    timeout: 45_000,
   });
   return { status: run.status, stdout: run.stdout, stderr: run.stderr };
 }
