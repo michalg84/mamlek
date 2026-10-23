@@ -202,6 +202,8 @@ async function importToDatabase(databaseUrl, source, startedAt) {
       }
     }
     await loadBatch(client, batch, dump);
+    // A file without a single human product is never a valid registry, whatever the database holds.
+    if (dump.products === 0) throw new ImportError("the dump contains no human products");
 
     // 3. Safety checks (the namespace is checked by the parser).
     const {
@@ -278,6 +280,7 @@ async function dryRun(source) {
     dump.substances += product.substances.length;
     dump.packages += product.packages.length;
   }
+  if (dump.products === 0) throw new ImportError("the dump contains no human products");
   return { snapshotDate, dump, stats };
 }
 

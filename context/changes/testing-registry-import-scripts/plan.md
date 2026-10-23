@@ -297,34 +297,34 @@ Brak migracji bazy. Zmiany w parserze i imporcie wchodzą do dziennego importu p
 
 #### Automated
 
-- [x] 1.1 Testy parsera przechodzą: `npx vitest run --project registry`
-- [x] 1.2 Wszystkie testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry`
-- [x] 1.3 Testy czerwone przed zaostrzeniem: dla nazwy ze spacji, `Ludzki` i `tak` test w `rpl-parser.test.ts` przed zmianą `rpl-parser.mjs` kończy się czerwono (kolejność commitów lub uruchomienie przed edycją)
-- [x] 1.4 Fixture'y CI wciąż przechodzą parser: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` oraz to samo dla `rpl-sample-v2.xml` (kod wyjścia 0, 11 produktów ludzkich i 1 pominięty w każdym)
-- [x] 1.5 Lint przechodzi: `npm run lint`
-- [x] 1.6 Typy przechodzą: `npx astro check`
+- [x] 1.1 Testy parsera przechodzą: `npx vitest run --project registry` — 1d631dc
+- [x] 1.2 Wszystkie testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry` — 1d631dc
+- [x] 1.3 Testy czerwone przed zaostrzeniem: dla nazwy ze spacji, `Ludzki` i `tak` test w `rpl-parser.test.ts` przed zmianą `rpl-parser.mjs` kończy się czerwono (kolejność commitów lub uruchomienie przed edycją) — 1d631dc
+- [x] 1.4 Fixture'y CI wciąż przechodzą parser: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` oraz to samo dla `rpl-sample-v2.xml` (kod wyjścia 0, 11 produktów ludzkich i 1 pominięty w każdym) — 1d631dc
+- [x] 1.5 Lint przechodzi: `npm run lint` — 1d631dc
+- [x] 1.6 Typy przechodzą: `npx astro check` — 1d631dc
 
 #### Manual
 
-- [x] 1.7 Zaostrzony parser przechodzi prawdziwy rejestr: `npm run registry:import -- --file <ścieżka do świeżo pobranego overall.xml> --dry-run` kończy się kodem 0 z liczbami zbliżonymi do migawki z 2026-10-21 (20 293 produkty ludzkie, 25 586 substancji, 71 558 aktywnych opakowań, 2 647 pominiętych, 4 104 pominięte opakowania); agent proponuje wykonać to sam, jeśli użytkownik nie zdecyduje inaczej
-- [x] 1.8 Oczekiwane wartości testu wycinka zgadzają się z rekordami źródłowymi (przegląd pięciu produktów obok XML-a)
+- [x] 1.7 Zaostrzony parser przechodzi prawdziwy rejestr: `npm run registry:import -- --file <ścieżka do świeżo pobranego overall.xml> --dry-run` kończy się kodem 0 z liczbami zbliżonymi do migawki z 2026-10-21 (20 293 produkty ludzkie, 25 586 substancji, 71 558 aktywnych opakowań, 2 647 pominiętych, 4 104 pominięte opakowania); agent proponuje wykonać to sam, jeśli użytkownik nie zdecyduje inaczej — 1d631dc
+- [x] 1.8 Oczekiwane wartości testu wycinka zgadzają się z rekordami źródłowymi (przegląd pięciu produktów obok XML-a) — 1d631dc
 
 ### Phase 2: Importer — zaostrzenie i testy na osobnej bazie
 
 #### Automated
 
-- [ ] 2.1 Testy importera przechodzą na lokalnej bazie: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
-- [ ] 2.2 Test pliku bez produktów jest czerwony przed zmianą w `registry-import.mjs`, zielony po niej
-- [ ] 2.3 `npm run test:db` nie zmienił stanu bazy `postgres` (11 aktywnych produktów, 3 wpisy w `registry_imports`): sprawdzenie zapytaniem przed i po
-- [ ] 2.4 Po przebiegu nie została baza testowa: `docker exec supabase_db_mamlek psql -U postgres -Atc "select count(*) from pg_database where datname = 'registry_import_test'"` zwraca 0
-- [ ] 2.5 Fixture'y CI przechodzą import: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` (kod 0)
-- [ ] 2.6 Testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry`
-- [ ] 2.7 Lint i typy przechodzą: `npm run lint`, `npx astro check`
+- [x] 2.1 Testy importera przechodzą na lokalnej bazie: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
+- [x] 2.2 Test pliku bez produktów jest czerwony przed zmianą w `registry-import.mjs`, zielony po niej
+- [x] 2.3 `npm run test:db` nie zmienił stanu bazy `postgres` (11 aktywnych produktów, 3 wpisy w `registry_imports`): sprawdzenie zapytaniem przed i po
+- [x] 2.4 Po przebiegu nie została baza testowa: `docker exec supabase_db_mamlek psql -U postgres -Atc "select count(*) from pg_database where datname = 'registry_import_test'"` zwraca 0
+- [x] 2.5 Fixture'y CI przechodzą import: `npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml --dry-run` (kod 0)
+- [x] 2.6 Testy bez bazy przechodzą: `npx vitest run --project unit --project component --project registry`
+- [x] 2.7 Lint i typy przechodzą: `npm run lint`, `npx astro check`
 
 #### Manual
 
-- [ ] 2.8 Przegląd tabeli złych plików: każdy z kształtów z ryzyka #7 (błędny, pusty, zduplikowany, nieoczekiwany) ma przypadek, który autor uznaje za reprezentatywny
-- [ ] 2.9 Jeśli któreś zaobserwowane zachowanie bazy odbiega od `research.md` (komunikat klucza głównego, SQLSTATE), autor potwierdza zaktualizowane oczekiwanie
+- [x] 2.8 Przegląd tabeli złych plików: każdy z kształtów z ryzyka #7 (błędny, pusty, zduplikowany, nieoczekiwany) ma przypadek, który autor uznaje za reprezentatywny
+- [x] 2.9 Jeśli któreś zaobserwowane zachowanie bazy odbiega od `research.md` (komunikat klucza głównego, SQLSTATE), autor potwierdza zaktualizowane oczekiwanie
 
 ### Phase 3: Bramki, CI, mutacje i dokumentacja
 
