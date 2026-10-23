@@ -1,6 +1,9 @@
 // Streaming parser for the RPL (Rejestr Produktów Leczniczych) XML export v6.0.0.
 // Turns a text stream into human product records shaped like the registry_* table columns,
 // without building the whole document tree in memory. Entities are decoded by saxes.
+// A record whose meaning the parser would have to guess ends in an RplParseError instead of a silent change:
+// rodzajPreparatu must be "ludzki" or "weterynaryjny", skasowane of a human product's package "TAK", "NIE" or
+// absent (the real export always uses exactly these), and a name of white space only counts as empty.
 
 import { SaxesParser } from "saxes";
 
@@ -8,11 +11,14 @@ export const RPL_NAMESPACE = "http://rejestry.ezdrowie.gov.pl/rpl/eksport-danych
 
 export class RplParseError extends Error {}
 
-// Empty XML strings are stored as NULL.
+// Empty XML strings are stored as NULL. Other values are stored as they are, white space included.
 function value(attributes, name) {
   const raw = attributes[name]?.value;
   return raw === undefined || raw === "" ? null : raw;
 }
+
+// A name is empty when it is missing or has nothing but white space; it is still stored untrimmed.
+const isBlank = (text) => text === null || text.trim() === "";
 
 function bigintId(attributes, element) {
   const id = attributes.id?.value ?? "";
@@ -48,7 +54,10 @@ function productRecord(attributes) {
  * @param {AsyncIterable<string>} source text chunks (already decoded from UTF-8)
  * @returns {Promise<{ snapshotDate: string, products: AsyncGenerator<object>, stats: { skippedProducts: number, skippedPackages: number } }>}
  *   `products` yields human products only; `stats` is complete once `products` is exhausted.
- *   Throws RplParseError on a wrong root namespace, a missing stanNaDzien, malformed or truncated XML.
+ *   Throws RplParseError on a wrong root namespace, a missing or malformed stanNaDzien, an invalid product or
+ *   package id, an empty (or white-space-only) nazwaProduktu or nazwaSubstancji, a rodzajPreparatu other than
+ *   "ludzki" / "weterynaryjny", a skasowane other than "TAK" / "NIE" on a human product's package, and on
+ *   malformed or truncated XML (the last as a plain Error from saxes).
  */
 export async function parseRpl(source) {
   const parser = new SaxesParser({ xmlns: true });
@@ -74,13 +83,19 @@ export async function parseRpl(source) {
     }
     if (snapshotDate === null) throw new RplParseError(`unexpected root element <${node.name}>`);
     switch (node.local) {
-      case "produktLeczniczy":
-        if (a.rodzajPreparatu?.value === "ludzki") product = productRecord(a);
-        else {
+      case "produktLeczniczy": {
+        const kind = a.rodzajPreparatu?.value;
+        if (kind === "ludzki") product = productRecord(a);
+        else if (kind === "weterynaryjny") {
           product = null;
           stats.skippedProducts++;
+        } else {
+          throw new RplParseError(
+            `product ${a.id?.value ?? "?"} has an unrecognised rodzajPreparatu "${kind ?? ""}", expected "ludzki" or "weterynaryjny"`,
+          );
         }
         break;
+      }
       case "kodATC":
         if (product) atcText = "";
         break;
@@ -92,7 +107,7 @@ export async function parseRpl(source) {
       case "substancjaCzynna":
         if (product) {
           const name = value(a, "nazwaSubstancji");
-          if (name === null)
+          if (isBlank(name))
             throw new RplParseError(`product ${product.id} has a substance with an empty nazwaSubstancji`);
           product.substances.push({
             position: product.substances.length + 1,
@@ -108,9 +123,13 @@ export async function parseRpl(source) {
       case "opakowanie":
         pkg = null;
         if (!product) break;
-        // Missing attribute or "NIE" means an active package.
+        // Missing attribute or "NIE" means an active package; any other value is an error.
         if (a.skasowane?.value === "TAK") stats.skippedPackages++;
-        else {
+        else if (a.skasowane !== undefined && a.skasowane.value !== "NIE") {
+          throw new RplParseError(
+            `product ${product.id} has a package with an unrecognised skasowane "${a.skasowane.value}", expected "TAK" or "NIE"`,
+          );
+        } else {
           pkg = {
             id: bigintId(a, "opakowanie"),
             gtin: value(a, "kodGTIN"),
@@ -152,7 +171,7 @@ export async function parseRpl(source) {
         break;
       case "produktLeczniczy":
         if (product) {
-          if (product.name === null) throw new RplParseError(`product ${product.id} has an empty nazwaProduktu`);
+          if (isBlank(product.name)) throw new RplParseError(`product ${product.id} has an empty nazwaProduktu`);
           queue.push(product);
         }
         product = null;

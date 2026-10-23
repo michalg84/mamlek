@@ -26,6 +26,14 @@ export default defineConfig({
       },
       {
         test: {
+          // The RPL registry XML parser (scripts/lib/rpl-parser.mjs): pure text-in, records-out, no database.
+          name: "registry",
+          include: ["tests/registry/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           // Proof of the Claude Code hooks in .claude/hooks/: real scripts and git in throwaway repos.
           name: "hooks",
           include: ["tests/hooks/**/*.test.ts"],
