@@ -189,7 +189,7 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(r.stderr).toBe("");
     expect(sb.calls()).toContain("eslint src/ok.ts");
     expect(sb.calls()).toContain("astro check");
-    expect(sb.calls()).toContain("vitest run --project unit --project component");
+    expect(sb.calls()).toContain("vitest run --project unit --project component --project registry");
   });
 
   it("blocks with exit 2 on a lint error written straight to disk, naming the file", () => {
@@ -218,21 +218,28 @@ describe("end-of-turn.mjs (Stop)", () => {
     write(sb.root, "src/x.test.ts", "it('rejects the input', () => {}); // TEST_FAIL\n");
     const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain("Unit/component tests fail");
+    expect(r.stderr).toContain("Unit/component/registry tests fail");
     expect(r.stderr).toContain("FAIL  src/x.test.ts");
-    expect(sb.calls()).toContain("vitest run --project unit --project component");
+    expect(sb.calls()).toContain("vitest run --project unit --project component --project registry");
   });
 
   it("runs the tests when only the test setup changed, but not for an uncovered file", () => {
     const sb = sandbox();
     write(sb.root, "tests/fixtures/data.json", "{}\n");
     expect(runHook(sb, "end-of-turn.mjs", stop(sb.root)).code).toBe(0);
-    expect(sb.calls()).toContain("vitest run --project unit --project component");
+    expect(sb.calls()).toContain("vitest run --project unit --project component --project registry");
 
     const other = sandbox();
     write(other.root, "README.md", "# changed\n");
     expect(runHook(other, "end-of-turn.mjs", stop(other.root)).code).toBe(0);
     expect(other.calls()).not.toContain("vitest");
+  });
+
+  it("runs the tests when a registry parser XML fixture changed, which no import points at", () => {
+    const sb = sandbox();
+    write(sb.root, "scripts/fixtures/rpl-sample-v3.xml", "<produktyLecznicze/>\n");
+    expect(runHook(sb, "end-of-turn.mjs", stop(sb.root)).code).toBe(0);
+    expect(sb.calls()).toContain("vitest run --project unit --project component --project registry");
   });
 
   it("checks a changed file with a non-ASCII name", () => {

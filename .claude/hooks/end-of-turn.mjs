@@ -1,6 +1,6 @@
 // Stop hook: before the agent finishes, sweep every file this turn changed with the gate that is wired in
 // test-plan.md §5 ("lint + type check + ui:scan"): ESLint on the changed files, ui:scan on the changed views,
-// then `astro check` over the whole project and the whole unit + component test suite (about 3 s). One retry: when
+// then `astro check` over the whole project and the whole unit + component + registry (parser) test suite (about 3 s). One retry: when
 // Claude is already continuing because of this hook (stop_hook_active, or Cursor's loop_count), it is let through and
 // the commit gate catches the rest.
 // Exit 2 + stderr is the only combination Claude sees at Stop. Node, not bash: this host has no jq.
@@ -14,8 +14,10 @@ const LINTED = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".astro"])
 const SCANNED = new Set([".astro", ".tsx"]);
 // A change to one of these can change the typecheck result even without a changed source file.
 const TYPE_INPUTS = /^(tsconfig.*\.json|package(-lock)?\.json|astro\.config\.[cm]?[jt]s)$/;
-// The test setup the unit + component projects read: a change here can turn a test red without a changed source file.
-const TEST_INPUTS = /^(vitest\.config\.ts|tests\/setup-component\.ts|tests\/(fixtures|helpers)\/.+)$/;
+// The test setup the unit + component + registry projects read: a change here can turn a test red without a changed
+// source file (the registry parser's XML fixtures are read as files, so no import graph points at them).
+const TEST_INPUTS =
+  /^(vitest\.config\.ts|tests\/setup-component\.ts|tests\/(fixtures|helpers)\/.+|scripts\/fixtures\/.+\.xml)$/;
 const ENV = { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" };
 // Claude Code kills the hook at the 120 s timeout in settings.json and lets the agent finish without a word, so the
 // checks stop earlier and say so. Override only in the proof tests.
@@ -107,8 +109,16 @@ for (const root of roots) {
   // The whole suite, not only the tests of the changed files: it takes seconds and a deleted or renamed module breaks
   // tests that import it. The hooks project is left to `npm test` and the hook proof itself.
   if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f) || TEST_INPUTS.test(f))) {
-    const tests = run(root, "node_modules/vitest/vitest.mjs", ["run", "--project", "unit", "--project", "component"]);
-    if (!tests.ok) report.push(`Unit/component tests fail (${root}):\n${tests.out}`);
+    const tests = run(root, "node_modules/vitest/vitest.mjs", [
+      "run",
+      "--project",
+      "unit",
+      "--project",
+      "component",
+      "--project",
+      "registry",
+    ]);
+    if (!tests.ok) report.push(`Unit/component/registry tests fail (${root}):\n${tests.out}`);
   }
 }
 

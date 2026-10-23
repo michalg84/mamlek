@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<produktyLecznicze stanNaDzien="2026-10-21" xmlns="http://rejestry.ezdrowie.gov.pl/rpl/eksport-danych-v6.0.0">
+    <produktLeczniczy nazwaProduktu="Siiltibcy" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Antygeny pochodzące z Mycobacterium tuberculosis" nazwaPoprzedniaProduktu="brak" moc="(0,5 mikrograma + 0,5 mikrograma)/ml &#10;(rdESAT-6 i rCFP-10)" nazwaPostaciFarmaceutycznej="Roztwór do wstrzykiwań" podmiotOdpowiedzialny="Serum Life Science Europe GmbH" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100512983">
+        <kodyATC/>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="śródskórna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Antygeny pochodzące z Mycobacterium tuberculosis" iloscSubstancji="" jednostkaMiaryIlosciSubstancji="" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci="(0,5 mikrograma + 0,5 mikrograma)/ml &#10;(rdESAT-6 i rCFP-10)"/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/24/1882/002" dystrybutorRownolegly="" id="160405">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="10" rodzajOpakowania="fiol." pojemnosc="1" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/24/1882/001" dystrybutorRownolegly="" id="160406">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="fiol." pojemnosc="1" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Bilthoven Biologicals B.V." krajWytworcyImportera="Holandia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Amaplantis" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Plantaginis lanceolatae folii extractum fluidum" nazwaPoprzedniaProduktu="brak" moc="150 mg/ml" nazwaPostaciFarmaceutycznej="Syrop" podmiotOdpowiedzialny="Zakład Farmaceutyczny &quot;Amara&quot; Sp. z o.o." typProcedury="NAR" numerPozwolenia="29839" waznoscPozwolenia="2031-07-13" podstawaPrawna="art. 20a ust. 1" zakazStosowaniaUZwierzat="" ulotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/43605/leaflet" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/43605/characteristic" id="100436059">
+        <kodyATC>
+            <kodATC>BRAK</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Plantaginis lanceolatae folii extractum fluidum" iloscSubstancji="0,15" jednostkaMiaryIlosciSubstancji="g/ml" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05901315022099" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="164139">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butelka" pojemnosc="125" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Zakład Farmaceutyczny &quot;Amara&quot; Sp. z o.o." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Nezglyal" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="" nazwaPoprzedniaProduktu="brak" nazwaPostaciFarmaceutycznej="Zawiesina doustna" podmiotOdpowiedzialny="" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100546235">
+        <kodyATC>
+            <kodATC>A16AX23</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne/>
+        <opakowania>
+            <opakowanie kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/26/2060/001" dystrybutorRownolegly="" id="168755">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="butel." pojemnosc="100" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Delpharm Huningue S.A.S." krajWytworcyImportera="Francja"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Elocom" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Mometasoni furoas" nazwaPoprzedniaProduktu="brak" moc="1 mg/g" nazwaPostaciFarmaceutycznej="Krem" podmiotOdpowiedzialny="Medezin Sp. z o.o." typProcedury="IR" numerPozwolenia="145/21" waznoscPozwolenia="2031-04-23" zakazStosowaniaUZwierzat="" ulotkaImportRownolegly="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/45160/parallel-import-files/LEAFLET/public" oznaczenieOpakowanImportRownolegly="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/45160/parallel-import-files/PACKAGE_MARKING/public" id="100451606">
+        <kodyATC>
+            <kodATC>D07AC13</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="na skórę"/>
+        </drogiPodania>
+        <substancjeCzynne/>
+        <opakowania>
+            <opakowanie kodGTIN="5909991452759" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="140235">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="tuba" pojemnosc="30" jednostkaPojemnosci="g" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy podmiotOdpowiedzialnywKrajuEksportu="N.V. Organon" krajEksportu="Bułgaria"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Urtix" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Urticae radix" nazwaPoprzedniaProduktu="brak" moc="330 mg" nazwaPostaciFarmaceutycznej="Tabletki" podmiotOdpowiedzialny="Labofarm sp. z o.o." typProcedury="NAR" numerPozwolenia="09126" waznoscPozwolenia="Bezterminowe" podstawaPrawna="art. 17  ust. 3" zakazStosowaniaUZwierzat="" charakterystyka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10552/characteristic" etykietoUlotka="https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/10552/package-leaflet-and-labelling" id="100105523">
+        <kodyATC/>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Urticae radix" iloscSubstancji="330" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05909990912612" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="18260">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="60" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="05909990912629" kategoriaDostepnosci="OTC" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="20192">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="90" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Labofarm sp. z o.o." krajWytworcyImportera="Polska"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Emend" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Aprepitantum" nazwaPoprzedniaProduktu="brak" moc="125 mg" nazwaPostaciFarmaceutycznej="Proszek do sporządzania zawiesiny doustnej" podmiotOdpowiedzialny="Merck Sharp &amp; Dohme B.V." typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100369529">
+        <kodyATC>
+            <kodATC>A04AD12</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne/>
+        <opakowania>
+            <opakowanie kodGTIN="05901549325034" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/03/262/011" dystrybutorRownolegly="" id="115378">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="sasz." pojemnosc="125" jednostkaPojemnosci="mg" informacjeDodatkowe=""/>
+                    <jednostkaOpakowania liczbaOpakowan="2" rodzajOpakowania="dozowniki" pojemnosc="" jednostkaPojemnosci="" informacjeDodatkowe=""/>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="pojemnik" pojemnosc="" jednostkaPojemnosci="" informacjeDodatkowe="+ 1 nasadka"/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Merck Sharp &amp; Dohme B.V." krajWytworcyImportera="Holandia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Sivextro" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Tedizolidi phosphas " nazwaPoprzedniaProduktu="brak" moc="200 mg" nazwaPostaciFarmaceutycznej="Tabletki powlekane" podmiotOdpowiedzialny="Merck Sharp &amp; Dohme B.V." typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="TAK" id="100342559">
+        <kodyATC>
+            <kodATC>J01XX11</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Tedizolidii phosphas" iloscSubstancji="200" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="05901549324952" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="EU/1/15/991/001" dystrybutorRownolegly="" id="108013">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="6" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="00191778013405" kategoriaDostepnosci="Rpz" skasowane="TAK" numerEu="EU/1/15/991/001" dystrybutorRownolegly="" id="127235">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="6" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Laboratoires Merck Sharp &amp; Dohme" krajWytworcyImportera="Francja"/>
+            <wytworcy nazwaWytworcyImportera="PATHEON ITALIA S.P.A." krajWytworcyImportera="Włochy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Uzpruvo" rodzajPreparatu="ludzki" nazwaPowszechnieStosowana="Ustekinumabum" nazwaPoprzedniaProduktu="brak" moc="90 mg" nazwaPostaciFarmaceutycznej="Roztwór do wstrzykiwań w ampułko-strzykawce" podmiotOdpowiedzialny="STADA Arzneimittel AG" typProcedury="CEN" numerPozwolenia="" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100490175">
+        <kodyATC>
+            <kodATC>L04AC05</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="podskórna"/>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Ustekinumabum" iloscSubstancji="90" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="04011548045817" kategoriaDostepnosci="Rpz" skasowane="NIE" numerEu="EU/1/23/1784/004" dystrybutorRownolegly="" id="152113">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="1" rodzajOpakowania="amp.-strzyk." pojemnosc="1" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kategoriaDostepnosci="" skasowane="NIE" numerEu="EU/1/23/1784/002" dystrybutorRownolegly="" id="160638">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="2" rodzajOpakowania="amp.-strzyk." pojemnosc="1" jednostkaPojemnosci="ml" informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Alvotech Hf" krajWytworcyImportera="Islandia"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+    <produktLeczniczy nazwaProduktu="Trocoxil" rodzajPreparatu="weterynaryjny" nazwaPowszechnieStosowana="Mavacoxib" nazwaPoprzedniaProduktu="brak" moc="30 mg" nazwaPostaciFarmaceutycznej="Tabletki do żucia" podmiotOdpowiedzialny="Pfizer Ltd." typProcedury="CEN" numerPozwolenia="EU/2/08/084" waznoscPozwolenia="" zakazStosowaniaUZwierzat="" id="100219110">
+        <kodyATC>
+            <kodATC>QM01AH92</kodATC>
+        </kodyATC>
+        <drogiPodania>
+            <drogaPodania drogaPodaniaNazwa="doustna">
+                <gatunki>
+                    <gatunek nazwaGatunku="pies"/>
+                </gatunki>
+            </drogaPodania>
+        </drogiPodania>
+        <substancjeCzynne>
+            <substancjaCzynna nazwaSubstancji="Mavacoxib" iloscSubstancji="30" jednostkaMiaryIlosciSubstancji="mg" iloscPreparatu="" jednostkaMiaryIlosciPreparatu="" innyOpisIlosci=""/>
+        </substancjeCzynne>
+        <opakowania>
+            <opakowanie kodGTIN="5909990744602" kategoriaDostepnosci="Rp" skasowane="TAK" numerEu="" dystrybutorRownolegly="" id="54460">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="2" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+            <opakowanie kodGTIN="5414736017556" kategoriaDostepnosci="Rp" skasowane="NIE" numerEu="" dystrybutorRownolegly="" id="137424">
+                <jednostkiOpakowania>
+                    <jednostkaOpakowania liczbaOpakowan="" rodzajOpakowania="" pojemnosc="2" jednostkaPojemnosci="tabl." informacjeDodatkowe=""/>
+                </jednostkiOpakowania>
+                <zgodyPrezesa/>
+            </opakowanie>
+        </opakowania>
+        <daneOWytworcy>
+            <wytworcy nazwaWytworcyImportera="Pfizer Italia S.r.l." krajWytworcyImportera="Włochy"/>
+        </daneOWytworcy>
+        <materialyEdukacyjne>
+            <dlaPacjenta/>
+            <dlaMedyka/>
+        </materialyEdukacyjne>
+    </produktLeczniczy>
+</produktyLecznicze>

@@ -57,31 +57,31 @@ Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Sett
 
 ## Scripts
 
-| Command                   | What it does                                                                                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`             | Dev server on the Cloudflare workerd runtime                                                                                                         |
-| `npm run build`           | Production build                                                                                                                                     |
-| `npm run preview`         | Serve the production build                                                                                                                           |
-| `npm run lint`            | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                                                              |
-| `npm run format`          | Prettier                                                                                                                                             |
-| `npx astro check`         | Type-check `.astro` and `.ts` files                                                                                                                  |
-| `npm run smoke`           | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`)                                                          |
-| `npm test`                | Unit and component tests (Vitest; `npm run test:watch` to watch), no database needed                                                                 |
-| `npm run test:db`         | Rule tests of `medicine_check` and kit isolation (RLS, `anon`) against a local Supabase (`DATABASE_URL`, needs `npx supabase db reset`), rolled back |
-| `npm run test:api`        | Black-box tests of `/api/kit*` on a running server (`BASE_URL` + local `DATABASE_URL`, needs the registry fixtures imported)                         |
-| `npm run roadmap:sync`    | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope)                                  |
-| `npm run registry:import` | Imports the Polish medicines registry (RPL XML export) into `DATABASE_URL` (`-- --file <path>` for a local file, `-- --dry-run` to parse only)       |
+| Command                   | What it does                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`             | Dev server on the Cloudflare workerd runtime                                                                                                                                          |
+| `npm run build`           | Production build                                                                                                                                                                      |
+| `npm run preview`         | Serve the production build                                                                                                                                                            |
+| `npm run lint`            | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                                                                                               |
+| `npm run format`          | Prettier                                                                                                                                                                              |
+| `npx astro check`         | Type-check `.astro` and `.ts` files                                                                                                                                                   |
+| `npm run smoke`           | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`)                                                                                           |
+| `npm test`                | Unit, component and registry parser tests (Vitest; `npm run test:watch` to watch), no database needed                                                                                 |
+| `npm run test:db`         | Rule tests of `medicine_check`, kit isolation (RLS, `anon`) and the registry importer (own scratch database) against a local Supabase (`DATABASE_URL`, needs `npx supabase db reset`) |
+| `npm run test:api`        | Black-box tests of `/api/kit*` on a running server (`BASE_URL` + local `DATABASE_URL`, needs the registry fixtures imported)                                                          |
+| `npm run roadmap:sync`    | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope)                                                                   |
+| `npm run registry:import` | Imports the Polish medicines registry (RPL XML export) into `DATABASE_URL` (`-- --file <path>` for a local file, `-- --dry-run` to parse only)                                        |
 
 The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off.
 
-A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`astro` files, `vitest related` (the unit and component tests related to those files) and `prettier --write` on `json`/`css`/`md` files.
+A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`astro` files, `vitest related` (the unit and component tests related to those files), `eslint --fix` plus the related registry parser tests on staged `mjs` files, the registry parser tests on staged XML fixtures, and `prettier --write` on `json`/`css`/`md` files.
 
 ## CI
 
 `.github/workflows/ci.yml` runs on every push and pull request to `main`:
 
-- **ci**: `astro sync`, lint, `astro check`, unit and component tests (Vitest), build. The build uses the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
-- **smoke**: starts a local Supabase (which applies the migrations), imports the registry fixtures (`scripts/fixtures/rpl-sample-v1.xml` twice, then `rpl-sample-v2.xml`) and verifies the result with `node scripts/registry-import-check.mjs` and the `medicine_check` rule and kit isolation tests (`npm run test:db`), then builds the app and runs `npm run smoke` and the kit API tests (`npm run test:api`) against `npm run preview`.
+- **ci**: `astro sync`, lint, `astro check`, unit, component and registry parser tests (Vitest), build. The build uses the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
+- **smoke**: starts a local Supabase (which applies the migrations), imports the registry fixtures (`scripts/fixtures/rpl-sample-v1.xml` twice, then `rpl-sample-v2.xml`) and verifies the result with `node scripts/registry-import-check.mjs` and the `medicine_check` rule, kit isolation and registry importer tests (`npm run test:db`), then builds the app and runs `npm run smoke` and the kit API tests (`npm run test:api`) against `npm run preview`.
 
 Both jobs are required checks: the ruleset in `.github/rulesets/main.json` protects `main` (PR required, merge commits only, `ci` and `smoke` green, no bypass, no force-push or deletion). Renaming either job requires updating the ruleset.
 

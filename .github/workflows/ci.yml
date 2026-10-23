@@ -22,7 +22,7 @@ jobs:
       - run: npm run lint
       - run: npm run ui:scan
       - run: npx astro check
-      - run: npx vitest run --project unit --project component
+      - run: npx vitest run --project unit --project component --project registry
       - run: npm run build
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -55,6 +55,8 @@ jobs:
           npm run registry:import -- --file scripts/fixtures/rpl-sample-v1.xml
           npm run registry:import -- --file scripts/fixtures/rpl-sample-v2.xml
           node scripts/registry-import-check.mjs
+          # test:db also runs the importer tests on their own scratch database (registry_import_test), so the
+          # v1, v1, v2 state above stays intact for test:api.
           npm run test:db
       - name: Configure secrets for build and preview
         run: |
