@@ -347,6 +347,6 @@ Brak migracji bazy. Zmiany w parserze i imporcie wchodzą do dziennego importu p
 
 #### Manual
 
-- [ ] 3.9 Pull request z zielonymi `ci` i `smoke` (ruleset `main`); `smoke` uruchamia `test:db` z nowym testem po `registry-import-check.mjs` i przed `test:api`, a `test:api` dalej przechodzi
-- [ ] 3.10 Po scaleniu najbliższy dzienny import (04:17 UTC, `registry-import.yml`) kończy się sukcesem — brak maila o nieudanym przebiegu następnego dnia
-- [ ] 3.11 Autor przegląda `test-plan.md` §6.5/§6.6 i pytanie otwarte w roadmapie
+- [x] 3.9 Pull request z zielonymi `ci` i `smoke` (ruleset `main`); `smoke` uruchamia `test:db` z nowym testem po `registry-import-check.mjs` i przed `test:api`, a `test:api` dalej przechodzi — 6c54d14
+- [x] 3.10 Po scaleniu najbliższy dzienny import (04:17 UTC, `registry-import.yml`) kończy się sukcesem — brak maila o nieudanym przebiegu następnego dnia — fc877b8
+- [x] 3.11 Autor przegląda `test-plan.md` §6.5/§6.6 i pytanie otwarte w roadmapie
