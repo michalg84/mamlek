@@ -330,14 +330,14 @@ Brak migracji bazy. Zmiany w parserze i imporcie wchodzą do dziennego importu p
 
 #### Automated
 
-- [x] 3.1 Pełny zestaw bez bazy przechodzi: `npx vitest run --project unit --project component --project registry`
-- [x] 3.2 Dowód hooków przechodzi: `npx vitest run --project hooks`
-- [x] 3.3 Testy bazy przechodzą: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db`
-- [x] 3.4 Lint całego repo oraz wszystkich `*.mjs` bez błędów: `npm run lint`
-- [x] 3.5 Typy przechodzą: `npx astro check`
-- [x] 3.6 Każda z mutacji (a)–(f) czerwona w oczekiwanym teście, po każdej `git checkout --` przywraca plik (`git status --short scripts/` bez zmian poza zamierzonymi)
-- [x] 3.7 Przykładowy commit z dotkniętym `*.mjs` uruchamia `eslint` i `vitest related --project registry` (sprawdzenie na stagingu próbnej zmiany, potem cofnięcie)
-- [x] 3.8 Odsyłacze w `test-plan.md` §3/§5/§6.5/§6.6 wskazują istniejące pliki i polecenia
+- [x] 3.1 Pełny zestaw bez bazy przechodzi: `npx vitest run --project unit --project component --project registry` — c6aa7c6
+- [x] 3.2 Dowód hooków przechodzi: `npx vitest run --project hooks` — c6aa7c6
+- [x] 3.3 Testy bazy przechodzą: `DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run test:db` — c6aa7c6
+- [x] 3.4 Lint całego repo oraz wszystkich `*.mjs` bez błędów: `npm run lint` — c6aa7c6
+- [x] 3.5 Typy przechodzą: `npx astro check` — c6aa7c6
+- [x] 3.6 Każda z mutacji (a)–(f) czerwona w oczekiwanym teście, po każdej `git checkout --` przywraca plik (`git status --short scripts/` bez zmian poza zamierzonymi) — c6aa7c6
+- [x] 3.7 Przykładowy commit z dotkniętym `*.mjs` uruchamia `eslint` i `vitest related --project registry` (sprawdzenie na stagingu próbnej zmiany, potem cofnięcie) — c6aa7c6
+- [x] 3.8 Odsyłacze w `test-plan.md` §3/§5/§6.5/§6.6 wskazują istniejące pliki i polecenia — c6aa7c6
 
 #### Manual
 

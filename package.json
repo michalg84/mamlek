@@ -86,7 +86,7 @@
       "eslint --fix",
       "vitest related --run --passWithNoTests --project registry"
     ],
-    "{scripts/fixtures,tests/fixtures}/*.xml": "vitest run --project registry",
+    "{scripts/fixtures,tests/fixtures}/*.xml": "node scripts/test-registry.mjs",
     "*.{json,css,md}": [
       "prettier --write"
     ]
