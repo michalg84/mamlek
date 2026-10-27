@@ -51,3 +51,11 @@ pnpm-debug.log*
 
 # UI state screenshots (npm run ui:shots)
 .ui-shots/
+
+# Playwright
+playwright/.auth/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.playwright-cli/
