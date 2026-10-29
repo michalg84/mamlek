@@ -164,21 +164,21 @@ Brak: jedna dodatkowa aktualizacja stanu przy edycji tekstu.
 
 #### Automated
 
-- [x] 1.1 Nowy test jest czerwony bez poprawki i zielony po niej: `npx vitest run --project component src/components/kit/KitAddForm.test.tsx`
-- [x] 1.2 Istniejące testy komponentów przechodzą: `npx vitest run --project component`
-- [x] 1.3 Lint przechodzi: `npm run lint`
-- [x] 1.4 Sprawdzenie typów przechodzi: `npx astro sync && npx astro check`
+- [x] 1.1 Nowy test jest czerwony bez poprawki i zielony po niej: `npx vitest run --project component src/components/kit/KitAddForm.test.tsx` — 9bdb111
+- [x] 1.2 Istniejące testy komponentów przechodzą: `npx vitest run --project component` — 9bdb111
+- [x] 1.3 Lint przechodzi: `npm run lint` — 9bdb111
+- [x] 1.4 Sprawdzenie typów przechodzi: `npx astro sync && npx astro check` — 9bdb111
 
 #### Manual
 
-- [x] 1.5 Na `http://localhost:4321/apteczka` edycja, wyczyszczenie pola i skasowanie litery usuwają formularz, a wybór z podpowiedzi go przywraca
+- [x] 1.5 Na `http://localhost:4321/apteczka` edycja, wyczyszczenie pola i skasowanie litery usuwają formularz, a wybór z podpowiedzi go przywraca — 9bdb111
 
 ### Phase 2: Wymagany `onEdit` w kontrakcie `MedicineSuggest`
 
 #### Automated
 
-- [ ] 2.1 Sprawdzenie typów przechodzi: `npx astro check`
-- [ ] 2.2 Usunięcie `onEdit` z `KitAddForm.tsx` powoduje błąd `astro check`; po przywróceniu przechodzi
-- [ ] 2.3 Testy przechodzą: `npx vitest run --project unit --project component --project registry`
-- [ ] 2.4 Lint przechodzi: `npm run lint`
-- [ ] 2.5 Pełna weryfikacja jak w CI: `/ci-check`
+- [x] 2.1 Sprawdzenie typów przechodzi: `npx astro check`
+- [x] 2.2 Usunięcie `onEdit` z `KitAddForm.tsx` powoduje błąd `astro check`; po przywróceniu przechodzi
+- [x] 2.3 Testy przechodzą: `npx vitest run --project unit --project component --project registry`
+- [x] 2.4 Lint przechodzi: `npm run lint`
+- [x] 2.5 Pełna weryfikacja jak w CI: `/ci-check`

@@ -1,7 +1,7 @@
 ---
 change_id: kit-add-form-reset-on-edit
 title: S-10 - formularz dodawania zapomina wybór po zmianie nazwy
-status: implementing
+status: implemented
 created: 2026-10-29
 updated: 2026-10-29
 ---
