@@ -94,6 +94,8 @@ Asercje dotyczą tylko tego, co wyrenderowane (tekst, role). Bez sleepów; odpow
 
 **Implementation Note**: Po automatycznych kontrolach zatrzymaj się na potwierdzenie ręczne przed fazą 2. Plik `.test.tsx` nie trafia do `src/pages/`.
 
+**Addendum (2026-10-29, z `/10x-impl-review`)**: faza 1 dodała też pusty `ResizeObserver` do `tests/setup-component.ts`, czego plan nie przewidywał. `RadioGroupItem` (Radix) z formularza opakowania go używa, a jsdom go nie ma, więc bez niego każdy test `KitAddForm` kończył się `ReferenceError`. Atrapa jest globalna, wzorem `scrollIntoView` w tym samym pliku.
+
 ---
 
 ## Phase 2: Wymagany `onEdit` w kontrakcie `MedicineSuggest`

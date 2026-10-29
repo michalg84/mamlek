@@ -161,6 +161,8 @@ describe("KitAddForm", () => {
 
       expect(chosen()).toBe(B_CHOSEN);
       expect(addButton()).not.toBeNull();
+      // The pack form shows the packs of the medicine picked last, not of the first one.
+      expect(form.routed.packageRequests()).toEqual([ID.ibuprom400, ID.ibupromMax400]);
     });
 
     it("shows the pack form of the same medicine picked again, with empty quantity and expiry", async () => {
