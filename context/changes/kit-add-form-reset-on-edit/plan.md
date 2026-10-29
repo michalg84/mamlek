@@ -177,8 +177,8 @@ Brak: jedna dodatkowa aktualizacja stanu przy edycji tekstu.
 
 #### Automated
 
-- [x] 2.1 Sprawdzenie typów przechodzi: `npx astro check`
-- [x] 2.2 Usunięcie `onEdit` z `KitAddForm.tsx` powoduje błąd `astro check`; po przywróceniu przechodzi
-- [x] 2.3 Testy przechodzą: `npx vitest run --project unit --project component --project registry`
-- [x] 2.4 Lint przechodzi: `npm run lint`
-- [x] 2.5 Pełna weryfikacja jak w CI: `/ci-check`
+- [x] 2.1 Sprawdzenie typów przechodzi: `npx astro check` — fbfac1d
+- [x] 2.2 Usunięcie `onEdit` z `KitAddForm.tsx` powoduje błąd `astro check`; po przywróceniu przechodzi — fbfac1d
+- [x] 2.3 Testy przechodzą: `npx vitest run --project unit --project component --project registry` — fbfac1d
+- [x] 2.4 Lint przechodzi: `npm run lint` — fbfac1d
+- [x] 2.5 Pełna weryfikacja jak w CI: `/ci-check` — fbfac1d
