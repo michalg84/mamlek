@@ -43,3 +43,10 @@
 - **Problem**: Astro 7 w powłoce agenta przechodzi w tryb tła i czeka na serwer tylko 30 s; start na zimno po przebudowie zależności Vite trwa 24–29 s, więc obok lintu i astro check przekracza limit, a agent bierze to za awarię i porzuca lokalny przebieg testów.
 - **Rule**: Uruchamiaj lokalny serwer dopiero po zakończeniu lintu, astro check i vitest, nigdy równolegle z nimi; gdy start przekroczy 30 s, sprawdź `npx astro dev logs` i ponów raz, zanim uznasz serwer za zepsuty, a po testach zatrzymaj go (`npx astro dev stop`).
 - **Applies to**: implement, impl-review
+
+## Pokaż w czacie to, o co pytasz, przed pytaniem
+
+- **Context**: każde pytanie do użytkownika, które prosi o zatwierdzenie albo wybór czegoś, co agent przygotował (fazy planu, zakres, podejście, ocena złożoności, nazwy, lista plików, zestaw zmian) — w każdym skillu i poza nimi
+- **Problem**: lista faz do zatwierdzenia była tylko w treści pytania, które w oknie użytkownika się nie wyświetliło, więc użytkownik nie wiedział, co zatwierdza (2026-10-29, `/10x-plan`); wcześniej zdarzało się to częściej.
+- **Rule**: Zanim zadasz pytanie z prośbą o zatwierdzenie albo wybór, wypisz jego przedmiot jako zwykły tekst w tej samej odpowiedzi (numerowana lista faz, opcje z krótkim opisem, podsumowanie), a dopiero potem wywołaj narzędzie pytań. Treść pytania powtarza krótko ten sam przedmiot, ale nigdy nie jest jedynym miejscem, w którym on stoi. Nie proś o zgodę na coś, czego użytkownik nie ma na ekranie.
+- **Applies to**: all
