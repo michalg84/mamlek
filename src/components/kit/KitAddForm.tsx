@@ -347,7 +347,15 @@ export default function KitAddForm({ version }: KitAddFormProps) {
 
   return (
     <div className="min-w-0 space-y-4">
-      <MedicineSuggest version={version} onSelect={setVariant} label="Lek" />
+      {/* Editing the text drops the pick: the name does not identify a variant, so the form must not outlive it. */}
+      <MedicineSuggest
+        version={version}
+        onSelect={setVariant}
+        onEdit={() => {
+          setVariant(null);
+        }}
+        label="Lek"
+      />
       {/* A new medicine remounts the pack form, which resets pack, quantity and expiry. */}
       {variant && <PackForm key={variant.id} variant={variant} />}
     </div>

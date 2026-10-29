@@ -12,7 +12,7 @@ interface MedicineSuggestProps {
   version: number;
   onSelect: (variant: RegistryVariant) => void;
   /** Called when the user edits the text, so a previous pick no longer matches what the field shows. */
-  onEdit?: () => void;
+  onEdit: () => void;
   label?: string;
 }
 
@@ -60,7 +60,7 @@ export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku
     setQuery(event.target.value);
     setOpen(true);
     setActiveIndex(-1);
-    onEdit?.();
+    onEdit();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {

@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { RegistrySearchListPayload } from "@/types";
+import type { RegistrySearchListPayload, RegistryVariantPackage } from "@/types";
 
 export function reply(body: unknown, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status }));
@@ -21,6 +21,7 @@ export function stubFetch(...replies: (() => Promise<Response>)[]) {
 
 const SEARCH_LIST_PATH = "/api/registry/search-list";
 const CHECK_PATH = "/api/kit/check";
+const PACKAGES_PATH = "/api/registry/packages";
 
 interface PendingCheck {
   resolve: (response: Response) => void;
@@ -34,6 +35,8 @@ export interface RoutedFetch {
   pendingChecks: (productId: number) => number;
   /** Every check request made so far, by product id, in call order (answered or not). */
   checkRequests: () => number[];
+  /** Every pack request made so far, by product id, in call order. */
+  packageRequests: () => number[];
 }
 
 /**
@@ -41,10 +44,16 @@ export interface RoutedFetch {
  * (`/api/kit/check?product=<id>`) stays pending until the test answers it with `resolveCheck`, in any order.
  * A pending request is never rejected on abort: like a response already on its way, it can still arrive late,
  * which is the stronger case for the stale-answer guards.
+ * Pack requests (`/api/registry/packages?product=<id>`) are answered at once with `packages[id]`; a product without
+ * an entry there is a test error. Any other address (`POST /api/kit` included) is rejected as unexpected.
  */
-export function stubRoutedFetch(list: RegistrySearchListPayload): RoutedFetch {
+export function stubRoutedFetch(
+  list: RegistrySearchListPayload,
+  packages: Partial<Record<number, RegistryVariantPackage[]>> = {},
+): RoutedFetch {
   const pending = new Map<number, PendingCheck[]>();
   const requested: number[] = [];
+  const packagesRequested: number[] = [];
 
   const fetchMock = vi.fn<typeof fetch>((input) => {
     const url = new URL(
@@ -60,6 +69,15 @@ export function stubRoutedFetch(list: RegistrySearchListPayload): RoutedFetch {
       return new Promise<Response>((resolve) => {
         pending.set(productId, [...(pending.get(productId) ?? []), { resolve }]);
       });
+    }
+    if (url.pathname === PACKAGES_PATH) {
+      const productId = Number(url.searchParams.get("product"));
+      packagesRequested.push(productId);
+      const stubbed = packages[productId];
+      if (!stubbed) {
+        return Promise.reject(new TypeError(`No packages stubbed for product ${productId}`));
+      }
+      return reply({ packages: stubbed });
     }
     return Promise.reject(new TypeError(`Unexpected fetch: ${url.pathname}`));
   });
@@ -77,5 +95,6 @@ export function stubRoutedFetch(list: RegistrySearchListPayload): RoutedFetch {
     },
     pendingChecks: (productId) => pending.get(productId)?.length ?? 0,
     checkRequests: () => [...requested],
+    packageRequests: () => [...packagesRequested],
   };
 }
