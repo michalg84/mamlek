@@ -6,6 +6,20 @@ import { afterEach, vi } from "vitest";
 // `performance.mark` with `detail` works in jsdom as is, so it needs no patch.
 Element.prototype.scrollIntoView = () => undefined;
 
+// jsdom has no ResizeObserver either; Radix (the pack radio group of KitAddForm) observes the size of its items.
+// Nothing here depends on sizes, so a no-op observer is enough.
+globalThis.ResizeObserver = class {
+  observe() {
+    // no layout in jsdom: there is nothing to report
+  }
+  unobserve() {
+    // see observe
+  }
+  disconnect() {
+    // see observe
+  }
+};
+
 // Vitest runs without globals, so Testing Library cannot set this flag in its own beforeAll; without it React never
 // warns about state updates outside act().
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
