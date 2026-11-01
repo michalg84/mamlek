@@ -2,7 +2,7 @@ import { IMPORT_MAX_ROWS } from "@/lib/kit-import-csv";
 import type { ParsedExpiry, ParsedQuantity, ParsedRow } from "@/lib/kit-import-csv";
 import { isQueryLongEnough, searchVariants } from "@/lib/registry-search";
 import type { RegistrySearchIndex } from "@/lib/registry-search";
-import type { KitItem, RegistryVariant } from "@/types";
+import type { KitItem, RegistryVariant, RowMatch } from "@/types";
 
 // Rules of the kit-import screen (FR-009): when a row is assigned on its own, what counts as "already have" or a
 // repeat, what blocks saving a page and how rows are split into pages. Pure: no React, no network.
@@ -16,11 +16,8 @@ export const IMPORT_SUGGESTIONS = 5;
 /** Strength longer than this is cut in the suggestion list (`registry_search_list.sql`). */
 const LIST_STRENGTH_MAX = 80;
 
-/** Result of matching one row against the registry list. */
-export type RowMatch =
-  | { kind: "auto"; variant: RegistryVariant }
-  | { kind: "choices"; variants: RegistryVariant[]; total: number }
-  | { kind: "none" };
+/** Result of matching one row against the registry list; lives in `src/types.ts` because the worker protocol uses it. */
+export type { RowMatch };
 
 /** Why a row blocks saving its page. */
 export type RowIssue =

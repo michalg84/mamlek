@@ -125,12 +125,27 @@ export interface MedicineCheckResponse {
   items: MedicineCheckItem[];
 }
 
-/** Page -> search worker: the raw list bytes (transferred, not copied), then queries. */
-export type RegistrySearchWorkerRequest =
-  { type: "load"; buffer: ArrayBuffer } | { type: "search"; id: number; query: string };
+/** Result of matching one kit-import row against the registry list (`matchRow` in `src/lib/kit-import.ts`). */
+export type RowMatch =
+  | { kind: "auto"; variant: RegistryVariant }
+  | { kind: "choices"; variants: RegistryVariant[]; total: number }
+  | { kind: "none" };
 
-/** Search worker -> page. `results` echo the `id` and `query` of the request they answer. */
+/**
+ * Page -> search worker: the raw list bytes (transferred, not copied), then queries. `match` carries the search
+ * queries of each kit-import row (`rowQueries`), in row order.
+ */
+export type RegistrySearchWorkerRequest =
+  | { type: "load"; buffer: ArrayBuffer }
+  | { type: "search"; id: number; query: string }
+  | { type: "match"; id: number; rows: string[][] };
+
+/**
+ * Search worker -> page. `results` echo the `id` and `query` of the request they answer; `matches` echo the `id` and
+ * hold one match per requested row, in row order.
+ */
 export type RegistrySearchWorkerResponse =
   | { type: "ready"; variantCount: number; buildMs: number }
   | { type: "error" }
-  | { type: "results"; id: number; query: string; results: RegistryVariant[]; total: number };
+  | { type: "results"; id: number; query: string; results: RegistryVariant[]; total: number }
+  | { type: "matches"; id: number; matches: RowMatch[] };

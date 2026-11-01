@@ -1,5 +1,11 @@
+import { matchRow } from "@/lib/kit-import";
 import { buildSearchIndex, MAX_RESULTS, searchVariants, type RegistrySearchIndex } from "@/lib/registry-search";
-import type { RegistrySearchListPayload, RegistrySearchWorkerRequest, RegistrySearchWorkerResponse } from "@/types";
+import type {
+  RegistrySearchListPayload,
+  RegistrySearchWorkerRequest,
+  RegistrySearchWorkerResponse,
+  RowMatch,
+} from "@/types";
 
 let index: RegistrySearchIndex | null = null;
 
@@ -31,13 +37,29 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
     return;
   }
   // A query that arrives before the index is built has nothing to answer; the page only sends queries once ready.
-  if (index) {
-    try {
-      const { results, total } = searchVariants(index, message.query, MAX_RESULTS);
-      reply({ type: "results", id: message.id, query: message.query, results, total });
-    } catch {
-      // One failing query must not turn into "the list did not load": the index is still good for the next one.
-      reply({ type: "results", id: message.id, query: message.query, results: [], total: 0 });
-    }
+  if (!index) {
+    return;
+  }
+  const built = index;
+  if (message.type === "match") {
+    const matches = message.rows.map((queries, row): RowMatch => {
+      try {
+        return matchRow(built, queries);
+      } catch (error) {
+        // One failing row must not fail the whole import: it is shown as "no match" and the user searches by hand.
+        // eslint-disable-next-line no-console -- the only trace of the failure; the row stays usable
+        console.error(`Matching import row ${row} failed`, error);
+        return { kind: "none" };
+      }
+    });
+    reply({ type: "matches", id: message.id, matches });
+    return;
+  }
+  try {
+    const { results, total } = searchVariants(built, message.query, MAX_RESULTS);
+    reply({ type: "results", id: message.id, query: message.query, results, total });
+  } catch {
+    // One failing query must not turn into "the list did not load": the index is still good for the next one.
+    reply({ type: "results", id: message.id, query: message.query, results: [], total: 0 });
   }
 });

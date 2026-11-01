@@ -330,25 +330,25 @@ Brak zmian w bazie i brak migracji — `npx supabase db push` nie jest potrzebny
 
 #### Automated
 
-- [x] 2.1 Lint i typy
-- [x] 2.2 Testy unit i komponentu bez regresji po wyciągnięciu schematu
-- [x] 2.3 Testy API przechodzą na lokalnym serwerze
+- [x] 2.1 Lint i typy — 5e67a3e
+- [x] 2.2 Testy unit i komponentu bez regresji po wyciągnięciu schematu — 5e67a3e
+- [x] 2.3 Testy API przechodzą na lokalnym serwerze — 5e67a3e
 
 #### Manual
 
-- [x] 2.4 Żądanie z 30 pozycjami zapisuje 30 wierszy, z jedną złą nie zapisuje nic
+- [x] 2.4 Żądanie z 30 pozycjami zapisuje 30 wierszy, z jedną złą nie zapisuje nic — 5e67a3e
 
 ### Phase 3: Dopasowanie wierszy w workerze
 
 #### Automated
 
-- [ ] 3.1 Test hooka: stara odpowiedź ignorowana, błąd listy z retry
-- [ ] 3.2 Testy /szukaj bez zmian i zielone
-- [ ] 3.3 Lint i typy
+- [x] 3.1 Test hooka: stara odpowiedź ignorowana, błąd listy z retry
+- [x] 3.2 Testy /szukaj bez zmian i zielone
+- [x] 3.3 Lint i typy
 
 #### Manual
 
-- [ ] 3.4 npm run perf bez regresji na profilu slow
+- [x] 3.4 npm run perf bez regresji na profilu slow
 
 ### Phase 4: Ekran /apteczka/import
 
