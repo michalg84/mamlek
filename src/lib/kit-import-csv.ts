@@ -149,7 +149,8 @@ function parseExpiry(text: string): ParsedExpiry {
   return { kind: "invalid", text };
 }
 
-function parseQuantity(text: string): ParsedQuantity {
+/** Digits only, 0…MAX_QUANTITY; "" is empty. Also used by the screen when the user corrects a quantity. */
+export function parseQuantity(text: string): ParsedQuantity {
   if (text === "") {
     return { kind: "empty" };
   }

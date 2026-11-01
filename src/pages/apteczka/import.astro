@@ -1,0 +1,72 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Topbar from "@/components/Topbar.astro";
+import { Card, CardContent } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { CircleAlert } from "lucide-react";
+import KitImport from "@/components/kit/KitImport";
+import { createClient } from "@/lib/supabase";
+import { kitItemVariantKey } from "@/lib/kit-import";
+import { getSearchListVersion } from "@/lib/services/registry-search-list";
+import { listKitItems } from "@/lib/services/kit";
+import { cn } from "@/lib/utils";
+import type { RegistrySearchListVersion } from "@/types";
+
+let list: RegistrySearchListVersion | null = null;
+// Only the variant keys go to the browser ("already have"), not the whole kit.
+let kitVariantKeys: string[] = [];
+let failed = false;
+try {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    const [version, items] = await Promise.all([getSearchListVersion(supabase), listKitItems(supabase)]);
+    list = version;
+    kitVariantKeys = [...new Set(items.map(kitItemVariantKey))];
+  } else {
+    failed = true;
+  }
+} catch (error) {
+  // Typically the app deployed before the migration reached the database; show a message instead of a 500 page.
+  failed = true;
+  // eslint-disable-next-line no-console -- the only trace of the failure; the page shows a generic message
+  console.error(error);
+}
+---
+
+<Layout title="Import apteczki z CSV">
+  {list && (
+    // Same URL, mode and credentials as the fetch in useRegistryMatch, so the browser reuses this download.
+    <link
+      slot="head"
+      rel="preload"
+      href={`/api/registry/search-list?v=${list.version}`}
+      as="fetch"
+      crossorigin="anonymous"
+    />
+  )}
+  <div class="min-h-screen p-4">
+    <div class="mx-auto w-full max-w-xl min-w-0">
+      <Topbar />
+      <main class="min-w-0">
+        <Card>
+          <CardContent className="min-w-0">
+            <a href="/apteczka" class:list={cn(buttonVariants({ variant: "link" }), "mb-2 h-auto px-0 py-1")}>
+              ← Wróć do apteczki
+            </a>
+            <h1 class="text-foreground mb-4 text-2xl font-bold">Import z CSV</h1>
+            {failed ? (
+              <p class="text-destructive flex items-start gap-1.5 text-sm font-medium">
+                <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                <span class="min-w-0">Nie udało się wczytać apteczki, spróbuj później</span>
+              </p>
+            ) : list ? (
+              <KitImport version={list.version} kitVariantKeys={kitVariantKeys} client:load />
+            ) : (
+              <p class="text-muted-foreground text-sm">Rejestr leków nie jest jeszcze wczytany</p>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  </div>
+</Layout>

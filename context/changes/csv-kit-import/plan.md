@@ -342,22 +342,22 @@ Brak zmian w bazie i brak migracji — `npx supabase db push` nie jest potrzebny
 
 #### Automated
 
-- [x] 3.1 Test hooka: stara odpowiedź ignorowana, błąd listy z retry
-- [x] 3.2 Testy /szukaj bez zmian i zielone
-- [x] 3.3 Lint i typy
+- [x] 3.1 Test hooka: stara odpowiedź ignorowana, błąd listy z retry — 5c05ba6
+- [x] 3.2 Testy /szukaj bez zmian i zielone — 5c05ba6
+- [x] 3.3 Lint i typy — 5c05ba6
 
 #### Manual
 
-- [x] 3.4 npm run perf bez regresji na profilu slow
+- [x] 3.4 npm run perf bez regresji na profilu slow — 5c05ba6
 
 ### Phase 4: Ekran /apteczka/import
 
 #### Automated
 
-- [ ] 4.1 Testy komponentu importu przechodzą
-- [ ] 4.2 Cały zestaw unit + component + registry
-- [ ] 4.3 Lint, typy, skan UI, build
-- [ ] 4.4 Testy API i smoke bez regresji
+- [x] 4.1 Testy komponentu importu przechodzą
+- [x] 4.2 Cały zestaw unit + component + registry
+- [x] 4.3 Lint, typy, skan UI, build
+- [x] 4.4 Testy API i smoke bez regresji
 
 #### Manual
 

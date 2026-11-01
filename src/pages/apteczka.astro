@@ -8,7 +8,21 @@ import { createClient } from "@/lib/supabase";
 import { formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
 import { countKitItemsWithPackage, listKitItems } from "@/lib/services/kit";
+import { IMPORT_MAX_ROWS } from "@/lib/kit-import";
+import { plural } from "@/lib/plural";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { KitItem, RegistrySearchListVersion } from "@/types";
+
+// `?zaimportowano=<n>` comes from the end of an import; only a count an import can reach is shown.
+const importedParam = Astro.url.searchParams.get("zaimportowano");
+const imported =
+  importedParam !== null &&
+  /^\d+$/.test(importedParam) &&
+  Number(importedParam) >= 1 &&
+  Number(importedParam) <= IMPORT_MAX_ROWS
+    ? Number(importedParam)
+    : null;
 
 let list: RegistrySearchListVersion | null = null;
 let items: KitItem[] = [];
@@ -63,6 +77,14 @@ try {
               </p>
             ) : (
               <div class="min-w-0 space-y-6">
+                {imported !== null && (
+                  <p
+                    role="status"
+                    class="bg-accent text-accent-foreground min-w-0 rounded-md px-3 py-2 text-sm font-medium"
+                  >
+                    Dodano {imported} {plural(imported, "lek", "leki", "leków")} z importu
+                  </p>
+                )}
                 {added && (
                   <div role="status" class="bg-accent text-accent-foreground min-w-0 rounded-md px-3 py-2 text-sm">
                     <p class="font-medium break-words">Dodano: {added.name}</p>
@@ -78,6 +100,12 @@ try {
                   ) : (
                     <p class="text-muted-foreground text-sm">Rejestr leków nie jest jeszcze wczytany</p>
                   )}
+                  <a
+                    href="/apteczka/import"
+                    class:list={cn(buttonVariants({ variant: "outline" }), "mt-4 min-h-11 w-full")}
+                  >
+                    Importuj z CSV
+                  </a>
                 </section>
                 <section class="min-w-0" aria-labelledby="list-heading">
                   <h2 id="list-heading" class="text-foreground mb-3 text-lg font-semibold">
