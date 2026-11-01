@@ -322,21 +322,21 @@ Brak zmian w bazie i brak migracji — `npx supabase db push` nie jest potrzebny
 
 #### Automated
 
-- [x] 1.1 Testy parsera pokrywają nagłówek, ogrodzenie kodu, BOM, cudzysłowy, wiersze malformed, formaty i granice dat i ilości, 200/201 wierszy
-- [x] 1.2 Testy reguł pokrywają automatyczne przypisanie, „już masz” (inne opakowanie, moc ponad 80 znaków), „powtórzony w imporcie” i strony
-- [x] 1.3 Lint i typy
+- [x] 1.1 Testy parsera pokrywają nagłówek, ogrodzenie kodu, BOM, cudzysłowy, wiersze malformed, formaty i granice dat i ilości, 200/201 wierszy — f8439b3
+- [x] 1.2 Testy reguł pokrywają automatyczne przypisanie, „już masz” (inne opakowanie, moc ponad 80 znaków), „powtórzony w imporcie” i strony — f8439b3
+- [x] 1.3 Lint i typy — f8439b3
 
 ### Phase 2: API zapisu strony
 
 #### Automated
 
-- [ ] 2.1 Lint i typy
-- [ ] 2.2 Testy unit i komponentu bez regresji po wyciągnięciu schematu
-- [ ] 2.3 Testy API przechodzą na lokalnym serwerze
+- [x] 2.1 Lint i typy
+- [x] 2.2 Testy unit i komponentu bez regresji po wyciągnięciu schematu
+- [x] 2.3 Testy API przechodzą na lokalnym serwerze
 
 #### Manual
 
-- [ ] 2.4 Żądanie z 30 pozycjami zapisuje 30 wierszy, z jedną złą nie zapisuje nic
+- [x] 2.4 Żądanie z 30 pozycjami zapisuje 30 wierszy, z jedną złą nie zapisuje nic
 
 ### Phase 3: Dopasowanie wierszy w workerze
 

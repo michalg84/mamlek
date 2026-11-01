@@ -6,6 +6,7 @@ import {
   escapeHtml,
   expectNoInternals,
   kitRowCount,
+  kitRowsById,
   loadBoundaryData,
   send,
   sendJson,
@@ -16,6 +17,7 @@ import {
 } from "./helpers";
 
 const KIT = "/api/kit";
+const IMPORT = "/api/kit/import";
 const CHECK = "/api/kit/check";
 
 let data: BoundaryData;
@@ -35,6 +37,22 @@ describe("without a session", () => {
     ["a wrong Content-Type", JSON.stringify({ packageId: 1 }), "text/plain"],
   ])("POST /api/kit with %s gets 401 (never 400 or 415)", async (_name, body, contentType) => {
     const reply = await send(KIT, { method: "POST", body, contentType });
+
+    expect(reply.status).toBe(401);
+    expectNoInternals(reply.body);
+  });
+
+  it.each([
+    ["a valid body", JSON.stringify({ items: [{ packageId: 1 }] }), "application/json"],
+    ["an invalid body", "{", "application/json"],
+    [
+      "too many items",
+      JSON.stringify({ items: Array.from({ length: 31 }, () => ({ packageId: 1 })) }),
+      "application/json",
+    ],
+    ["a wrong Content-Type", JSON.stringify({ items: [{ packageId: 1 }] }), "text/plain"],
+  ])("POST /api/kit/import with %s gets 401 (never 400 or 415)", async (_name, body, contentType) => {
+    const reply = await send(IMPORT, { method: "POST", body, contentType });
 
     expect(reply.status).toBe(401);
     expectNoInternals(reply.body);
@@ -74,9 +92,44 @@ describe("account B against the kit of account A", () => {
     expect(await kitRowCount(a.email)).toBe(beforeA);
   });
 
+  it.each([["userId"], ["user_id"]])("B cannot name A as the owner of an imported row (%s = A's id)", async (key) => {
+    const before = await kitRowCount(a.email);
+    const beforeB = await kitRowCount(b.email);
+
+    const reply = await sendJson(
+      IMPORT,
+      { items: [{ packageId: data.sized.packageId, [key]: await userIdOf(a.email) }] },
+      b.jar,
+    );
+
+    expect(reply.status).toBe(400);
+    expect(await kitRowCount(a.email)).toBe(before);
+    expect(await kitRowCount(b.email)).toBe(beforeB);
+  });
+
+  it("rows B imports belong to B, not to A (the owner comes from the session)", async () => {
+    const beforeA = await kitRowCount(a.email);
+    const beforeB = await kitRowCount(b.email);
+
+    const reply = await sendJson(
+      IMPORT,
+      { items: [{ packageId: data.sized.packageId }, { packageId: data.unsized.packageId }] },
+      b.jar,
+    );
+
+    expect(reply.status).toBe(201);
+    const { ids } = JSON.parse(reply.body) as { ids: number[] };
+    expect((await kitRowsById(ids)).map((row) => row.owner)).toEqual([b.email, b.email]);
+    expect(await kitRowCount(b.email)).toBe(beforeB + 2);
+    expect(await kitRowCount(a.email)).toBe(beforeA);
+  });
+
   it("another account opening /apteczka?dodano=<id of A's row> sees neither the confirmation nor A's medicine", async () => {
     // A third account with an empty kit, so that its own page cannot contain the medicine for another reason.
     const c = await signUpAndSignIn("viewer");
+    // A's medicine is in A's kit both added one by one and imported: neither may reach C's page.
+    const imported = await sendJson(IMPORT, { items: [{ packageId: data.sized.packageId }] }, a.jar);
+    expect(imported.status).toBe(201);
     const added = await sendJson(KIT, { packageId: data.sized.packageId }, a.jar);
     expect(added.status).toBe(201);
     const { id } = JSON.parse(added.body) as { id: number };

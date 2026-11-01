@@ -80,6 +80,17 @@ export interface AddKitItemResponse {
   id: number;
 }
 
+/** Body of a successful `POST /api/kit/import` (201): the new ids in the order of the request's items. */
+export interface ImportKitItemsResponse {
+  ids: number[];
+}
+
+/** Body of a `POST /api/kit/import` rejected for one item (400): `index` is its 0-based position in `items`. */
+export interface ImportKitItemsItemError {
+  error: string;
+  index: number;
+}
+
 /** A kit item matching the checked medicine, as returned by `GET /api/kit/check`. */
 export interface MedicineCheckItem {
   id: number;

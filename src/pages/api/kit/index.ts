@@ -1,21 +1,9 @@
 import type { APIRoute } from "astro";
-import { z } from "astro/zod";
 import { createClient } from "@/lib/supabase";
-import { expiryToDate, MAX_QUANTITY, packQuantity } from "@/lib/kit-format";
+import { expiryToDate, packQuantity } from "@/lib/kit-format";
+import { kitItemRequest } from "@/lib/kit-request";
 import { addKitItem, getPackage } from "@/lib/services/kit";
 import type { AddKitItemResponse } from "@/types";
-
-const addRequest = z
-  .object({
-    packageId: z.number().int().positive(),
-    quantity: z.number().int().min(0).max(MAX_QUANTITY).nullable().optional(),
-    expiry: z
-      .object({ month: z.number().int().min(1).max(12), year: z.number().int().min(2000).max(2100) })
-      .strict()
-      .nullable()
-      .optional(),
-  })
-  .strict();
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -43,7 +31,7 @@ export const POST: APIRoute = async (context) => {
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
-  const parsed = addRequest.safeParse(body);
+  const parsed = kitItemRequest.safeParse(body);
   if (!parsed.success) {
     return json(
       {

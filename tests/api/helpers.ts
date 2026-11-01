@@ -193,6 +193,27 @@ export async function kitRowCount(email: string): Promise<number> {
   return row.n;
 }
 
+export interface KitRow {
+  id: number;
+  owner: string;
+  packageId: number;
+  quantity: number | null;
+}
+
+/** The kit rows with these ids, in the order of `ids` (a missing row is left out), with the owner's e-mail. */
+export async function kitRowsById(ids: number[]): Promise<KitRow[]> {
+  const rows = await query<{ id: number; email: string; package_id: number; quantity: number | null }>(
+    `select k.id::float8 as id, u.email, k.package_id::float8 as package_id, k.quantity
+       from kit_items k join auth.users u on u.id = k.user_id where k.id = any($1::bigint[])`,
+    [ids],
+  );
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [{ id, owner: row.email, packageId: row.package_id, quantity: row.quantity }] : [];
+  });
+}
+
 /** The id (uuid) of the account with this e-mail, as the database stores it in `kit_items.user_id`. */
 export async function userIdOf(email: string): Promise<string> {
   const [row] = await query<{ id: string }>("select id::text from auth.users where email = $1", [email]);
