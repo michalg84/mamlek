@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistryMatch } from "@/components/hooks/useRegistryMatch";
 import { KitImportRow } from "@/components/kit/KitImportRow";
@@ -258,6 +258,22 @@ function ImportReview({
   /** Row index the server rejected in the last save. */
   const [rejected, setRejected] = useState<number | null>(null);
   const reasonId = useId();
+  /** The page heading (or the "all done" line): where the view and the focus go when the page changes. */
+  const topRef = useRef<HTMLElement | null>(null);
+  const setTop = (element: HTMLElement | null) => {
+    topRef.current = element;
+  };
+  const firstRender = useRef(true);
+
+  // A new page starts at the top, with the focus on its heading, not on the button that was just pressed at the bottom.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0 });
+    topRef.current?.focus({ preventScroll: true });
+  }, [page]);
 
   const kitKeys = useMemo(() => new Set(kitVariantKeys), [kitVariantKeys]);
   const pages = pageCount(rows);
@@ -358,10 +374,12 @@ function ImportReview({
       </p>
 
       {finished ? (
-        <p className="text-foreground text-sm">Wszystkie strony importu są już obsłużone.</p>
+        <p ref={setTop} tabIndex={-1} className="text-foreground text-sm outline-none">
+          Wszystkie strony importu są już obsłużone.
+        </p>
       ) : (
         <section className="min-w-0 space-y-4" aria-labelledby={`${reasonId}-page`}>
-          <h2 id={`${reasonId}-page`} className={HEADING_CLASS}>
+          <h2 ref={setTop} tabIndex={-1} id={`${reasonId}-page`} className={cn(HEADING_CLASS, "outline-none")}>
             Strona {page + 1} z {pages}
           </h2>
           <ol className="divide-border min-w-0 divide-y rounded-lg border">

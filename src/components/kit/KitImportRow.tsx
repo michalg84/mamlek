@@ -174,27 +174,16 @@ function RowPack({
   );
 }
 
-function formatMonth(month: number, year: number): string {
-  return `${String(month).padStart(2, "0")}/${year}`;
-}
-
-/** Expiry of the row; a value from the CSV that could not be read gets month and year fields and a clear button. */
+/** Expiry of the row: always month and year fields (prefilled from the CSV) and a clear button. */
 function RowExpiry({ row, onChange }: { row: ImportRow; onChange: (expiry: ParsedExpiry) => void }) {
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
+  const [month, setMonth] = useState(row.expiry.kind === "ok" ? String(row.expiry.month) : "");
+  const [year, setYear] = useState(row.expiry.kind === "ok" ? String(row.expiry.year) : "");
   const monthId = useId();
   const yearId = useId();
   const groupId = useId();
   const errorId = useId();
 
-  if (row.parsed.expiry.kind !== "invalid") {
-    return (
-      <p className="text-foreground text-sm">
-        Ważny do: {row.expiry.kind === "ok" ? formatMonth(row.expiry.month, row.expiry.year) : "nieznane"}
-      </p>
-    );
-  }
-  const original = row.parsed.expiry.text;
+  const original = row.parsed.expiry.kind === "invalid" ? row.parsed.expiry.text : null;
   const invalid = row.expiry.kind === "invalid";
 
   function change(nextMonth: string, nextYear: string) {
@@ -203,12 +192,17 @@ function RowExpiry({ row, onChange }: { row: ImportRow; onChange: (expiry: Parse
     onChange(
       nextMonth !== "" && nextYear !== ""
         ? { kind: "ok", month: Number(nextMonth), year: Number(nextYear) }
-        : { kind: "invalid", text: original },
+        : { kind: "invalid", text: original ?? "" },
     );
   }
 
   const thisYear = new Date().getFullYear();
   const years = Array.from({ length: YEARS_BACK + YEARS_AHEAD + 1 }, (_, index) => thisYear - YEARS_BACK + index);
+  // A year from the CSV can lie outside the usual range (2000–2100 is accepted): keep it selectable.
+  if (year !== "" && !years.includes(Number(year))) {
+    years.push(Number(year));
+    years.sort((a, b) => a - b);
+  }
 
   return (
     <div role="group" aria-labelledby={groupId} className="min-w-0">
@@ -263,7 +257,7 @@ function RowExpiry({ row, onChange }: { row: ImportRow; onChange: (expiry: Parse
       </div>
       {invalid && (
         <InlineError id={errorId}>
-          Nie da się odczytać daty „{original}”. Wybierz miesiąc i rok albo wyczyść datę.
+          {original !== null ? `Nie da się odczytać daty „${original}”. ` : ""}Wybierz miesiąc i rok albo wyczyść datę.
         </InlineError>
       )}
       {row.expiry.kind === "empty" && <p className="text-muted-foreground mt-1 text-sm">Data ważności: nieznana</p>}
@@ -277,13 +271,13 @@ function RowExpiry({ row, onChange }: { row: ImportRow; onChange: (expiry: Parse
           onChange({ kind: "empty" });
         }}
       >
-        Wyczyść (nieznane)
+        Wyczyść datę (nieznana)
       </Button>
     </div>
   );
 }
 
-/** Quantity of the row; a value that cannot be read, or one over the pack size, gets a field and a clear button. */
+/** Quantity of the row: always a field (prefilled from the CSV) and a clear button. */
 function RowQuantity({
   row,
   packMax,
@@ -299,20 +293,11 @@ function RowQuantity({
   const [text, setText] = useState(
     parsed.kind === "invalid" ? parsed.text : parsed.kind === "ok" ? String(parsed.value) : "",
   );
-  // Once shown, the field stays: it must not vanish while the user is still typing a valid number.
-  const [touched, setTouched] = useState(false);
   const inputId = useId();
   const errorId = useId();
 
-  if (parsed.kind !== "invalid" && !overPack && !touched) {
-    return (
-      <p className="text-foreground text-sm">Ilość: {row.quantity.kind === "ok" ? row.quantity.value : "nieznana"}</p>
-    );
-  }
-
   function change(value: string) {
     setText(value);
-    setTouched(true);
     onChange(parseQuantity(value.trim()));
   }
 
@@ -341,6 +326,9 @@ function RowQuantity({
         className="min-h-11 w-32 text-base md:text-base"
       />
       {error && <InlineError id={errorId}>{error}</InlineError>}
+      {!error && packMax !== null && (
+        <p className="text-muted-foreground mt-1 text-sm">Najwyżej {packMax} w opakowaniu</p>
+      )}
       {row.quantity.kind === "empty" && <p className="text-muted-foreground mt-1 text-sm">Ilość: nieznana</p>}
       <Button
         type="button"
@@ -350,7 +338,7 @@ function RowQuantity({
           change("");
         }}
       >
-        Wyczyść (nieznane)
+        Wyczyść ilość (nieznana)
       </Button>
     </div>
   );
@@ -453,11 +441,23 @@ export function KitImportRow(props: KitImportRowProps) {
   const repeated = issues.includes("repeated-in-import");
 
   return (
-    <li aria-label={label} className="min-w-0 space-y-3 px-3 py-3">
+    <li
+      aria-label={label}
+      className={cn(
+        "bg-card min-w-0 space-y-3 rounded-lg border border-l-4 px-3 py-3 shadow-sm",
+        row.removed
+          ? "border-l-border opacity-70"
+          : issues.length === 0
+            ? "border-l-success-foreground"
+            : "border-l-warning-foreground",
+      )}
+    >
       <div className="flex min-w-0 items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-muted-foreground text-xs">{label}</p>
-          <p className="text-foreground font-mono text-sm break-all">{row.parsed.raw}</p>
+          <p className="text-foreground text-sm font-semibold">{label}</p>
+          <p className="bg-muted text-muted-foreground mt-1 rounded-md px-2 py-1 font-mono text-xs break-all">
+            {row.parsed.raw}
+          </p>
         </div>
         {row.removed ? (
           <Button type="button" variant="outline" size="sm" onClick={props.onRestore}>

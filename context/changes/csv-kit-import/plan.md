@@ -354,14 +354,14 @@ Brak zmian w bazie i brak migracji — `npx supabase db push` nie jest potrzebny
 
 #### Automated
 
-- [x] 4.1 Testy komponentu importu przechodzą
-- [x] 4.2 Cały zestaw unit + component + registry
-- [x] 4.3 Lint, typy, skan UI, build
-- [x] 4.4 Testy API i smoke bez regresji
+- [x] 4.1 Testy komponentu importu przechodzą — 4e927f3
+- [x] 4.2 Cały zestaw unit + component + registry — 4e927f3
+- [x] 4.3 Lint, typy, skan UI, build — 4e927f3
+- [x] 4.4 Testy API i smoke bez regresji — 4e927f3
 
 #### Manual
 
 - [ ] 4.5 Na telefonie CSV z czatu przechodzi przez oba kroki i trafia do apteczki
-- [ ] 4.6 Import ponad 30 wierszy przerwany na drugiej stronie zostawia tylko pierwszą stronę
-- [ ] 4.7 Ponowny import tego samego CSV oznacza leki jako „już masz”
-- [ ] 4.8 Czytnik ekranu ogłasza skopiowanie, powód blokady i błąd zapisu
+- [x] 4.6 Import ponad 30 wierszy przerwany na drugiej stronie zostawia tylko pierwszą stronę
+- [x] 4.7 Ponowny import tego samego CSV oznacza leki jako „już masz”
+- [x] 4.8 Czytnik ekranu ogłasza skopiowanie, powód blokady i błąd zapisu

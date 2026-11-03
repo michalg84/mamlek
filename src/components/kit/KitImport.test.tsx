@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import KitImport from "@/components/kit/KitImport";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
@@ -181,12 +181,43 @@ describe("KitImport", () => {
     const routed = await review(csv("No-Spa;40 mg;tabletki;13.2027;5"), { importKit: () => reply({ ids: [7] }, 201) });
     await packChosen(2);
 
-    fireEvent.click(within(row(2)).getByRole("button", { name: "Wyczyść (nieznane)" }));
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Wyczyść datę (nieznana)" }));
     expect(text(2)).toContain(READY);
     fireEvent.click(saveButton());
 
     await screen.findByText("Wszystkie strony importu są już obsłużone.");
     expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 5, expiry: null }] }]);
+  });
+
+  it("lets the user change a valid quantity and expiry before saving", async () => {
+    const routed = await review(csv(NO_SPA), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    // The CSV says 20 and 03.2027, both valid: the fields are there anyway, prefilled.
+    const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
+    expect(quantity.value).toBe("20");
+    expect(within(row(2)).getByLabelText<HTMLSelectElement>("Miesiąc").value).toBe("3");
+    expect(within(row(2)).getByLabelText<HTMLSelectElement>("Rok").value).toBe("2027");
+    fireEvent.change(quantity, { target: { value: "5" } });
+    fireEvent.change(within(row(2)).getByLabelText("Miesiąc"), { target: { value: "11" } });
+    expect(saveBlocked()).toBe(false);
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([
+      { items: [{ packageId: 801, quantity: 5, expiry: { month: 11, year: 2027 } }] },
+    ]);
+  });
+
+  it("lets the user fill in a quantity the CSV left empty", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    fireEvent.change(within(row(2)).getByLabelText("Ilość"), { target: { value: "12" } });
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 12, expiry: null }] }]);
   });
 
   it("saves only the kept rows of the page, moves to the next page and counts what was saved", async () => {
@@ -203,10 +234,15 @@ describe("KitImport", () => {
     }
     expect(saveBlocked()).toBe(false);
     expect(screen.queryByRole("listitem", { name: "Wiersz 32" })).toBeNull();
+    const scrollTo = vi.fn();
+    vi.stubGlobal("scrollTo", scrollTo);
 
     fireEvent.click(saveButton());
 
-    await screen.findByRole("heading", { name: "Strona 2 z 2" });
+    const heading = await screen.findByRole("heading", { name: "Strona 2 z 2" });
+    // The next page opens at the top of the view with the focus on its heading, not on the button below.
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+    expect(document.activeElement).toBe(heading);
     expect(routed.importRequests()).toEqual([
       {
         items: [
