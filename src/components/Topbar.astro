@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const { user } = Astro.locals;
 const linkClass = cn(buttonVariants({ variant: "link" }), "h-auto px-2 py-1");
 const onSearch = Astro.url.pathname === "/szukaj";
-const onKit = Astro.url.pathname === "/apteczka";
+const onKit = Astro.url.pathname === "/apteczka" || Astro.url.pathname === "/apteczka/import";
 ---
 
 <div class="bg-card mb-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-2 text-sm">

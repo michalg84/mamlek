@@ -5,6 +5,8 @@ import { afterEach, vi } from "vitest";
 // jsdom has no layout, so it lacks scrollIntoView (MedicineSuggest calls it on keyboard navigation).
 // `performance.mark` with `detail` works in jsdom as is, so it needs no patch.
 Element.prototype.scrollIntoView = () => undefined;
+// ...and window.scrollTo (KitImport scrolls to the top on a new page); tests that assert on it stub it themselves.
+window.scrollTo = () => undefined;
 
 // jsdom has no ResizeObserver either; Radix (the pack radio group of KitAddForm) observes the size of its items.
 // Nothing here depends on sizes, so a no-op observer is enough.

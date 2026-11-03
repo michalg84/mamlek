@@ -22,6 +22,7 @@ export function stubFetch(...replies: (() => Promise<Response>)[]) {
 const SEARCH_LIST_PATH = "/api/registry/search-list";
 const CHECK_PATH = "/api/kit/check";
 const PACKAGES_PATH = "/api/registry/packages";
+const IMPORT_PATH = "/api/kit/import";
 
 interface PendingCheck {
   resolve: (response: Response) => void;
@@ -37,6 +38,13 @@ export interface RoutedFetch {
   checkRequests: () => number[];
   /** Every pack request made so far, by product id, in call order. */
   packageRequests: () => number[];
+  /** Body of every `POST /api/kit/import` made so far (parsed JSON), in call order. */
+  importRequests: () => unknown[];
+}
+
+export interface RoutedFetchOptions {
+  /** Answers `POST /api/kit/import`; without it such a request is rejected as unexpected. */
+  importKit?: () => Promise<Response>;
 }
 
 /**
@@ -45,17 +53,20 @@ export interface RoutedFetch {
  * A pending request is never rejected on abort: like a response already on its way, it can still arrive late,
  * which is the stronger case for the stale-answer guards.
  * Pack requests (`/api/registry/packages?product=<id>`) are answered at once with `packages[id]`; a product without
- * an entry there is a test error. Any other address (`POST /api/kit` included) is rejected as unexpected.
+ * an entry there is a test error. `POST /api/kit/import` is answered by `options.importKit` (its body is recorded);
+ * any other address (`POST /api/kit` included) is rejected as unexpected.
  */
 export function stubRoutedFetch(
   list: RegistrySearchListPayload,
   packages: Partial<Record<number, RegistryVariantPackage[]>> = {},
+  options: RoutedFetchOptions = {},
 ): RoutedFetch {
   const pending = new Map<number, PendingCheck[]>();
   const requested: number[] = [];
   const packagesRequested: number[] = [];
+  const imports: unknown[] = [];
 
-  const fetchMock = vi.fn<typeof fetch>((input) => {
+  const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const url = new URL(
       typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
       "http://localhost",
@@ -79,6 +90,13 @@ export function stubRoutedFetch(
       }
       return reply({ packages: stubbed });
     }
+    if (url.pathname === IMPORT_PATH && init?.method === "POST" && options.importKit) {
+      if (typeof init.body !== "string") {
+        return Promise.reject(new Error(`Unexpected body of ${url.pathname}`));
+      }
+      imports.push(JSON.parse(init.body));
+      return options.importKit();
+    }
     return Promise.reject(new TypeError(`Unexpected fetch: ${url.pathname}`));
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -96,5 +114,6 @@ export function stubRoutedFetch(
     pendingChecks: (productId) => pending.get(productId)?.length ?? 0,
     checkRequests: () => [...requested],
     packageRequests: () => [...packagesRequested],
+    importRequests: () => [...imports],
   };
 }

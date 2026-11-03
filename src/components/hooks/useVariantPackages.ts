@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { uniquePacks } from "@/lib/kit-format";
 import type { RegistryVariantPackage } from "@/types";
 
 export type VariantPackagesStatus = "loading" | "ready" | "unauthorized" | "error";
@@ -43,7 +44,7 @@ export function useVariantPackages(productId: number) {
           return;
         }
         const body = (await response.json()) as { packages?: RegistryVariantPackage[] };
-        finish("ready", body.packages ?? NO_PACKAGES);
+        finish("ready", uniquePacks(body.packages ?? NO_PACKAGES));
       } catch {
         // Aborted on unmount or product change (ignored in `finish`), network failure or an unreadable body.
         finish("error");

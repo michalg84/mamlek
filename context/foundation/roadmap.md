@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-10-29
+updated: 2026-11-03
 prd_version: 2
 main_goal: market-feedback
 top_blocker: time
@@ -39,33 +39,35 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                     | Outcome (user can …)                                                                                 | Prerequisites | PRD refs                             | Status   |
-| ---- | ----------------------------- | ---------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------ | -------- |
-| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem        | —             | FR-001, NFR (świeżość danych)        | done     |
-| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi               | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done     |
-| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                          | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
-| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz         | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | done     |
-| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru       | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | proposed |
-| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                     | S-02          | FR-005                               | proposed |
-| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu     | S-03          | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh        | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                     | F-01          | FR-001, NFR (świeżość danych)        | done     |
-| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia   | S-03, S-05    | FR-014                               | proposed |
-| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu         | S-01          | FR-002, NFR (czas odpowiedzi)        | done     |
-| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku           | S-02          | FR-003                               | done     |
-| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg) | S-01          | FR-002                               | proposed |
+| ID   | Change ID                     | Outcome (user can …)                                                                                         | Prerequisites | PRD refs                             | Status      |
+| ---- | ----------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------- | ------------------------------------ | ----------- |
+| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                | —             | FR-001, NFR (świeżość danych)        | done        |
+| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                       | F-01          | FR-002, US-01, NFR (czas odpowiedzi) | done        |
+| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                  | S-01          | FR-003, FR-013, US-01, NFR (dostęp)  | done        |
+| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                 | S-01, S-02    | FR-010, FR-011, FR-012, US-01        | done        |
+| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru               | S-01, S-02    | FR-007, FR-008, FR-009, US-02        | in-progress |
+| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                             | S-02          | FR-005                               | proposed    |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu             | S-03          | FR-016, US-01                        | proposed    |
+| S-07 | daily-registry-refresh        | zobaczyć datę ostatniej aktualizacji rejestru, który odświeża się sam codziennie                             | F-01          | FR-001, NFR (świeżość danych)        | done        |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia           | S-03, S-05    | FR-014                               | proposed    |
+| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                 | S-01          | FR-002, NFR (czas odpowiedzi)        | done        |
+| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                   | S-02          | FR-003                               | done        |
+| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)         | S-01          | FR-002                               | proposed    |
+| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie | S-02, S-04    | FR-003, FR-005, FR-007               | proposed    |
 
 ## Streams
 
 Pomoc w nawigacji — grupuje pozycje, które dzielą łańcuch Prerequisites. Wiążąca kolejność nadal żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania równoległych ścieżek.
 
-| Stream | Theme               | Chain                                      | Note                                                                                          |
-| ------ | ------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| A      | Sprawdzenie leku    | `F-01` → `S-01` → `S-02` → `S-03` → `S-06` | Najkrótsza droga do pierwszego sprawdzenia w aptece — to jest cel kamienia milowego.          |
-| B      | Masowe wprowadzenie | `S-04`                                     | Dołącza do Stream A przy `S-02`; może iść równolegle z `S-03`.                                |
-| C      | Utrzymanie apteczki | `S-05` → `S-08`                            | Dołącza do Stream A przy `S-02`; `S-08` czeka dodatkowo na `S-03`.                            |
-| D      | Świeżość rejestru   | `S-07`                                     | Dołącza do Stream A przy `F-01`; niezależny od reszty, dobry kandydat na równoległy przebieg. |
-| E      | Wydajność           | `S-09`                                     | Dołącza do Stream A przy `S-01`; usprawnia komponent podpowiedzi używany przez S-02–S-04.     |
-| F      | Poprawki            | `S-10`, `S-11`                             | Małe, niezależne poprawki z testów: `S-10` dołącza przy `S-02`, `S-11` przy `S-01`.           |
+| Stream | Theme               | Chain                                      | Note                                                                                            |
+| ------ | ------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| A      | Sprawdzenie leku    | `F-01` → `S-01` → `S-02` → `S-03` → `S-06` | Najkrótsza droga do pierwszego sprawdzenia w aptece — to jest cel kamienia milowego.            |
+| B      | Masowe wprowadzenie | `S-04`                                     | Dołącza do Stream A przy `S-02`; może iść równolegle z `S-03`.                                  |
+| C      | Utrzymanie apteczki | `S-05` → `S-08`                            | Dołącza do Stream A przy `S-02`; `S-08` czeka dodatkowo na `S-03`.                              |
+| D      | Świeżość rejestru   | `S-07`                                     | Dołącza do Stream A przy `F-01`; niezależny od reszty, dobry kandydat na równoległy przebieg.   |
+| E      | Wydajność           | `S-09`                                     | Dołącza do Stream A przy `S-01`; usprawnia komponent podpowiedzi używany przez S-02–S-04.       |
+| F      | Poprawki            | `S-10`, `S-11`                             | Małe, niezależne poprawki z testów: `S-10` dołącza przy `S-02`, `S-11` przy `S-01`.             |
+| G      | Ilość w apteczce    | `S-12`                                     | Dotyka formularza, importu i widoku apteczki; najlepiej przed `S-05` (edycja ilości na liście). |
 
 ## Baseline
 
@@ -148,7 +150,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
   - Jak proponować rekordy rejestru dla nazw z CSV, nie zgadując leku — bezpiecznik PRD wymaga pytania zamiast strzelania przy braku pewnego wskazania. — Owner: autor. Block: no.
   - Czy wyszukiwanie zmieści się w progu wydajności, jeśli import doda pracy liście lub workerowi — zapas na profilu Slow 4G + CPU 6x to tylko ok. 350 ms (4651 ms wobec celu 5 s, najgorszy przebieg 5652 ms); po zmianach w liście lub workerze uruchomić `npm run perf`. Źródło: S-09. — Owner: autor. Block: no.
 - **Risk:** Bez masowego wejścia próg startu zabija aplikację w pierwszym tygodniu (Wizja), więc idzie zaraz obok S-03; ekran zatwierdzenia jest granicą odpowiedzialności z FR-009 — żaden wiersz nie może zostać pominięty po cichu.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-05: Przegląd i edycja apteczki
 
@@ -250,6 +252,20 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Risk:** Decyzja autora 2026-10-16 (Open Roadmap Question 9). Reguła S-01 porównuje moc jako tekst w `src/lib/registry-search.ts`, więc dla tej samej nazwy „1000 mg” stoi przed „500 mg”. Zmiana sortowania to zmiana reguły dopasowania: test reguły (`src/lib/registry-search.test.ts`) dostaje przypadki mocy o różnej liczbie cyfr, a plik wzorcowy `search:check` trzeba zapisać ponownie po świadomym przeglądzie różnic. Sortowanie działa w workerze na całej liście, więc po zmianie `npm run perf` (zapas ok. 350 ms, zob. S-04).
 - **Status:** proposed
 
+### S-12: Jednoznaczna ilość w apteczce (jednostki opakowania czy tabletki)
+
+- **Outcome:** użytkownik podaje ilość leku tak, jak ją widzi — w tabletkach (sztukach) — także dla opakowań, które rejestr opisuje liczbą jednostek („1 butelka po 90 tabl.”, „2 blistry po 10 tabl.”), a aplikacja pokazuje tę ilość jednoznacznie, bez mieszania „butelek” z „tabletkami”.
+- **Change ID:** kit-quantity-semantics
+- **PRD refs:** FR-003, FR-005, FR-007
+- **Prerequisites:** S-02, S-04
+- **Parallel with:** S-06, S-08
+- **Blockers:** —
+- **Unknowns:**
+  - Co znaczy `quantity` w bazie: liczba jednostek opakowania (dziś) czy sztuki z `capacity_unit`; czy dodać kolumnę z jednostką ilości, czy przyjąć regułę „dla opakowania z `capacity` ilość to zawsze sztuki”. Wybór dotyka migracji, `POST /api/kit`, `POST /api/kit/import`, `packQuantity`, formularza ręcznego, importu i widoku apteczki. — Owner: autor. Block: yes.
+  - Czy ilość ponad pojemność opakowania jest dozwolona z ostrzeżeniem (pomysł autora: blister 12 → 14). — Owner: autor. Block: no.
+- **Risk:** Zgłoszone w ręcznym teście S-04 (2026-11-03). `packQuantity` (`src/lib/kit-format.ts`) ustawia górną granicę jako `count` jedynego wpisu opakowania, a `capacity` ignoruje: Oxbryta („1 butelka po 90 tabl.”) przyjmuje najwyżej 1. Opakowania bez `count` (np. Apap „12 tabl.”) nie mają limitu, więc tam ilość jest w tabletkach — ta sama kolumna znaczy więc co innego zależnie od leku. Prompt dla czatu w imporcie świadomie zostaje przy „ile sztuk zostało”, więc czat poda 90 tabletek zamiast 1 butelki, a ekran importu zablokuje wiersz, dopóki użytkownik nie poprawi ilości. Na S-04 złagodzono to polem ilości zawsze edytowalnym.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                     | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                |
@@ -266,6 +282,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 | S-09       | registry-search-performance   | Wydajność wyszukiwania leków na słabym telefonie            | yes                   | FR-002, NFR (czas odpowiedzi)        |
 | S-10       | kit-add-form-reset-on-edit    | Formularz dodawania zapomina wybór po zmianie nazwy         | yes                   | FR-003; defekt z test-plan §6.6      |
 | S-11       | search-numeric-strength-order | Liczbowa kolejność mocy w podpowiedziach                    | yes                   | FR-002; Open Roadmap Question 9      |
+| S-12       | kit-quantity-semantics        | Jednoznaczna ilość w apteczce (opakowania czy tabletki)     | no                    | FR-003, FR-005, FR-007               |
 
 ## Open Roadmap Questions
 

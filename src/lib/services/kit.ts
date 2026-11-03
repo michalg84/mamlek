@@ -87,30 +87,87 @@ export async function getPackage(supabase: SupabaseClient, packageId: number): P
   };
 }
 
-/** Adds one pack to the signed-in account's kit; the owner is set by the database (`user_id` default). */
-export async function addKitItem(
+/**
+ * The active packs among `ids`, by id, in one query; the same rule as `getPackage` (a pack missing from the map does
+ * not exist or is withdrawn, the pack or its product).
+ */
+export async function getPackages(
   supabase: SupabaseClient,
-  input: {
-    packageId: number;
-    quantity: number | null;
-    expiresOn: string | null;
-    expiryPrecision: "month" | "day" | null;
-  },
-): Promise<{ id: number }> {
+  ids: number[],
+): Promise<Map<number, RegistryVariantPackage>> {
+  const packages = new Map<number, RegistryVariantPackage>();
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) {
+    return packages;
+  }
   const { data, error } = await supabase
-    .from("kit_items")
-    .insert({
-      package_id: input.packageId,
-      quantity: input.quantity,
-      expires_on: input.expiresOn,
-      expiry_precision: input.expiryPrecision,
-    })
-    .select("id")
-    .single();
+    .from("registry_packages")
+    .select(
+      "id, product_id, gtin, availability_category, units, registry_products!inner(marketing_authorization_holder, removed_at)",
+    )
+    .in("id", unique)
+    .is("removed_at", null);
+  if (error) {
+    throw new Error(`Failed to read ${unique.length} registry packages: ${error.message}`, { cause: error });
+  }
+  for (const row of data as unknown as PackageRow[]) {
+    if (row.registry_products?.removed_at !== null) {
+      continue;
+    }
+    packages.set(row.id, {
+      packageId: row.id,
+      productId: row.product_id,
+      gtin: row.gtin,
+      availabilityCategory: row.availability_category,
+      units: row.units ?? [],
+      holder: row.registry_products.marketing_authorization_holder,
+    });
+  }
+  return packages;
+}
+
+/** A new kit item; the owner is not part of it (the database sets `user_id` from the session). */
+export interface NewKitItem {
+  packageId: number;
+  quantity: number | null;
+  expiresOn: string | null;
+  expiryPrecision: "month" | "day" | null;
+}
+
+function kitItemInsert(input: NewKitItem) {
+  return {
+    package_id: input.packageId,
+    quantity: input.quantity,
+    expires_on: input.expiresOn,
+    expiry_precision: input.expiryPrecision,
+  };
+}
+
+/** Adds one pack to the signed-in account's kit; the owner is set by the database (`user_id` default). */
+export async function addKitItem(supabase: SupabaseClient, input: NewKitItem): Promise<{ id: number }> {
+  const { data, error } = await supabase.from("kit_items").insert(kitItemInsert(input)).select("id").single();
   if (error) {
     throw new Error(`Failed to add kit item for package ${input.packageId}: ${error.message}`);
   }
   return { id: Number(data.id) };
+}
+
+/**
+ * Adds several packs to the signed-in account's kit with one insert, which is one SQL statement: all rows are stored
+ * or none. Returns the new ids in the order of `items`.
+ */
+export async function addKitItems(supabase: SupabaseClient, items: NewKitItem[]): Promise<{ ids: number[] }> {
+  const { data, error } = await supabase.from("kit_items").insert(items.map(kitItemInsert)).select("id");
+  if (error) {
+    throw new Error(`Failed to add ${items.length} kit items: ${error.message}`, { cause: error });
+  }
+  // `RETURNING` order is not guaranteed by SQL, but the identity column takes its values in insertion order within
+  // one statement, so ascending ids are the order of `items`.
+  const ids = (data as { id: number }[]).map((row) => row.id).sort((x, y) => x - y);
+  if (ids.length !== items.length) {
+    throw new Error(`Adding ${items.length} kit items returned ${ids.length} ids`);
+  }
+  return { ids };
 }
 
 /** The signed-in account's kit, newest first (RLS limits the rows to the owner). */

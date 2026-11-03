@@ -33,6 +33,23 @@ export function packLabel(units: RegistryPackageUnit[]): string {
 }
 
 /**
+ * Packs that look the same to the user (same `packLabel`) collapse to the first one. The registry lists the same
+ * pack size under several GTINs (e.g. Rennie Fruit: 12, 12, 24, 24, ...), and a picker with identical choices only
+ * confuses. The order of the remaining packs is kept.
+ */
+export function uniquePacks<T extends { units: RegistryPackageUnit[] }>(packs: T[]): T[] {
+  const seen = new Set<string>();
+  return packs.filter((pack) => {
+    const label = packLabel(pack.units);
+    if (seen.has(label)) {
+      return false;
+    }
+    seen.add(label);
+    return true;
+  });
+}
+
+/**
  * Quantity unit and upper bound of a pack. Only a single-entry pack with a positive integer count has
  * them (unit = the entry's kind, max = its count); anything else has no cap and no unit word.
  */
