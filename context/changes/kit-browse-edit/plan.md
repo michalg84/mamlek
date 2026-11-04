@@ -584,10 +584,10 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i komponentów przechodzą, w tym niezmienione `MedicineCheckResult.test.tsx` i `RegistrySearch.test.tsx`: `npx vitest run --project unit --project component`
-- [ ] 2.2 `npm run ui:scan` bez trafień
-- [ ] 2.3 Lint, typy i build: `npm run lint`, `npx astro check`, `npm run build`
-- [ ] 2.4 Smoke przechodzi bez zmian w kroku listy: `npm run smoke`
+- [x] 2.1 Testy jednostkowe i komponentów przechodzą, w tym niezmienione `MedicineCheckResult.test.tsx` i `RegistrySearch.test.tsx`: `npx vitest run --project unit --project component` — 917252f
+- [x] 2.2 `npm run ui:scan` bez trafień — 917252f
+- [x] 2.3 Lint, typy i build: `npm run lint`, `npx astro check`, `npm run build` — 917252f
+- [x] 2.4 Smoke przechodzi bez zmian w kroku listy: `npm run smoke` — 917252f
 
 #### Manual
 

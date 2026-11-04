@@ -70,6 +70,26 @@ export function packQuantity(units: RegistryPackageUnit[]): { unit: string | nul
   return { unit: present(unit.kind), max };
 }
 
+/**
+ * Quantity typed by the user, checked like the API does: empty text is an unknown quantity (`null`), anything else
+ * must be an integer from 0 up to `max` (the pack size) or, for a pack without one, `MAX_QUANTITY`.
+ */
+export function parseQuantityInput(text: string, max: number | null): { value: number | null } | { error: string } {
+  const trimmed = text.trim();
+  if (trimmed === "") {
+    return { value: null };
+  }
+  const value = Number(trimmed);
+  if (!Number.isInteger(value) || value < 0) {
+    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+  }
+  const limit = max ?? MAX_QUANTITY;
+  if (value > limit) {
+    return { error: `Ilość nie może być większa niż ${limit}` };
+  }
+  return { value };
+}
+
 /** ISO date (YYYY-MM-DD) of the last day of the given month. `month` is 1-12. */
 export function expiryToDate(month: number, year: number): string {
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();

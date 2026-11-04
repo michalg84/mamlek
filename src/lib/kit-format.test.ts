@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { todayIso, uniquePacks } from "@/lib/kit-format";
+import { MAX_QUANTITY, parseQuantityInput, todayIso, uniquePacks } from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 
 function tablets(capacity: string): RegistryPackageUnit[] {
@@ -69,5 +69,32 @@ describe("todayIso", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-30T22:30:00Z"));
     expect(todayIso("Europe/Warsaw")).toBe("2026-11-30");
+  });
+});
+
+describe("parseQuantityInput", () => {
+  it("reads empty or blank text as an unknown quantity", () => {
+    expect(parseQuantityInput("", 30)).toEqual({ value: null });
+    expect(parseQuantityInput("   ", 30)).toEqual({ value: null });
+  });
+
+  it("accepts 0 and the pack size, and refuses one more than the pack size", () => {
+    expect(parseQuantityInput("0", 30)).toEqual({ value: 0 });
+    expect(parseQuantityInput(" 30 ", 30)).toEqual({ value: 30 });
+    expect(parseQuantityInput("31", 30)).toEqual({ error: "Ilość nie może być większa niż 30" });
+  });
+
+  it("caps a pack without a size at MAX_QUANTITY", () => {
+    expect(parseQuantityInput(String(MAX_QUANTITY), null)).toEqual({ value: MAX_QUANTITY });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1), null)).toEqual({
+      error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
+    });
+  });
+
+  it("refuses a negative number, a fraction and text that is no number", () => {
+    const error = { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    expect(parseQuantityInput("-1", 30)).toEqual(error);
+    expect(parseQuantityInput("1.5", 30)).toEqual(error);
+    expect(parseQuantityInput("abc", 30)).toEqual(error);
   });
 });
