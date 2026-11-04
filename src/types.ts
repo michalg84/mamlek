@@ -54,6 +54,8 @@ export interface RegistryVariantPackage {
 export interface KitItem {
   id: number;
   packageId: number;
+  /** Registry product of the pack; the edit panel reads the packs of its variant. */
+  productId: number;
   name: string;
   strength: string | null;
   form: string | null;

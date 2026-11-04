@@ -29,6 +29,7 @@ interface KitItemRow {
   expiry_precision: "month" | "day" | null;
   created_at: string;
   registry_packages: {
+    product_id: number;
     units: RegistryPackageUnit[] | null;
     removed_at: string | null;
     registry_products: {
@@ -175,7 +176,7 @@ export async function listKitItems(supabase: SupabaseClient): Promise<KitItem[]>
   const { data, error } = await supabase
     .from("kit_items")
     .select(
-      "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at))",
+      "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(product_id, units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at))",
     )
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
@@ -188,6 +189,7 @@ export async function listKitItems(supabase: SupabaseClient): Promise<KitItem[]>
     return {
       id: row.id,
       packageId: row.package_id,
+      productId: pack.product_id,
       name: product.name,
       strength: product.strength,
       form: product.pharmaceutical_form,

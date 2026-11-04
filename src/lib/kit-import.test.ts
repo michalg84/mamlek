@@ -191,6 +191,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
   return {
     id: 1,
     packageId: 10,
+    productId: 1,
     name: "Ibuprom",
     strength: "400 mg",
     form: "tabletki powlekane",
