@@ -1,9 +1,9 @@
 ---
 change_id: csv-kit-import
 title: Import apteczki z CSV z ekranem zatwierdzenia (S-04)
-status: implemented
+status: impl_reviewed
 created: 2026-11-01
-updated: 2026-11-03
+updated: 2026-11-04
 archived_at: null
 ---
 
