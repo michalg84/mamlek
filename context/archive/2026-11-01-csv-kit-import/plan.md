@@ -361,7 +361,8 @@ Brak zmian w bazie i brak migracji — `npx supabase db push` nie jest potrzebny
 
 #### Manual
 
-- [ ] 4.5 Na telefonie CSV z czatu przechodzi przez oba kroki i trafia do apteczki
+- [ ] 4.5 Na telefonie CSV z czatu przechodzi przez oba kroki i trafia do apteczki — odroczone: do sprawdzenia kiedyś na prawdziwym telefonie, nie blokuje zamknięcia zmiany
 - [x] 4.6 Import ponad 30 wierszy przerwany na drugiej stronie zostawia tylko pierwszą stronę
 - [x] 4.7 Ponowny import tego samego CSV oznacza leki jako „już masz”
 - [x] 4.8 Czytnik ekranu ogłasza skopiowanie, powód blokady i błąd zapisu
+- [x] 4.9 Po poprawkach z przeglądu (F4, F7) na /apteczka/import: pole „Wklej CSV” ma stałą wysokość z przewijaniem (nie rośnie z długą wklejką), białe tło i ten sam rozmiar tekstu na telefonie i komputerze; lista wierszy podczas zapisu strony jest zablokowana bez zmiany układu na wąskim ekranie; propozycje dopasowania (przyciski) zawijają długie nazwy i mają widoczny fokus

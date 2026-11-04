@@ -176,6 +176,33 @@ describe("parseKitCsv: header", () => {
     expect(errorOf("moc;postac\n400 mg;tabletki")).toEqual({ code: "missing-column", column: "nazwa" });
   });
 
+  it("ignores one trailing semicolon on the header and on the rows (chats add it)", () => {
+    const rows = rowsOf(`${HEADER};\nNo-Spa;40 mg;tabletki;03.2027;20;\nApap;;;;;`);
+
+    expect(rows.map((row) => row.malformed)).toEqual([false, false]);
+    expect(rows[0]).toMatchObject({
+      name: "No-Spa",
+      strength: "40 mg",
+      form: "tabletki",
+      expiry: { kind: "ok", month: 3, year: 2027 },
+      quantity: { kind: "ok", value: 20 },
+    });
+    expect(rows[1]).toMatchObject({ name: "Apap", strength: null, quantity: { kind: "empty" } });
+  });
+
+  it("reads rows without the trailing semicolon under a header that has it", () => {
+    const [row] = rowsOf(`${HEADER};\nNo-Spa;40 mg;tabletki;03.2027;20`);
+
+    expect(row.malformed).toBe(false);
+    expect(row.quantity).toEqual({ kind: "ok", value: 20 });
+  });
+
+  it("still names an unknown column behind the trailing semicolon, and keeps a second empty field as an error", () => {
+    expect(errorOf("nazwa;producent;\nIbuprom;Polfa;")).toEqual({ code: "unknown-column", column: "producent" });
+    expect(errorOf(`${HEADER};;\nNo-Spa;40 mg;tabletki;03.2027;20`)).toEqual({ code: "unknown-column", column: "" });
+    expect(rowsOf(`${HEADER}\nNo-Spa;40 mg;tabletki;03.2027;20;;`)[0].malformed).toBe(true);
+  });
+
   it("reports a header without data rows", () => {
     expect(errorOf(HEADER)).toEqual({ code: "no-rows" });
     expect(errorOf(`\`\`\`csv\n${HEADER}\n\n\`\`\``)).toEqual({ code: "no-rows" });

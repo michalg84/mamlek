@@ -5,9 +5,11 @@ import { KitImportRow } from "@/components/kit/KitImportRow";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { packQuantity } from "@/lib/kit-format";
 import { parseKitCsv, type CsvError, type ParsedRow } from "@/lib/kit-import-csv";
 import {
+  acceptDuplicates,
   assignVariant,
   createImportRow,
   earlierVariantKeys,
@@ -42,10 +44,6 @@ const MAX_FILE_BYTES = 256 * 1024;
 
 const SAVE_FAILED =
   "Nie udało się zapisać strony. Jeśli połączenie zerwało się w trakcie, sprawdź apteczkę, zanim spróbujesz ponownie.";
-
-// Same look as `Input`, for the multi-line paste field.
-const TEXTAREA_CLASS =
-  "border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 min-h-40 w-full min-w-0 rounded-md border px-3 py-2 font-mono text-base shadow-xs outline-none focus-visible:ring-3";
 
 const HEADING_CLASS = "text-foreground mb-2 text-lg font-semibold";
 
@@ -193,7 +191,7 @@ function ImportInput({ onParsed }: { onParsed: (rows: ParsedRow[]) => void }) {
           <Label htmlFor={textId} className="text-muted-foreground mb-1 block text-sm leading-normal">
             Wklej CSV
           </Label>
-          <textarea
+          <Textarea
             id={textId}
             value={text}
             onChange={(event) => {
@@ -203,7 +201,7 @@ function ImportInput({ onParsed }: { onParsed: (rows: ParsedRow[]) => void }) {
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
             spellCheck={false}
-            className={TEXTAREA_CLASS}
+            className="text-foreground bg-background field-sizing-fixed min-h-40 min-w-0 font-mono md:text-base"
           />
         </div>
         <div className="min-w-0">
@@ -382,51 +380,54 @@ function ImportReview({
           <h2 ref={setTop} tabIndex={-1} id={`${reasonId}-page`} className={cn(HEADING_CLASS, "outline-none")}>
             Strona {page + 1} z {pages}
           </h2>
-          <ol className="divide-border min-w-0 divide-y rounded-lg border">
-            {pageIndices.map((index) => (
-              <KitImportRow
-                key={index}
-                version={version}
-                row={rows[index]}
-                issues={issues[index]}
-                packMax={packMaxOf(index)}
-                editing={editing === index}
-                rejected={rejected === index}
-                onStartEdit={() => {
-                  setEditing(index);
-                }}
-                onCancelEdit={() => {
-                  setEditing(null);
-                }}
-                onAssign={(variant) => {
-                  update(index, (row) => assignVariant(row, variant));
-                  setEditing(null);
-                }}
-                onPickPack={(pack) => {
-                  setPacks((current) => ({ ...current, [index]: pack }));
-                  update(index, (row) => ({ ...row, packageId: pack.packageId }));
-                }}
-                onExpiry={(expiry) => {
-                  update(index, (row) => ({ ...row, expiry }));
-                }}
-                onQuantity={(quantity) => {
-                  update(index, (row) => ({ ...row, quantity }));
-                }}
-                onAddAnyway={() => {
-                  update(index, (row) => ({ ...row, duplicateDecision: "add" }));
-                }}
-                onRemove={() => {
-                  update(index, (row) => ({ ...row, removed: true }));
-                  if (editing === index) {
+          {/* The rows are locked while the page is saved: the request carries the state it started with. */}
+          <fieldset disabled={saving} className="min-w-0 border-0">
+            <ol className="divide-border min-w-0 divide-y rounded-lg border">
+              {pageIndices.map((index) => (
+                <KitImportRow
+                  key={index}
+                  version={version}
+                  row={rows[index]}
+                  issues={issues[index]}
+                  packMax={packMaxOf(index)}
+                  editing={editing === index}
+                  rejected={rejected === index}
+                  onStartEdit={() => {
+                    setEditing(index);
+                  }}
+                  onCancelEdit={() => {
                     setEditing(null);
-                  }
-                }}
-                onRestore={() => {
-                  update(index, (row) => ({ ...row, removed: false }));
-                }}
-              />
-            ))}
-          </ol>
+                  }}
+                  onAssign={(variant) => {
+                    update(index, (row) => assignVariant(row, variant));
+                    setEditing(null);
+                  }}
+                  onPickPack={(pack) => {
+                    setPacks((current) => ({ ...current, [index]: pack }));
+                    update(index, (row) => ({ ...row, packageId: pack.packageId }));
+                  }}
+                  onExpiry={(expiry) => {
+                    update(index, (row) => ({ ...row, expiry }));
+                  }}
+                  onQuantity={(quantity) => {
+                    update(index, (row) => ({ ...row, quantity }));
+                  }}
+                  onAddAnyway={() => {
+                    update(index, (row) => acceptDuplicates(row, issues[index]));
+                  }}
+                  onRemove={() => {
+                    update(index, (row) => ({ ...row, removed: true }));
+                    if (editing === index) {
+                      setEditing(null);
+                    }
+                  }}
+                  onRestore={() => {
+                    update(index, (row) => ({ ...row, removed: false }));
+                  }}
+                />
+              ))}
+            </ol>
+          </fieldset>
 
           {kept.length === 0 ? (
             <Button type="button" variant="outline" onClick={nextPage} className="min-h-11 w-full">
@@ -490,9 +491,20 @@ function ImportReview({
           Zapisane wiersze: {savedItems} · usunięte: {removed} · niezapisane: {unsaved}
         </p>
         {unsavedPages && <p className="text-muted-foreground text-sm">{unsavedPages}</p>}
+        {/* While a page is being saved the link would leave without it: aria-disabled and no navigation. */}
         <a
           href={finishHref}
-          className={cn(buttonVariants({ variant: finished ? "default" : "outline" }), "min-h-11 w-full")}
+          aria-disabled={saving ? true : undefined}
+          onClick={(event) => {
+            if (saving) {
+              event.preventDefault();
+            }
+          }}
+          className={cn(
+            buttonVariants({ variant: finished ? "default" : "outline" }),
+            "min-h-11 w-full",
+            saving && "cursor-not-allowed opacity-50",
+          )}
         >
           Zakończ import
         </a>
@@ -509,15 +521,32 @@ export default function KitImport({ version, kitVariantKeys }: KitImportProps) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
   const queries = useMemo(() => (parsed ? parsed.map(rowQueries) : null), [parsed]);
   const { status, matches, retry } = useRegistryMatch(version, queries);
-  const initialRows = useMemo(
+  const matchedRows = useMemo(
     () => (parsed && matches ? parsed.map((row, index) => createImportRow(row, matches[index])) : null),
     [parsed, matches],
   );
+  // The first rows built from the matches are kept for this text. The review holds the user's decisions and the pages
+  // already saved, so a list error that comes later (the worker dying after "ready") must not unmount it.
+  const [kept, setKept] = useState<{ parsed: ParsedRow[]; rows: ImportRow[] } | null>(null);
+  if (parsed && matchedRows && kept?.parsed !== parsed) {
+    setKept({ parsed, rows: matchedRows });
+  }
+  const initialRows = kept?.parsed === parsed ? kept.rows : null;
 
   if (!parsed) {
     return <ImportInput onParsed={setParsed} />;
   }
-  if (status === "error") {
+  if (status === "unauthorized" && !initialRows) {
+    return (
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <ErrorText>Sesja wygasła — zaloguj się ponownie.</ErrorText>
+        <a href="/auth/signin" className={cn(buttonVariants({ variant: "link" }), "h-auto p-0")}>
+          Zaloguj się
+        </a>
+      </div>
+    );
+  }
+  if (status === "error" && !initialRows) {
     return (
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         <ErrorText>Nie udało się wczytać listy leków.</ErrorText>

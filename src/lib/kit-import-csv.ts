@@ -168,10 +168,16 @@ function emptyToNull(value: string): string | null {
   return value === "" ? null : value;
 }
 
-function parseHeader(fields: string[] | null): { ok: true; columns: Column[] } | { ok: false; error: CsvError } {
-  if (!fields) {
+/** Chats often end every line with `;`. One empty field after the last separator is dropped, never a second one. */
+function withoutTrailingEmpty(fields: string[]): string[] {
+  return fields.length > 1 && fields[fields.length - 1].trim() === "" ? fields.slice(0, -1) : fields;
+}
+
+function parseHeader(raw: string[] | null): { ok: true; columns: Column[] } | { ok: false; error: CsvError } {
+  if (!raw) {
     return { ok: false, error: { code: "no-header" } };
   }
+  const fields = withoutTrailingEmpty(raw);
   const columns: (Column | null)[] = fields.map((field) => COLUMNS[normalizeText(field.trim())] ?? null);
   if (columns.every((column) => column === null)) {
     return { ok: false, error: { code: "no-header" } };
@@ -208,7 +214,9 @@ function malformedRow(line: number, raw: string): ParsedRow {
 }
 
 function parseDataRow(line: number, raw: string, columns: Column[]): ParsedRow {
-  const fields = splitFields(raw);
+  const split = splitFields(raw);
+  // A row may end with `;` too, but only when it has no more fields than the header has columns.
+  const fields = split?.length === columns.length + 1 ? withoutTrailingEmpty(split) : split;
   if (fields?.length !== columns.length) {
     return malformedRow(line, raw);
   }

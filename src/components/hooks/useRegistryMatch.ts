@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegistryListWorker, type RegistryWorkerAnswer } from "@/components/hooks/useRegistryListWorker";
 import type { RegistrySearchWorkerRequest, RowMatch } from "@/types";
 
-export type RegistryMatchStatus = "loading" | "ready" | "error";
+export type RegistryMatchStatus = "loading" | "ready" | "unauthorized" | "error";
 
 export interface RegistryMatch {
   status: RegistryMatchStatus;
@@ -25,8 +25,8 @@ interface Answer {
  *
  * `rows` is compared by identity: pass a memoized array, a new array is a new set of rows. Until the worker answers
  * the current set, `status` is "loading" and `matches` null; an answer to an earlier set is dropped. With `rows` null
- * nothing is sent and `matches` stay null; `status` then only tells whether the list is ready. Any failure to load the
- * list (including an expired session) is "error"; `retry` loads it again and matches the current rows.
+ * nothing is sent and `matches` stay null; `status` then only tells whether the list is ready. An expired session is
+ * "unauthorized" (a retry cannot help); any other failure to load the list is "error"; `retry` loads it again and matches the current rows.
  */
 export function useRegistryMatch(version: number, rows: string[][] | null): RegistryMatch {
   const [answer, setAnswer] = useState<Answer | null>(null);
@@ -57,6 +57,9 @@ export function useRegistryMatch(version: number, rows: string[][] | null): Regi
 
   if (listStatus === "loading") {
     return { status: "loading", matches: null, retry };
+  }
+  if (listStatus === "unauthorized") {
+    return { status: "unauthorized", matches: null, retry };
   }
   if (listStatus !== "ready") {
     return { status: "error", matches: null, retry };
