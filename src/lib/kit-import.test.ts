@@ -3,6 +3,7 @@ import {
   IMPORT_MAX_ROWS,
   IMPORT_PAGE_SIZE,
   IMPORT_SUGGESTIONS,
+  acceptDuplicates,
   assignVariant,
   createImportRow,
   earlierVariantKeys,
@@ -346,9 +347,29 @@ describe("rowIssues", () => {
   });
 
   it("lifts already-have and repeated-in-import with the decision to add", () => {
-    const row = readyRow({ duplicateDecision: "add" });
+    const row = readyRow({ duplicateDecision: ["already-have", "repeated-in-import"] });
 
     expect(rowIssues(row, context({ kitKeys: new Set([ibupromKey]), earlierKeys: new Set([ibupromKey]) }))).toEqual([]);
+  });
+
+  it("blocks a reason that came after the decision to add", () => {
+    // The user accepted "already have"; later an earlier row got the same variant.
+    const row = readyRow({ duplicateDecision: ["already-have"] });
+
+    expect(rowIssues(row, context({ kitKeys: new Set([ibupromKey]) }))).toEqual([]);
+    expect(rowIssues(row, context({ kitKeys: new Set([ibupromKey]), earlierKeys: new Set([ibupromKey]) }))).toEqual([
+      "repeated-in-import",
+    ]);
+  });
+
+  it("records only the duplicate reasons the row has when the user adds anyway", () => {
+    const row = readyRow();
+
+    expect(acceptDuplicates(row, ["no-package", "already-have"]).duplicateDecision).toEqual(["already-have"]);
+    expect(acceptDuplicates(row, ["already-have", "repeated-in-import"]).duplicateDecision).toEqual([
+      "already-have",
+      "repeated-in-import",
+    ]);
   });
 
   it("blocks both when the variant is in the kit and earlier in the import", () => {
@@ -438,7 +459,7 @@ describe("repeated in the import", () => {
   });
 
   it("clears a decision to add when another variant is assigned", () => {
-    const decided = rowOf(ibuprom400, { duplicateDecision: "add" });
+    const decided = rowOf(ibuprom400, { duplicateDecision: ["already-have"] });
 
     expect(assignVariant(decided, ibuprom200)).toEqual({
       ...decided,

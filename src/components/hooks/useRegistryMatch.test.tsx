@@ -128,14 +128,14 @@ describe("useRegistryMatch", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("reports an expired session as an error", async () => {
+  it("reports an expired session as unauthorized, not as a generic error", async () => {
     stubFetch(() => reply({ error: "unauthorized" }, 401));
     stubSearchWorker({ autoDeliver: true });
     const rows = [NO_SPA_ROW];
 
     const { result } = renderHook(() => useRegistryMatch(registrySearchList.version, rows));
     await waitFor(() => {
-      expect(result.current.status).toBe("error");
+      expect(result.current.status).toBe("unauthorized");
     });
     expect(result.current.matches).toBeNull();
   });

@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import KitImport from "@/components/kit/KitImport";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
-import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
-import { reply, stubRoutedFetch, type RoutedFetchOptions } from "../../../tests/helpers/fetch";
+import { FakeSearchWorker, stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
+import { reply, stubFetch, stubRoutedFetch, type RoutedFetchOptions } from "../../../tests/helpers/fetch";
 import type { RegistryVariantPackage } from "@/types";
 
 // The texts below are pinned on purpose, like in RegistrySearch.test.tsx. Expected values are written by hand from
@@ -220,6 +220,81 @@ describe("KitImport", () => {
     expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 12, expiry: null }] }]);
   });
 
+  it("keeps the edited quantity when a removed row is restored", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;20"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    // The CSV says 20: change it to 5, remove the row and restore it. The field must show 5, not 20.
+    fireEvent.change(within(row(2)).getByLabelText("Ilość"), { target: { value: "5" } });
+    removeRow(2);
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Przywróć" }));
+    await packChosen(2);
+
+    expect(within(row(2)).getByLabelText<HTMLInputElement>("Ilość").value).toBe("5");
+    fireEvent.click(saveButton());
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 5, expiry: null }] }]);
+  });
+
+  it("offers signing in, not a retry, when the session expired while the list loads", async () => {
+    stubFetch(() => reply({ error: "unauthorized" }, 401));
+    stubSearchWorker({ autoDeliver: true });
+    render(<KitImport version={registrySearchList.version} kitVariantKeys={[]} />);
+    fireEvent.change(screen.getByLabelText("Wklej CSV"), { target: { value: csv(NO_SPA) } });
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+
+    expect(await screen.findByText("Sesja wygasła — zaloguj się ponownie.")).not.toBeNull();
+    expect(screen.getByRole("link", { name: "Zaloguj się" }).getAttribute("href")).toBe("/auth/signin");
+    expect(screen.queryByRole("button", { name: "Spróbuj ponownie" })).toBeNull();
+    expect(screen.queryByText("Nie udało się wczytać listy leków.")).toBeNull();
+  });
+
+  it("locks the rows and the finish link while a page is being saved", async () => {
+    let answer: (response: Response) => void = () => undefined;
+    await review(csv(NO_SPA, NO_SPA), {
+      importKit: () =>
+        new Promise<Response>((resolve) => {
+          answer = resolve;
+        }),
+    });
+    await packChosen(2);
+    await packChosen(3);
+    fireEvent.click(within(row(3)).getByRole("button", { name: "Dodaj jako osobne opakowanie" }));
+    fireEvent.click(saveButton());
+
+    // The request is out: the row controls are disabled (by the fieldset), and the link does not leave the page.
+    await waitFor(() => {
+      expect(within(row(2)).getAllByRole("button", { name: "Usuń z importu" })[0].matches(":disabled")).toBe(true);
+    });
+    expect(within(row(2)).getByLabelText("Ilość").matches(":disabled")).toBe(true);
+    expect(finishLink().getAttribute("aria-disabled")).toBe("true");
+    expect(fireEvent.click(finishLink())).toBe(false);
+
+    await act(async () => {
+      answer(new Response(JSON.stringify({ ids: [1, 2] }), { status: 201 }));
+      await Promise.resolve();
+    });
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(screen.getByText("Zapisano 1 z 1 strony, 2 leki")).not.toBeNull();
+    expect(finishLink().getAttribute("aria-disabled")).toBeNull();
+  });
+
+  it("keeps the review and its decisions when the list worker fails after the rows were matched", async () => {
+    await review(csv(NO_SPA, NO_SPA));
+    await packChosen(2);
+    await packChosen(3);
+    removeRow(2);
+
+    act(() => {
+      FakeSearchWorker.last?.onerror?.(new ErrorEvent("error"));
+    });
+
+    expect(screen.queryByText("Nie udało się wczytać listy leków.")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Strona 1 z 1" })).not.toBeNull();
+    expect(text(2)).toContain("Usunięty z importu");
+    expect(text(3)).toContain(READY);
+  });
+
   it("saves only the kept rows of the page, moves to the next page and counts what was saved", async () => {
     // Page 1: lines 2–31 (No-Spa, Rutinoscorbin, 28 unknown rows); page 2: line 32 (Altacet).
     const unknownRows = Array.from({ length: 28 }, () => UNKNOWN);
@@ -256,7 +331,8 @@ describe("KitImport", () => {
     await packChosen(32);
     expect(screen.getByText("Strona 2 nie zostanie zapisana")).not.toBeNull();
     expect(finishLink().getAttribute("href")).toBe("/apteczka?zaimportowano=2");
-  });
+    // 32 rows render twice (two pages): ~3 s alone, over the default 5 s when lint and astro check run alongside.
+  }, 15_000);
 
   it("marks the row the server rejected by its index among the sent rows", async () => {
     await review(csv(NO_SPA, UNKNOWN, RUTINOSCORBIN), {

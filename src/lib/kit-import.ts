@@ -29,6 +29,9 @@ export type RowIssue =
   | "already-have"
   | "repeated-in-import";
 
+/** The reasons a user may accept with "add anyway". */
+export type DuplicateIssue = Extract<RowIssue, "already-have" | "repeated-in-import">;
+
 /** State of one row on the approval screen. */
 export interface ImportRow {
   parsed: ParsedRow;
@@ -40,8 +43,11 @@ export interface ImportRow {
   expiry: ParsedExpiry;
   /** Starts as the parsed value; the user may correct or clear it. */
   quantity: ParsedQuantity;
-  /** "add": the user accepted adding a variant already in the kit or earlier in the import. */
-  duplicateDecision: "add" | null;
+  /**
+   * The duplicate reasons the user accepted with "add anyway", as they stood at that moment (`acceptDuplicates`). A
+   * reason that appears later (another row now carries the same variant) blocks the row again.
+   */
+  duplicateDecision: DuplicateIssue[] | null;
   removed: boolean;
 }
 
@@ -160,9 +166,20 @@ export function assignVariant(row: ImportRow, variant: RegistryVariant): ImportR
   return { ...row, variant, packageId: null, duplicateDecision: null };
 }
 
+/** Records the user's "add anyway" for the duplicate reasons the row has now (taken from its `rowIssues`). */
+export function acceptDuplicates(row: ImportRow, issues: readonly RowIssue[]): ImportRow {
+  return {
+    ...row,
+    duplicateDecision: issues.filter(
+      (issue): issue is DuplicateIssue => issue === "already-have" || issue === "repeated-in-import",
+    ),
+  };
+}
+
 /**
  * Reasons the row blocks saving its page, in a fixed order; empty means ready. A removed row has none. An
- * automatic assignment is not a reason. "Already have" and "repeated" are lifted by `duplicateDecision: "add"`.
+ * automatic assignment is not a reason. "Already have" and "repeated" are lifted only when `duplicateDecision`
+ * lists that very reason.
  */
 export function rowIssues(row: ImportRow, context: RowIssueContext): RowIssue[] {
   if (row.removed) {
@@ -188,11 +205,12 @@ export function rowIssues(row: ImportRow, context: RowIssueContext): RowIssue[] 
   ) {
     issues.push("quantity-over-pack");
   }
-  if (key !== null && row.duplicateDecision !== "add") {
-    if (context.kitKeys.has(key)) {
+  if (key !== null) {
+    const accepted = row.duplicateDecision ?? [];
+    if (context.kitKeys.has(key) && !accepted.includes("already-have")) {
       issues.push("already-have");
     }
-    if (context.earlierKeys.has(key)) {
+    if (context.earlierKeys.has(key) && !accepted.includes("repeated-in-import")) {
       issues.push("repeated-in-import");
     }
   }

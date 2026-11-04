@@ -289,9 +289,10 @@ function RowQuantity({
   overPack: boolean;
   onChange: (quantity: ParsedQuantity) => void;
 }) {
-  const parsed = row.parsed.quantity;
+  // Start from the current value (what will be saved), not the CSV original: a restored row remounts this field.
+  const current = row.quantity;
   const [text, setText] = useState(
-    parsed.kind === "invalid" ? parsed.text : parsed.kind === "ok" ? String(parsed.value) : "",
+    current.kind === "invalid" ? current.text : current.kind === "ok" ? String(current.value) : "",
   );
   const inputId = useId();
   const errorId = useId();
@@ -405,16 +406,17 @@ function RowVariant({
               const details = variantDetails(choice);
               return (
                 <li key={choice.id} className="min-w-0">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => {
                       onAssign(choice);
                     }}
-                    className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring/50 block min-h-11 w-full min-w-0 rounded-md border px-3 py-2 text-left outline-none focus-visible:ring-3"
+                    className="block h-auto min-h-11 w-full min-w-0 px-3 py-2 text-left whitespace-normal"
                   >
                     <span className="block font-bold break-words">{choice.name}</span>
                     {details && <span className="text-muted-foreground block text-sm break-words">{details}</span>}
-                  </button>
+                  </Button>
                 </li>
               );
             })}

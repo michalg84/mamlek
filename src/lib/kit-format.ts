@@ -33,18 +33,19 @@ export function packLabel(units: RegistryPackageUnit[]): string {
 }
 
 /**
- * Packs that look the same to the user (same `packLabel`) collapse to the first one. The registry lists the same
- * pack size under several GTINs (e.g. Rennie Fruit: 12, 12, 24, 24, ...), and a picker with identical choices only
- * confuses. The order of the remaining packs is kept.
+ * Packs of the same product that look the same to the user (same `packLabel`) collapse to the first one. The registry
+ * lists the same pack size under several GTINs (e.g. Rennie Fruit: 12, 12, 24, 24, ...), and a picker with identical
+ * choices only confuses. Packs of different products (e.g. a parallel import by another holder) stay apart: the
+ * pickers tell them by the holder. The order of the remaining packs is kept.
  */
-export function uniquePacks<T extends { units: RegistryPackageUnit[] }>(packs: T[]): T[] {
+export function uniquePacks<T extends { productId: number; units: RegistryPackageUnit[] }>(packs: T[]): T[] {
   const seen = new Set<string>();
   return packs.filter((pack) => {
-    const label = packLabel(pack.units);
-    if (seen.has(label)) {
+    const key = `${pack.productId}|${packLabel(pack.units)}`;
+    if (seen.has(key)) {
       return false;
     }
-    seen.add(label);
+    seen.add(key);
     return true;
   });
 }
