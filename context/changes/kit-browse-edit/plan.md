@@ -613,9 +613,9 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 #### Automated
 
-- [ ] 4.1 Testy jednostkowe i komponentów przechodzą, w tym niezmieniony `KitAddForm.test.tsx`: `npx vitest run --project unit --project component`
-- [ ] 4.2 `npm run ui:scan` bez trafień
-- [ ] 4.3 Lint, typy i build: `npm run lint`, `npx astro check`, `npm run build`
+- [x] 4.1 Testy jednostkowe i komponentów przechodzą, w tym niezmieniony `KitAddForm.test.tsx`: `npx vitest run --project unit --project component` — e737b07
+- [x] 4.2 `npm run ui:scan` bez trafień — e737b07
+- [x] 4.3 Lint, typy i build: `npm run lint`, `npx astro check`, `npm run build` — e737b07
 - [ ] 4.4 Pełny zestaw serwerowy jeszcze raz na końcu: `npm run test:db`, `npm run test:api`, `npm run smoke`
 
 #### Manual
