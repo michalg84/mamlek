@@ -4,8 +4,9 @@ import Topbar from "@/components/Topbar.astro";
 import { Card, CardContent } from "@/components/ui/card";
 import { CircleAlert } from "lucide-react";
 import KitAddForm from "@/components/kit/KitAddForm";
+import KitList from "@/components/kit/KitList";
 import { createClient } from "@/lib/supabase";
-import { formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
+import { todayIso } from "@/lib/kit-format";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
 import { countKitItemsWithPackage, listKitItems } from "@/lib/services/kit";
 import { IMPORT_MAX_ROWS } from "@/lib/kit-import";
@@ -111,30 +112,7 @@ try {
                   <h2 id="list-heading" class="text-foreground mb-3 text-lg font-semibold">
                     W apteczce
                   </h2>
-                  {items.length === 0 ? (
-                    <p class="text-muted-foreground text-sm">Apteczka jest pusta</p>
-                  ) : (
-                    <ul class="divide-border min-w-0 divide-y rounded-lg border">
-                      {items.map((item) => (
-                        <li class="min-w-0 px-3 py-3">
-                          <p class="text-foreground font-bold break-words">{item.name}</p>
-                          {[item.strength, item.form].some(Boolean) && (
-                            <p class="text-muted-foreground text-sm break-words">
-                              {[item.strength, item.form].filter(Boolean).join(" · ")}
-                            </p>
-                          )}
-                          <p class="text-foreground mt-1 text-sm break-words">{packLabel(item.units)}</p>
-                          <p class="text-foreground text-sm break-words">
-                            Ilość: {formatQuantity(item.quantity, item.units)}
-                          </p>
-                          <p class="text-foreground text-sm break-words">
-                            Ważny do: {formatExpiry(item.expiresOn, item.expiryPrecision)}
-                          </p>
-                          {item.withdrawn && <p class="text-muted-foreground text-sm">wycofany z rejestru</p>}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <KitList items={items} today={todayIso("Europe/Warsaw")} client:load />
                 </section>
               </div>
             )}

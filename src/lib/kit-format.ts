@@ -85,10 +85,24 @@ export function formatExpiry(expiresOn: string | null, precision: "month" | "day
   return precision === "day" ? `${day}.${month}.${year}` : `${month}/${year}`;
 }
 
-/** Today's local date as YYYY-MM-DD, comparable with `expiresOn` as a string. */
-export function todayIso(): string {
-  const now = new Date();
-  return `${String(now.getFullYear()).padStart(4, "0")}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+/**
+ * Today's date as YYYY-MM-DD, comparable with `expiresOn` as a string. Without `timeZone` it is the local date of the
+ * runtime; with one (e.g. "Europe/Warsaw") it is the date in that zone, which lets a server running in UTC answer for
+ * a user elsewhere.
+ */
+export function todayIso(timeZone?: string): string {
+  if (timeZone === undefined) {
+    const now = new Date();
+    return `${String(now.getFullYear()).padStart(4, "0")}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: "year" | "month" | "day") => parts.find((entry) => entry.type === type)?.value ?? "";
+  return `${part("year").padStart(4, "0")}-${part("month")}-${part("day")}`;
 }
 
 /**

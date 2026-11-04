@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { uniquePacks } from "@/lib/kit-format";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { todayIso, uniquePacks } from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 
 function tablets(capacity: string): RegistryPackageUnit[] {
@@ -38,5 +38,36 @@ describe("uniquePacks", () => {
       { id: 901, productId: 2, units: tablets("30") },
     ];
     expect(uniquePacks(packs).map((pack) => pack.id)).toEqual([801, 901]);
+  });
+});
+
+describe("todayIso", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("without a time zone is the local date of the runtime", () => {
+    // Built from local parts, so the expectation does not depend on the zone the test runs in.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 30));
+    expect(todayIso()).toBe("2026-10-31");
+  });
+
+  it("in Europe/Warsaw is already the next day at 23:30 UTC on the last day of a month (winter time)", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-30T23:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-12-01");
+  });
+
+  it("in Europe/Warsaw is already the next day at 22:30 UTC on the last day of a month (summer time)", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-06-30T22:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-07-01");
+  });
+
+  it("in Europe/Warsaw is still the same day an hour earlier", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-30T22:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-11-30");
   });
 });

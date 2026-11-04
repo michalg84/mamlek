@@ -570,11 +570,11 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 - [ ] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
 - [ ] 1.2 Fixture'y rejestru zaimportowane po resecie (v1, v1, v2) i `node scripts/registry-import-check.mjs` przechodzi
-- [ ] 1.3 Testy bazy przechodzą, w tym trigger i strażnik `security definer`: `npm run test:db`
-- [ ] 1.4 Testy jednostkowe schematu przechodzą: `npx vitest run --project unit`
+- [x] 1.3 Testy bazy przechodzą, w tym trigger i strażnik `security definer`: `npm run test:db` — 14c3cc4
+- [x] 1.4 Testy jednostkowe schematu przechodzą: `npx vitest run --project unit` — 14c3cc4
 - [ ] 1.5 Testy HTTP przechodzą na lokalnym serwerze: `npm run test:api`
-- [ ] 1.6 Smoke przechodzi z nowymi krokami: `npm run smoke`
-- [ ] 1.7 Lint i typy: `npm run lint` i `npx astro check`
+- [x] 1.6 Smoke przechodzi z nowymi krokami: `npm run smoke` — 14c3cc4
+- [x] 1.7 Lint i typy: `npm run lint` i `npx astro check` — 14c3cc4
 
 #### Manual
 
