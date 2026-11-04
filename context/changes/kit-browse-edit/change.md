@@ -1,7 +1,7 @@
 ---
 change_id: kit-browse-edit
 title: Przegląd i edycja apteczki (S-05)
-status: implementing
+status: impl_reviewed
 created: 2026-11-04
 updated: 2026-11-04
 archived_at: null
