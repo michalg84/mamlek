@@ -71,7 +71,8 @@ const PACKAGES = "/api/registry/packages";
 const KIT = "/api/kit";
 const CHECK = "/api/kit/check";
 // Filled by the pack lookup step, used by the later kit steps: the medicine (variant id and name) and its first pack.
-const kit = { productId: 0, name: "", packageId: 0 };
+// `itemId` is the kit item the add step stores, which the edit and delete steps work on.
+const kit = { productId: 0, name: "", packageId: 0, itemId: 0 };
 const email2 = `smoke-${Date.now()}-b@example.com`;
 const jar2 = new Map();
 
@@ -95,6 +96,23 @@ function parsePackages(body) {
     return Array.isArray(packages) ? packages : [];
   } catch {
     return [];
+  }
+}
+
+function parseId(body) {
+  try {
+    const { id } = JSON.parse(body);
+    return Number.isInteger(id) ? id : 0;
+  } catch {
+    return 0; // not a usable answer: the later steps fail on id 0
+  }
+}
+
+function parseItemQuantity(body) {
+  try {
+    return JSON.parse(body).item?.quantity;
+  } catch {
+    return undefined; // not a usable answer: the step's check fails
   }
 }
 
@@ -199,8 +217,12 @@ const steps = [
   ],
   [
     "kit add stores a pack without quantity and expiry",
-    () => request(KIT, { method: "POST", json: { packageId: kit.packageId } }),
-    { status: 201, check: (actual) => Number.isInteger(JSON.parse(actual.body).id) },
+    async () => {
+      const reply = await request(KIT, { method: "POST", json: { packageId: kit.packageId } });
+      kit.itemId = parseId(reply.body);
+      return reply;
+    },
+    { status: 201, check: () => kit.itemId > 0 },
   ],
   [
     "kit add rejects negative quantity",
@@ -254,6 +276,22 @@ const steps = [
         return items !== null && items.length === 0;
       },
     },
+  ],
+  [
+    "kit delete does not remove an item of another account",
+    () => request(`${KIT}/${kit.itemId}`, { method: "DELETE", jar: jar2 }),
+    { status: 404 },
+  ],
+  [
+    "kit update changes the quantity of an own item",
+    () => request(`${KIT}/${kit.itemId}`, { method: "PATCH", json: { quantity: 1 } }),
+    { status: 200, check: (actual) => parseItemQuantity(actual.body) === 1 },
+  ],
+  ["kit delete removes an own item", () => request(`${KIT}/${kit.itemId}`, { method: "DELETE" }), { status: 204 }],
+  [
+    "kit page no longer lists the deleted medicine",
+    () => request("/apteczka"),
+    { status: 200, check: (actual) => !pageShowsMedicine(actual.body) },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["search page redirects after signout", () => request("/szukaj"), { status: 302, location: "/auth/signin" }],

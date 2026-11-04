@@ -171,37 +171,88 @@ export async function addKitItems(supabase: SupabaseClient, items: NewKitItem[])
   return { ids };
 }
 
+// One select for every read of a kit item, so the list, the single read and the update return the same shape.
+const KIT_ITEM_SELECT =
+  "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(product_id, units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at))";
+
+function toKitItem(row: KitItemRow): KitItem {
+  const pack = row.registry_packages;
+  const product = pack.registry_products;
+  return {
+    id: row.id,
+    packageId: row.package_id,
+    productId: pack.product_id,
+    name: product.name,
+    strength: product.strength,
+    form: product.pharmaceutical_form,
+    holder: product.marketing_authorization_holder,
+    units: pack.units ?? [],
+    quantity: row.quantity,
+    expiresOn: row.expires_on,
+    expiryPrecision: row.expiry_precision,
+    withdrawn: pack.removed_at !== null || product.removed_at !== null,
+    createdAt: row.created_at,
+  };
+}
+
 /** The signed-in account's kit, newest first (RLS limits the rows to the owner). */
 export async function listKitItems(supabase: SupabaseClient): Promise<KitItem[]> {
   const { data, error } = await supabase
     .from("kit_items")
-    .select(
-      "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(product_id, units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at))",
-    )
+    .select(KIT_ITEM_SELECT)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false });
   if (error) {
     throw new Error(`Failed to read kit items: ${error.message}`);
   }
-  return (data as unknown as KitItemRow[]).map((row) => {
-    const pack = row.registry_packages;
-    const product = pack.registry_products;
-    return {
-      id: row.id,
-      packageId: row.package_id,
-      productId: pack.product_id,
-      name: product.name,
-      strength: product.strength,
-      form: product.pharmaceutical_form,
-      holder: product.marketing_authorization_holder,
-      units: pack.units ?? [],
-      quantity: row.quantity,
-      expiresOn: row.expires_on,
-      expiryPrecision: row.expiry_precision,
-      withdrawn: pack.removed_at !== null || product.removed_at !== null,
-      createdAt: row.created_at,
-    };
-  });
+  return (data as unknown as KitItemRow[]).map(toKitItem);
+}
+
+/**
+ * One kit item of the signed-in account, or null when it does not exist or is another account's (RLS hides it). Unlike
+ * `getPackage`, withdrawn packs and products are not filtered out: the item keeps its pack and its `units`.
+ */
+export async function getKitItem(supabase: SupabaseClient, id: number): Promise<KitItem | null> {
+  const { data, error } = await supabase.from("kit_items").select(KIT_ITEM_SELECT).eq("id", id).maybeSingle();
+  if (error) {
+    throw new Error(`Failed to read kit item ${id}: ${error.message}`, { cause: error });
+  }
+  return data ? toKitItem(data as unknown as KitItemRow) : null;
+}
+
+/** Columns an edit may change; a column left out of the object is not written. */
+export interface KitItemChanges {
+  package_id?: number;
+  quantity?: number | null;
+  expires_on?: string | null;
+  expiry_precision?: "month" | "day" | null;
+}
+
+/**
+ * Updates one kit item of the signed-in account and returns it as stored, or null when no row was touched (it does not
+ * exist, is another account's, or was deleted meanwhile): supabase-js reports no error for an update that hit 0 rows,
+ * so the row is read back with `select`.
+ */
+export async function updateKitItem(
+  supabase: SupabaseClient,
+  id: number,
+  changes: KitItemChanges,
+): Promise<KitItem | null> {
+  const { data, error } = await supabase.from("kit_items").update(changes).eq("id", id).select(KIT_ITEM_SELECT);
+  if (error) {
+    throw new Error(`Failed to update kit item ${id}: ${error.message}`, { cause: error });
+  }
+  const rows = data as unknown as KitItemRow[];
+  return rows.length > 0 ? toKitItem(rows[0]) : null;
+}
+
+/** Deletes one kit item of the signed-in account; false when no row was touched (missing or another account's). */
+export async function deleteKitItem(supabase: SupabaseClient, id: number): Promise<boolean> {
+  const { data, error } = await supabase.from("kit_items").delete().eq("id", id).select("id");
+  if (error) {
+    throw new Error(`Failed to delete kit item ${id}: ${error.message}`, { cause: error });
+  }
+  return data.length > 0;
 }
 
 /** How many kit items of the signed-in account are an instance of this pack. */

@@ -82,6 +82,21 @@ export interface AddKitItemResponse {
   id: number;
 }
 
+/**
+ * Body of `PATCH /api/kit/[id]`: only the keys present are changed. `packageId` moves the item to another pack of the
+ * same medicine; `quantity: null` and `expiry: null` clear the value.
+ */
+export interface UpdateKitItemRequest {
+  packageId?: number;
+  quantity?: number | null;
+  expiry?: { month: number; year: number } | null;
+}
+
+/** Body of a successful `PATCH /api/kit/[id]` (200): the item as stored. */
+export interface UpdateKitItemResponse {
+  item: KitItem;
+}
+
 /** Body of a successful `POST /api/kit/import` (201): the new ids in the order of the request's items. */
 export interface ImportKitItemsResponse {
   ids: number[];
