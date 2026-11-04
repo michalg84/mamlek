@@ -1,6 +1,7 @@
-import type { ComponentProps } from "react";
+import { useId, type ComponentProps } from "react";
 import { CircleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MAX_QUANTITY } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +58,111 @@ export function QuantityInput({ max, unit, className, ...props }: QuantityInputP
           z {[max, unit].filter((part) => part !== null).join(" ")}
         </span>
       )}
+    </div>
+  );
+}
+
+/** Expiry years offered: from this many years back (expired boxes exist) to this many ahead. */
+const YEARS_BACK = 5;
+const YEARS_AHEAD = 10;
+
+const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
+
+/** The years offered around this year, plus the given ones outside that range (a stored old date), in order. */
+function expiryYears(extra: string[]): number[] {
+  const thisYear = new Date().getFullYear();
+  const years = Array.from({ length: YEARS_BACK + YEARS_AHEAD + 1 }, (_, index) => thisYear - YEARS_BACK + index);
+  for (const text of extra) {
+    const value = Number(text);
+    if (text !== "" && Number.isInteger(value) && !years.includes(value)) {
+      years.push(value);
+    }
+  }
+  return years.sort((a, b) => a - b);
+}
+
+interface ExpirySelectProps {
+  /** Text of the group label ("Ważny do (opcjonalnie)"). */
+  label: string;
+  /** Picked month "1"-"12" and year as text; "" when not picked. */
+  month: string;
+  year: string;
+  onMonthChange: (month: string) => void;
+  onYearChange: (year: string) => void;
+  /** Year of the stored date: stays among the options even outside the range, also after another year is picked. */
+  storedYear?: string;
+  /** Field hint under the selects (e.g. only one of them picked). */
+  error?: string | undefined;
+}
+
+/** Month and year of an expiry date: two native selects in one labelled group. */
+export function ExpirySelect({
+  label,
+  month,
+  year,
+  onMonthChange,
+  onYearChange,
+  storedYear = "",
+  error,
+}: ExpirySelectProps) {
+  const groupId = useId();
+  const monthId = useId();
+  const yearId = useId();
+  const errorId = useId();
+  const years = expiryYears([storedYear, year]);
+
+  return (
+    <div role="group" aria-labelledby={groupId} className="min-w-0">
+      <p id={groupId} className={FIELD_LABEL_CLASS}>
+        {label}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="min-w-0">
+          <Label htmlFor={monthId} className="sr-only">
+            Miesiąc
+          </Label>
+          <select
+            id={monthId}
+            value={month}
+            onChange={(event) => {
+              onMonthChange(event.target.value);
+            }}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            className={SELECT_CLASS}
+          >
+            <option value="">Miesiąc</option>
+            {MONTHS.map((value) => (
+              <option key={value} value={value}>
+                {String(value).padStart(2, "0")}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-0">
+          <Label htmlFor={yearId} className="sr-only">
+            Rok
+          </Label>
+          <select
+            id={yearId}
+            value={year}
+            onChange={(event) => {
+              onYearChange(event.target.value);
+            }}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            className={SELECT_CLASS}
+          >
+            <option value="">Rok</option>
+            {years.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {error && <InlineError id={errorId}>{error}</InlineError>}
     </div>
   );
 }

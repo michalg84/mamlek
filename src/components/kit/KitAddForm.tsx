@@ -1,12 +1,12 @@
 import { useEffect, useId, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
-import { FIELD_LABEL_CLASS, InlineError, QuantityInput, SELECT_CLASS } from "@/components/kit/kit-fields";
+import { ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { packLabel, packQuantity, parseQuantityInput } from "@/lib/kit-format";
+import { packLabel, packQuantity, parseExpiryInput, parseQuantityInput } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 import type { AddKitItemRequest, AddKitItemResponse, RegistryVariant, RegistryVariantPackage } from "@/types";
 
@@ -14,12 +14,6 @@ interface KitAddFormProps {
   /** Version of the search list as rendered by the server; addresses the HTTP cache entry of the list. */
   version: number;
 }
-
-/** Expiry years offered: from this many years back (expired boxes exist) to this many ahead. */
-const YEARS_BACK = 5;
-const YEARS_AHEAD = 10;
-
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
 
 interface FieldErrors {
   quantity?: string | undefined;
@@ -53,19 +47,12 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   const packGroupId = useId();
   const quantityId = useId();
   const quantityErrorId = useId();
-  const monthId = useId();
-  const yearId = useId();
-  const expiryGroupId = useId();
-  const expiryErrorId = useId();
 
   // A single pack is chosen for the user.
   const selected: RegistryVariantPackage | null =
     packages.find((pack) => pack.packageId === chosenId) ?? (packages.length === 1 ? packages[0] : null);
   const showHolder = new Set(packages.map((pack) => pack.productId)).size > 1;
   const { unit, max } = selected ? packQuantity(selected.units) : { unit: null, max: null };
-
-  const thisYear = new Date().getFullYear();
-  const years = Array.from({ length: YEARS_BACK + YEARS_AHEAD + 1 }, (_, index) => thisYear - YEARS_BACK + index);
 
   function validate(): { quantity: number | null; expiry: AddKitItemRequest["expiry"] } | null {
     const errors: FieldErrors = {};
@@ -79,10 +66,11 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
     }
 
     let parsedExpiry: AddKitItemRequest["expiry"] = null;
-    if (month !== "" && year !== "") {
-      parsedExpiry = { month: Number(month), year: Number(year) };
-    } else if (month !== "" || year !== "") {
-      errors.expiry = "Wybierz miesiąc i rok albo zostaw oba pola puste";
+    const expiryResult = parseExpiryInput(month, year);
+    if ("error" in expiryResult) {
+      errors.expiry = expiryResult.error;
+    } else {
+      parsedExpiry = expiryResult.value;
     }
 
     setFieldErrors(errors);
@@ -240,60 +228,20 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
             {fieldErrors.quantity && <InlineError id={quantityErrorId}>{fieldErrors.quantity}</InlineError>}
           </div>
 
-          <div role="group" aria-labelledby={expiryGroupId} className="min-w-0">
-            <p id={expiryGroupId} className={FIELD_LABEL_CLASS}>
-              Ważny do (opcjonalnie)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="min-w-0">
-                <Label htmlFor={monthId} className="sr-only">
-                  Miesiąc
-                </Label>
-                <select
-                  id={monthId}
-                  value={month}
-                  onChange={(event) => {
-                    setMonth(event.target.value);
-                    setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
-                  }}
-                  aria-invalid={fieldErrors.expiry ? true : undefined}
-                  aria-describedby={fieldErrors.expiry ? expiryErrorId : undefined}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Miesiąc</option>
-                  {MONTHS.map((value) => (
-                    <option key={value} value={value}>
-                      {String(value).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="min-w-0">
-                <Label htmlFor={yearId} className="sr-only">
-                  Rok
-                </Label>
-                <select
-                  id={yearId}
-                  value={year}
-                  onChange={(event) => {
-                    setYear(event.target.value);
-                    setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
-                  }}
-                  aria-invalid={fieldErrors.expiry ? true : undefined}
-                  aria-describedby={fieldErrors.expiry ? expiryErrorId : undefined}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Rok</option>
-                  {years.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {fieldErrors.expiry && <InlineError id={expiryErrorId}>{fieldErrors.expiry}</InlineError>}
-          </div>
+          <ExpirySelect
+            label="Ważny do (opcjonalnie)"
+            month={month}
+            year={year}
+            onMonthChange={(value) => {
+              setMonth(value);
+              setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
+            }}
+            onYearChange={(value) => {
+              setYear(value);
+              setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
+            }}
+            error={fieldErrors.expiry}
+          />
         </>
       )}
 

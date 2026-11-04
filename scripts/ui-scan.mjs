@@ -26,6 +26,7 @@ const GUARDED = [
   "src/components/kit/KitItemDetails.tsx",
   "src/components/kit/KitList.tsx",
   "src/components/kit/kit-fields.tsx",
+  "src/components/kit/KitItemEdit.tsx",
   "src/components/registry/MedicineCheckResult.tsx",
   "src/pages/apteczka/import.astro",
   "src/components/kit/KitImport.tsx",

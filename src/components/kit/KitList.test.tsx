@@ -10,6 +10,7 @@ const EMPTY = "Apteczka jest pusta";
 const EXPIRED = "przeterminowany";
 const SAVE = "Zapisz";
 const DELETE = "Usuń";
+const EDIT = "Edytuj";
 const CANCEL = "Anuluj";
 const EMPTY_PACK = "Opakowanie puste";
 const CONFIRM_TITLE = "Usunąć z apteczki?";
@@ -261,6 +262,84 @@ describe("KitList", () => {
       fireEvent.click(screen.getByRole("button", { name: SAVE }));
 
       expect(await screen.findByText(EMPTY_PACK)).toBeTruthy();
+    });
+  });
+
+  describe("edit", () => {
+    function editButton(name: string) {
+      return within(row(name)).getByRole("button", { name: EDIT });
+    }
+
+    /** Answers the pack request of `item` with its own pack and one of 60. */
+    function stubPacks(item: KitItem, respond: (request: KitItemRequest) => Promise<Response>) {
+      const own = {
+        packageId: item.packageId,
+        productId: item.productId,
+        gtin: null,
+        availabilityCategory: null,
+        units: item.units,
+        holder: null,
+      };
+      const bigger = {
+        ...own,
+        packageId: item.packageId + 500,
+        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+      };
+      return stubRoutedFetch(registrySearchList, { [item.productId]: [own, bigger] }, { kitItem: respond });
+    }
+
+    it("„Edytuj” opens the panel in the row (aria-expanded), with the only quantity field, and „Anuluj” closes it", async () => {
+      const item = kitItem();
+      const routed = stubPacks(item, () => Promise.reject(new Error("no request expected")));
+      render(<KitList items={[item, kitItem()]} today="2026-11-04" />);
+
+      expect(editButton("Lek 1").getAttribute("aria-expanded")).toBe("false");
+      fireEvent.click(editButton("Lek 1"));
+
+      expect(editButton("Lek 1").getAttribute("aria-expanded")).toBe("true");
+      const panel = within(row("Lek 1")).getByRole("form", { name: "Edycja: Lek 1" });
+      expect(await within(panel).findByRole("radio", { name: "30 tabletki" })).toBeTruthy();
+      expect(within(row("Lek 1")).queryByLabelText("Ilość: Lek 1")).toBeNull();
+      expect(within(row("Lek 1")).getByText("Ilość: 10 z 30 tabletki")).toBeTruthy();
+      // The other row keeps its own field.
+      expect(quantityField("Lek 2")).toBeTruthy();
+
+      fireEvent.click(within(panel).getByRole("button", { name: CANCEL }));
+
+      expect(screen.queryByRole("form")).toBeNull();
+      expect(editButton("Lek 1").getAttribute("aria-expanded")).toBe("false");
+      expect(document.activeElement).toBe(editButton("Lek 1"));
+      expect(quantityField("Lek 1").value).toBe("10");
+      expect(routed.kitItemRequests()).toEqual([]);
+    });
+
+    it("a saved edit replaces the row and closes the panel", async () => {
+      const item = kitItem();
+      const stored: KitItem = {
+        ...item,
+        packageId: item.packageId + 500,
+        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+        quantity: 45,
+      };
+      const routed = stubPacks(item, () => reply({ item: stored }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.click(editButton("Lek 1"));
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabletki" }));
+      fireEvent.change(within(panel).getByLabelText("Ilość w opakowaniu (opcjonalnie)"), { target: { value: "45" } });
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("form")).toBeNull();
+      });
+      expect(routed.kitItemRequests()).toEqual([
+        { method: "PATCH", id: item.id, body: { packageId: stored.packageId, quantity: 45 } },
+      ]);
+      expect(within(row("Lek 1")).getByText("60 tabletki")).toBeTruthy();
+      expect(quantityField("Lek 1").value).toBe("45");
+      expect(within(row("Lek 1")).getByText("z 60 tabletki")).toBeTruthy();
+      expect(document.activeElement).toBe(editButton("Lek 1"));
     });
   });
 

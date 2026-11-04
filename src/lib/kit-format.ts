@@ -90,6 +90,32 @@ export function parseQuantityInput(text: string, max: number | null): { value: n
   return { value };
 }
 
+/**
+ * Expiry picked in the month and year selects (values as text, "" = not picked): both empty is an unknown date
+ * (`null`), only one of them is an error.
+ */
+export function parseExpiryInput(
+  month: string,
+  year: string,
+): { value: { month: number; year: number } | null } | { error: string } {
+  if (month === "" && year === "") {
+    return { value: null };
+  }
+  if (month === "" || year === "") {
+    return { error: "Wybierz miesiąc i rok albo zostaw oba pola puste" };
+  }
+  return { value: { month: Number(month), year: Number(year) } };
+}
+
+/** Month and year of a stored expiry date as select values ("3", "2027"); both "" for an unknown date. */
+export function expiryInput(expiresOn: string | null): { month: string; year: string } {
+  if (expiresOn === null) {
+    return { month: "", year: "" };
+  }
+  const [year, month] = expiresOn.split("-");
+  return { month: String(Number(month)), year: String(Number(year)) };
+}
+
 /** ISO date (YYYY-MM-DD) of the last day of the given month. `month` is 1-12. */
 export function expiryToDate(month: number, year: number): string {
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();

@@ -3,6 +3,7 @@ import { LoaderCircle } from "lucide-react";
 import { useKitItemActions } from "@/components/hooks/useKitItemActions";
 import { InlineError, QuantityInput } from "@/components/kit/kit-fields";
 import { KitItemDetails } from "@/components/kit/KitItemDetails";
+import { KitItemEdit } from "@/components/kit/KitItemEdit";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,9 +138,12 @@ interface KitRowProps {
   onRemoved: (id: number) => void;
 }
 
-/** One pack of the kit: its details, the quantity field and the delete action with its confirmation. */
+/** One pack of the kit: its details, the quantity field, the edit panel and the delete action with its confirmation. */
 function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
   const { remove } = useKitItemActions();
+  const [editing, setEditing] = useState(false);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
+  const editPanelId = useId();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
@@ -172,9 +176,20 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
     onRemoved(item.id);
   }
 
+  function closeEdit() {
+    setEditing(false);
+    // The panel (and whatever had the focus in it) is gone; the button that opened it takes the focus back.
+    editButtonRef.current?.focus();
+  }
+
   return (
     <li ref={rowRef} tabIndex={-1} className={cn("min-w-0 px-3 py-3", FOCUS_TARGET_CLASS)}>
-      <KitItemDetails item={item} today={today} quantitySlot={<QuantityField item={item} onSaved={onSaved} />} />
+      {/* While the panel is open it holds the only quantity field; the row shows the stored quantity as text. */}
+      <KitItemDetails
+        item={item}
+        today={today}
+        quantitySlot={editing ? undefined : <QuantityField item={item} onSaved={onSaved} />}
+      />
 
       {item.quantity === 0 && (
         <div className="bg-muted mt-2 flex min-w-0 flex-wrap items-center gap-2 rounded-md px-3 py-2">
@@ -186,11 +201,38 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
       )}
 
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
+        <Button
+          ref={editButtonRef}
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          aria-expanded={editing}
+          aria-controls={editing ? editPanelId : undefined}
+          onClick={() => {
+            setEditing((open) => !open);
+          }}
+        >
+          Edytuj
+        </Button>
         <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={openConfirm}>
           Usuń
         </Button>
       </div>
       {removeError && <InlineError alert>{removeError}</InlineError>}
+
+      {editing && (
+        <div id={editPanelId} className="min-w-0">
+          <KitItemEdit
+            item={item}
+            onSaved={(saved) => {
+              onSaved(saved);
+              closeEdit();
+            }}
+            onCancel={closeEdit}
+          />
+        </div>
+      )}
 
       <AlertDialog
         open={confirmOpen}

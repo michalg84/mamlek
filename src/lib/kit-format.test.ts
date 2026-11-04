@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MAX_QUANTITY, parseQuantityInput, todayIso, uniquePacks } from "@/lib/kit-format";
+import {
+  MAX_QUANTITY,
+  expiryInput,
+  parseExpiryInput,
+  parseQuantityInput,
+  todayIso,
+  uniquePacks,
+} from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 
 function tablets(capacity: string): RegistryPackageUnit[] {
@@ -96,5 +103,26 @@ describe("parseQuantityInput", () => {
     expect(parseQuantityInput("-1", 30)).toEqual(error);
     expect(parseQuantityInput("1.5", 30)).toEqual(error);
     expect(parseQuantityInput("abc", 30)).toEqual(error);
+  });
+});
+
+describe("parseExpiryInput", () => {
+  it("reads both selects empty as an unknown date and both picked as month and year", () => {
+    expect(parseExpiryInput("", "")).toEqual({ value: null });
+    expect(parseExpiryInput("3", "2027")).toEqual({ value: { month: 3, year: 2027 } });
+  });
+
+  it("refuses only one of the two picked", () => {
+    const error = { error: "Wybierz miesiąc i rok albo zostaw oba pola puste" };
+    expect(parseExpiryInput("3", "")).toEqual(error);
+    expect(parseExpiryInput("", "2027")).toEqual(error);
+  });
+});
+
+describe("expiryInput", () => {
+  it("gives the select values of a stored date, without leading zeros, and empty ones for an unknown date", () => {
+    expect(expiryInput("2027-03-31")).toEqual({ month: "3", year: "2027" });
+    expect(expiryInput("2027-12-15")).toEqual({ month: "12", year: "2027" });
+    expect(expiryInput(null)).toEqual({ month: "", year: "" });
   });
 });
