@@ -72,10 +72,19 @@ export function packQuantity(units: RegistryPackageUnit[]): { unit: string | nul
 
 /**
  * Quantity typed by the user, checked like the API does: empty text is an unknown quantity (`null`), anything else
- * must be an integer from 0 up to `max` (the pack size) or, for a pack without one, `MAX_QUANTITY`.
+ * must be an integer from 0 up to `max` (the pack size) or, for a pack without one, `MAX_QUANTITY`. `badInput` is the
+ * `validity.badInput` of the number field the text came from.
  */
-export function parseQuantityInput(text: string, max: number | null): { value: number | null } | { error: string } {
+export function parseQuantityInput(
+  text: string,
+  max: number | null,
+  badInput = false,
+): { value: number | null } | { error: string } {
   const trimmed = text.trim();
+  // A number field answers "" for something it cannot read ("-", "1e"): that is a mistake, not an unknown quantity.
+  if (badInput) {
+    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+  }
   if (trimmed === "") {
     return { value: null };
   }

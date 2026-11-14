@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type MouseEvent } from "react";
 import { LoaderCircle } from "lucide-react";
 import { useKitItemActions } from "@/components/hooks/useKitItemActions";
-import { InlineError, QuantityInput } from "@/components/kit/kit-fields";
+import { ActionError, InlineError, QuantityInput } from "@/components/kit/kit-fields";
 import { KitItemDetails } from "@/components/kit/KitItemDetails";
 import { KitItemEdit } from "@/components/kit/KitItemEdit";
 import {
@@ -37,17 +37,29 @@ function quantityText(quantity: number | null): string {
   return quantity === null ? "" : String(quantity);
 }
 
+/** A message under a field or a row; `signIn` adds the link to sign in again. */
+interface FieldMessage {
+  text: string;
+  signIn: boolean;
+  /** An answer of the server (announced as an alert) rather than a hint about the typed value. */
+  fromServer: boolean;
+}
+
 interface QuantityFieldProps {
   item: KitItem;
+  /** True while the request runs; owned by the row, which blocks its other buttons meanwhile. */
+  saving: boolean;
+  onSavingChange: (saving: boolean) => void;
   onSaved: (item: KitItem) => void;
 }
 
 /** The editable quantity of a row: "Zapisz" (or Enter) stores a changed value, the error stays under the field. */
-function QuantityField({ item, onSaved }: QuantityFieldProps) {
+function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldProps) {
   const { save } = useKitItemActions();
   const [draft, setDraft] = useState(() => quantityText(item.quantity));
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `badInput` set.
+  const [badInput, setBadInput] = useState(false);
+  const [error, setError] = useState<FieldMessage | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const errorId = useId();
   const { unit, max } = packQuantity(item.units);
@@ -57,21 +69,22 @@ function QuantityField({ item, onSaved }: QuantityFieldProps) {
     if (!changed || saving) {
       return;
     }
-    const parsed = parseQuantityInput(draft, max);
+    const parsed = parseQuantityInput(draft, max, badInput);
     if ("error" in parsed) {
-      setError(parsed.error);
+      setError({ text: parsed.error, signIn: false, fromServer: false });
       return;
     }
-    setSaving(true);
+    onSavingChange(true);
     setError(null);
     const result = await save(item.id, { quantity: parsed.value });
-    setSaving(false);
+    onSavingChange(false);
     if ("error" in result) {
       // The typed value stays, so the user can try again.
-      setError(result.error);
+      setError({ text: result.error, signIn: result.kind === "session", fromServer: true });
       return;
     }
     setDraft(quantityText(result.item.quantity));
+    setBadInput(false);
     onSaved(result.item);
     // "Zapisz" disappears with the change, so the field takes the focus back.
     inputRef.current?.focus();
@@ -96,6 +109,7 @@ function QuantityField({ item, onSaved }: QuantityFieldProps) {
           readOnly={saving}
           onChange={(event) => {
             setDraft(event.target.value);
+            setBadInput(event.target.validity.badInput);
             setError(null);
           }}
           onKeyDown={(event) => {
@@ -120,11 +134,12 @@ function QuantityField({ item, onSaved }: QuantityFieldProps) {
           </Button>
         )}
       </div>
-      {error && (
-        <InlineError id={errorId} alert>
-          {error}
-        </InlineError>
-      )}
+      {error &&
+        (error.fromServer ? (
+          <ActionError id={errorId} message={error.text} signIn={error.signIn} />
+        ) : (
+          <InlineError id={errorId}>{error.text}</InlineError>
+        ))}
     </div>
   );
 }
@@ -146,7 +161,9 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
   const editPanelId = useId();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<{ text: string; signIn: boolean } | null>(null);
+  // The quantity request is in flight: "Edytuj" would open a panel on the old quantity and "Usuń" would race the save.
+  const [savingQuantity, setSavingQuantity] = useState(false);
   // Set once the delete succeeded: the dialog must not hand the focus back to a button that is gone (the list has
   // already moved it to a neighbour).
   const removedRef = useRef(false);
@@ -166,9 +183,10 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
     }
     setRemoving(true);
     const result = await remove(item.id);
-    if ("error" in result) {
+    // An item that is already gone (deleted in another tab) is what the user asked for: the row goes either way.
+    if ("error" in result && result.kind !== "gone") {
       setRemoving(false);
-      setRemoveError(result.error);
+      setRemoveError({ text: result.error, signIn: result.kind === "session" });
       setConfirmOpen(false);
       return;
     }
@@ -188,13 +206,24 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
       <KitItemDetails
         item={item}
         today={today}
-        quantitySlot={editing ? undefined : <QuantityField item={item} onSaved={onSaved} />}
+        quantitySlot={
+          editing ? undefined : (
+            <QuantityField item={item} saving={savingQuantity} onSavingChange={setSavingQuantity} onSaved={onSaved} />
+          )
+        }
       />
 
       {item.quantity === 0 && (
         <div className="bg-muted mt-2 flex min-w-0 flex-wrap items-center gap-2 rounded-md px-3 py-2">
           <p className="text-foreground min-w-0 flex-1 text-sm font-medium break-words">Opakowanie puste</p>
-          <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={openConfirm}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            disabled={savingQuantity}
+            onClick={openConfirm}
+          >
             Usuń
           </Button>
         </div>
@@ -209,17 +238,25 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
           className="min-h-11"
           aria-expanded={editing}
           aria-controls={editing ? editPanelId : undefined}
+          disabled={savingQuantity}
           onClick={() => {
             setEditing((open) => !open);
           }}
         >
           Edytuj
         </Button>
-        <Button type="button" variant="outline" size="sm" className="min-h-11" onClick={openConfirm}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          disabled={savingQuantity}
+          onClick={openConfirm}
+        >
           Usuń
         </Button>
       </div>
-      {removeError && <InlineError alert>{removeError}</InlineError>}
+      {removeError && <ActionError message={removeError.text} signIn={removeError.signIn} />}
 
       {editing && (
         <div id={editPanelId} className="min-w-0">

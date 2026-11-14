@@ -125,6 +125,37 @@ describe("KitItemEdit", () => {
     });
   });
 
+  it("pins a withdrawn pack as „obecne” even when an active pack has the same label", async () => {
+    // 1009 is withdrawn; the active 1001 only looks the same (10 sachets). Picking 1001 must be a real change.
+    const item = kitItem({ packageId: 1009, units: sachets("10"), withdrawn: true });
+    const { routed } = renderEdit(item, [pack(1001, "10"), pack(1002, "30")]);
+
+    const radios = await screen.findAllByRole("radio");
+    expect(radios).toHaveLength(3);
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["true", "false", "false"]);
+    expect(screen.getAllByText("· obecne")).toHaveLength(1);
+
+    fireEvent.click(radios[1]);
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { packageId: 1001 } }]);
+    });
+  });
+
+  it("does not read an unreadable number field as an unknown quantity", async () => {
+    const { routed } = renderEdit(kitItem(), SMECTA_PACKS);
+    await screen.findAllByRole("radio");
+
+    // What the browser reports for "-" or "1e": an empty value with `validity.badInput`.
+    Object.defineProperty(quantityField(), "validity", { value: { badInput: true } });
+    fireEvent.change(quantityField(), { target: { value: "" } });
+    fireEvent.click(saveButton());
+
+    expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+    expect(routed.kitItemRequests()).toEqual([]);
+  });
+
   it("shows a GTIN hidden by uniquePacks as one checked option, and saving it sends no packageId", async () => {
     // 1001 and 1003 are the same product and the same label: uniquePacks keeps 1001 only, the item is on 1003.
     const item = kitItem({ packageId: 1003 });
@@ -248,6 +279,9 @@ describe("KitItemEdit", () => {
     fireEvent.click(saveButton());
 
     expect((await screen.findByRole("alert")).textContent).toBe(message);
+    expect(screen.queryByRole("link", { name: "Zaloguj się" })?.getAttribute("href") ?? null).toBe(
+      message === SESSION_EXPIRED ? "/auth/signin" : null,
+    );
     expect(quantityField().value).toBe("6");
     expect(onSaved).not.toHaveBeenCalled();
   });

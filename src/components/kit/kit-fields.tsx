@@ -1,6 +1,7 @@
 import { useId, type ComponentProps } from "react";
 import { CircleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { MAX_QUANTITY } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,34 @@ export function InlineError({ id, alert = false, children }: InlineErrorProps) {
       <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span className="min-w-0">{children}</span>
     </p>
+  );
+}
+
+interface ActionErrorProps {
+  id?: string;
+  message: string;
+  /** The session expired: the message comes with a link to sign in again. */
+  signIn?: boolean;
+}
+
+/** The answer of the server to a save or a delete, announced as it appears; offers signing in when asked to. */
+export function ActionError({ id, message, signIn = false }: ActionErrorProps) {
+  if (!signIn) {
+    return (
+      <InlineError id={id} alert>
+        {message}
+      </InlineError>
+    );
+  }
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2">
+      <InlineError id={id} alert>
+        {message}
+      </InlineError>
+      <a href="/auth/signin" className={cn(buttonVariants({ variant: "link" }), "mt-1 h-auto p-0")}>
+        Zaloguj się
+      </a>
+    </div>
   );
 }
 

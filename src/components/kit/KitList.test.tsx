@@ -242,6 +242,75 @@ describe("KitList", () => {
       expect(screen.getByRole("button", { name: SAVE })).toBeTruthy();
     });
 
+    it("offers signing in when the session expired", async () => {
+      stubKitItem(() => reply({ error: "Unauthorized" }, 401));
+      render(<KitList items={[kitItem()]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "7" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      await screen.findByRole("alert");
+      expect(within(row("Lek 1")).getByRole("link", { name: "Zaloguj się" }).getAttribute("href")).toBe("/auth/signin");
+    });
+
+    it("logs the cause of a failed save, and the status with the answer of the server", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const cause = new TypeError("Failed to fetch");
+      stubKitItem(() => Promise.reject(cause));
+      render(<KitList items={[kitItem()]} today="2026-11-04" />);
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "7" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+      await screen.findByRole("alert");
+      expect(log).toHaveBeenCalledWith(cause);
+
+      log.mockClear();
+      stubKitItem(() => reply({ error: "boom" }, 500));
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+      await waitFor(() => {
+        expect(log).toHaveBeenCalledWith("Saving a kit item failed", 500, { error: "boom" });
+      });
+    });
+
+    it("does not read an unreadable number field as an unknown quantity", () => {
+      const routed = stubKitItem(() => reply({ item: kitItem() }));
+      render(<KitList items={[kitItem()]} today="2026-11-04" />);
+
+      // What the browser reports for "-" or "1e": an empty value with `validity.badInput`.
+      const field = quantityField("Lek 1");
+      Object.defineProperty(field, "validity", { value: { badInput: true } });
+      fireEvent.change(field, { target: { value: "" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+      expect(routed.kitItemRequests()).toEqual([]);
+    });
+
+    it("blocks „Edytuj” and „Usuń” of the row while its quantity is being saved", async () => {
+      let answer: (response: Response) => void = () => undefined;
+      stubKitItem(
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = resolve;
+          }),
+      );
+      const item = kitItem();
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "7" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      const buttons = () =>
+        [EDIT, DELETE].map((name) => within(row("Lek 1")).getByRole<HTMLButtonElement>("button", { name }));
+      await waitFor(() => {
+        expect(buttons().map((button) => button.disabled)).toEqual([true, true]);
+      });
+
+      answer(new Response(JSON.stringify({ item: { ...item, quantity: 7 } }), { status: 200 }));
+      await waitFor(() => {
+        expect(buttons().map((button) => button.disabled)).toEqual([false, false]);
+      });
+    });
+
     it("never shows the server's own error text", async () => {
       stubKitItem(() => reply({ error: "Quantity exceeds the pack size (30)" }, 400));
       render(<KitList items={[kitItem()]} today="2026-11-04" />);
@@ -436,9 +505,9 @@ describe("KitList", () => {
     });
 
     it.each([
-      ["404", () => reply({ error: "Not found" }, 404), GONE],
-      ["a network error", () => Promise.reject(new TypeError("Failed to fetch")), NETWORK],
-    ])("on %s keeps the row with the message in Polish", async (_case, respond, message) => {
+      ["a network error", () => Promise.reject(new TypeError("Failed to fetch")), NETWORK, false],
+      ["401", () => reply({ error: "Unauthorized" }, 401), SESSION_EXPIRED, true],
+    ])("on %s keeps the row with the message in Polish", async (_case, respond, message, signIn) => {
       stubKitItem(respond);
       render(<KitList items={[kitItem()]} today="2026-11-04" />);
 
@@ -449,6 +518,23 @@ describe("KitList", () => {
         expect(screen.queryByRole("alertdialog")).toBeNull();
       });
       expect(within(row("Lek 1")).getByRole("alert").textContent).toBe(message);
+      const link = within(row("Lek 1")).queryByRole("link", { name: "Zaloguj się" });
+      expect(link?.getAttribute("href") ?? null).toBe(signIn ? "/auth/signin" : null);
+    });
+
+    it("on 404 drops the row, since the item is already gone, and moves the focus to the next row", async () => {
+      stubKitItem(() => reply({ error: "Not found" }, 404));
+      render(<KitList items={[kitItem(), kitItem()]} today="2026-11-04" />);
+
+      fireEvent.click(rowDeleteButton("Lek 1"));
+      fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: DELETE }));
+
+      await waitFor(() => {
+        expect(screen.queryByText("Lek 1")).toBeNull();
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      expect(document.activeElement).toBe(row("Lek 2"));
+      expect(screen.queryByText(GONE)).toBeNull();
     });
   });
 });

@@ -104,6 +104,11 @@ describe("parseQuantityInput", () => {
     expect(parseQuantityInput("1.5", 30)).toEqual(error);
     expect(parseQuantityInput("abc", 30)).toEqual(error);
   });
+
+  it("refuses an empty value the number field reported as unreadable, instead of reading it as unknown", () => {
+    expect(parseQuantityInput("", 30, true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
+    expect(parseQuantityInput("", 30, false)).toEqual({ value: null });
+  });
 });
 
 describe("parseExpiryInput", () => {

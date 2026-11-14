@@ -2,7 +2,7 @@ import { useId, useState, type ReactNode, type SubmitEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useKitItemActions } from "@/components/hooks/useKitItemActions";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
-import { ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
+import { ActionError, ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -39,8 +39,9 @@ function quantityText(quantity: number | null): string {
 /**
  * The packs the item can move to, with the item's own pack always among them. `uniquePacks` may have hidden the item's
  * GTIN under an option of the same product with the same label: that option takes over the item's `packageId`, so
- * picking it means "no change" (one label, not two). Only when no such option exists (the pack is withdrawn) the item's
- * pack is pinned first as "obecne".
+ * picking it means "no change" (one label, not two). A withdrawn pack is never merged that way: an active pack that
+ * only looks the same is a real change, so the item's own pack is pinned first as "obecne", as it is when no such
+ * option exists at all.
  */
 function packOptions(item: KitItem, packages: RegistryVariantPackage[]): PackOption[] {
   const options = packages.map((pack) => ({
@@ -54,7 +55,9 @@ function packOptions(item: KitItem, packages: RegistryVariantPackage[]): PackOpt
     return options;
   }
   const label = packLabel(item.units);
-  const twin = options.findIndex((option) => option.productId === item.productId && packLabel(option.units) === label);
+  const twin = item.withdrawn
+    ? -1
+    : options.findIndex((option) => option.productId === item.productId && packLabel(option.units) === label);
   if (twin !== -1) {
     return options.map((option, index) => (index === twin ? { ...option, packageId: item.packageId } : option));
   }
@@ -75,7 +78,9 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
   const [month, setMonth] = useState(stored.month);
   const [year, setYear] = useState(stored.year);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<{ text: string; signIn: boolean } | null>(null);
+  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `badInput` set.
+  const [quantityBadInput, setQuantityBadInput] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const packGroupId = useId();
@@ -103,7 +108,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
       request.packageId = chosenId;
     }
 
-    const quantityResult = parseQuantityInput(quantity, max);
+    const quantityResult = parseQuantityInput(quantity, max, quantityBadInput);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else if (quantityResult.value !== item.quantity) {
@@ -142,7 +147,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
     const result = await save(item.id, request);
     setSaving(false);
     if ("error" in result) {
-      setFormError(result.error);
+      setFormError({ text: result.error, signIn: result.kind === "session" });
       return;
     }
     onSaved(result.item);
@@ -245,6 +250,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
           placeholder="nieznane"
           onChange={(event) => {
             setQuantity(event.target.value);
+            setQuantityBadInput(event.target.validity.badInput);
             setFieldErrors((errors) => ({ ...errors, quantity: undefined }));
           }}
           aria-invalid={fieldErrors.quantity ? true : undefined}
@@ -285,7 +291,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
         </Button>
       </div>
 
-      {formError && <InlineError alert>{formError}</InlineError>}
+      {formError && <ActionError message={formError.text} signIn={formError.signIn} />}
 
       <div className="flex min-w-0 flex-wrap items-center gap-2">
         {/* Not disabled while saving: a disabled button would drop the focus; a second click is ignored instead. */}

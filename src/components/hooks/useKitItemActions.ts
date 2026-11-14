@@ -1,8 +1,17 @@
 import { useCallback } from "react";
 import type { KitItem, UpdateKitItemRequest, UpdateKitItemResponse } from "@/types";
 
-export type SaveKitItemResult = { item: KitItem } | { error: string };
-export type RemoveKitItemResult = { ok: true } | { error: string };
+/**
+ * A failed request: the Polish message to show and what the screen may do about it. `session` offers signing in,
+ * `gone` is an item that no longer exists (a delete treats it as done), `failed` is everything else.
+ */
+export interface KitItemActionFailure {
+  error: string;
+  kind: "session" | "gone" | "failed";
+}
+
+export type SaveKitItemResult = { item: KitItem } | KitItemActionFailure;
+export type RemoveKitItemResult = { ok: true } | KitItemActionFailure;
 
 type Verb = "zapisać" | "usunąć";
 
@@ -10,20 +19,34 @@ type Verb = "zapisać" | "usunąć";
  * Polish message for a failed request, by status only: the server's `error` is English and meant for developers.
  * `null` is a request that never got an answer (network failure).
  */
-function failureMessage(status: number | null, verb: Verb): string {
+function failure(status: number | null, verb: Verb): KitItemActionFailure {
   if (status === null) {
-    return "Nie udało się połączyć z serwerem, spróbuj ponownie";
+    return { error: "Nie udało się połączyć z serwerem, spróbuj ponownie", kind: "failed" };
   }
   if (status === 401) {
-    return "Sesja wygasła — zaloguj się ponownie";
+    return { error: "Sesja wygasła — zaloguj się ponownie", kind: "session" };
   }
   if (status === 404) {
-    return "Tej pozycji nie ma już w apteczce — odśwież stronę";
+    return { error: "Tej pozycji nie ma już w apteczce — odśwież stronę", kind: "gone" };
   }
   if (status === 400) {
-    return `Nie udało się ${verb} tej wartości`;
+    return { error: `Nie udało się ${verb} tej wartości`, kind: "failed" };
   }
-  return `Nie udało się ${verb}, spróbuj później`;
+  return { error: `Nie udało się ${verb}, spróbuj później`, kind: "failed" };
+}
+
+/** The only trace of a failure: the screen shows a generic message, the console keeps the cause or the answer. */
+function logFailure(...details: unknown[]) {
+  // eslint-disable-next-line no-console -- the screen shows a generic Polish message, this is the evidence
+  console.error(...details);
+}
+
+/** The JSON body of an answer, or null (and a logged cause) when it is missing or unreadable. */
+async function readBody(response: Response): Promise<unknown> {
+  return response.json().catch((cause: unknown) => {
+    logFailure(cause);
+    return null;
+  });
 }
 
 /** Changes and deletes one kit item (`PATCH` / `DELETE /api/kit/[id]`), answering with the message to show. */
@@ -36,18 +59,21 @@ export function useKitItemActions() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(changes),
       });
-    } catch {
+    } catch (cause) {
       // The request never got an answer (offline, server unreachable): the message says so.
-      return { error: failureMessage(null, "zapisać") };
+      logFailure(cause);
+      return failure(null, "zapisać");
     }
     if (!response.ok) {
-      return { error: failureMessage(response.status, "zapisać") };
+      logFailure("Saving a kit item failed", response.status, await readBody(response));
+      return failure(response.status, "zapisać");
     }
     // Without the stored item the list cannot show what was saved, so it is not reported as a success; a 2xx status
     // falls through to the generic message.
-    const body = (await response.json().catch(() => null)) as UpdateKitItemResponse | null;
+    const body = (await readBody(response)) as UpdateKitItemResponse | null;
     if (!body?.item) {
-      return { error: failureMessage(response.status, "zapisać") };
+      logFailure("Saving a kit item got an answer without the item", response.status, body);
+      return failure(response.status, "zapisać");
     }
     return { item: body.item };
   }, []);
@@ -56,12 +82,14 @@ export function useKitItemActions() {
     let response: Response;
     try {
       response = await fetch(`/api/kit/${id}`, { method: "DELETE" });
-    } catch {
+    } catch (cause) {
       // See `save`.
-      return { error: failureMessage(null, "usunąć") };
+      logFailure(cause);
+      return failure(null, "usunąć");
     }
     if (!response.ok) {
-      return { error: failureMessage(response.status, "usunąć") };
+      logFailure("Deleting a kit item failed", response.status, await readBody(response));
+      return failure(response.status, "usunąć");
     }
     return { ok: true };
   }, []);
