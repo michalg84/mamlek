@@ -593,7 +593,7 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 #### Manual
 
 - [x] 2.5 `http://localhost:4321/apteczka` pokazuje pozycje jak przed zmianą, a przeterminowana ma „przeterminowany”
-- [ ] 2.6 `ui:shots` stanów `check-*` na `/szukaj` (`BASE_URL=http://localhost:4321 npm run ui:shots -- --label kit-browse-edit-p2`) wygląda tak samo jak `.ui-shots/kit-browse-edit-before/`
+- [x] 2.6 `ui:shots` stanów `check-*` na `/szukaj` (`BASE_URL=http://localhost:4321 npm run ui:shots -- --label kit-browse-edit-p2`) wygląda tak samo jak `.ui-shots/kit-browse-edit-before/`
 
 ### Phase 3: Ilość na liście i usuwanie
 
