@@ -569,17 +569,17 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 #### Automated
 
-- [ ] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
-- [ ] 1.2 Fixture'y rejestru zaimportowane po resecie (v1, v1, v2) i `node scripts/registry-import-check.mjs` przechodzi
+- [x] 1.1 Migracja wchodzi na czystą bazę: `npx supabase db reset`
+- [x] 1.2 Fixture'y rejestru zaimportowane po resecie (v1, v1, v2) i `node scripts/registry-import-check.mjs` przechodzi
 - [x] 1.3 Testy bazy przechodzą, w tym trigger i strażnik `security definer`: `npm run test:db` — 14c3cc4
 - [x] 1.4 Testy jednostkowe schematu przechodzą: `npx vitest run --project unit` — 14c3cc4
-- [ ] 1.5 Testy HTTP przechodzą na lokalnym serwerze: `npm run test:api`
+- [x] 1.5 Testy HTTP przechodzą na lokalnym serwerze: `npm run test:api`
 - [x] 1.6 Smoke przechodzi z nowymi krokami: `npm run smoke` — 14c3cc4
 - [x] 1.7 Lint i typy: `npm run lint` i `npx astro check` — 14c3cc4
 
 #### Manual
 
-- [ ] 1.8 Przed merge: migracja wypchnięta na produkcję (`npx supabase db push`), bo deploy jej nie stosuje
+- [x] 1.8 Przed merge: migracja wypchnięta na produkcję (`npx supabase db push`), bo deploy jej nie stosuje
 
 ### Phase 2: Wspólny wiersz i lista jako wyspa
 
@@ -592,7 +592,7 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 #### Manual
 
-- [ ] 2.5 `http://localhost:4321/apteczka` pokazuje pozycje jak przed zmianą, a przeterminowana ma „przeterminowany”
+- [x] 2.5 `http://localhost:4321/apteczka` pokazuje pozycje jak przed zmianą, a przeterminowana ma „przeterminowany”
 - [ ] 2.6 `ui:shots` stanów `check-*` na `/szukaj` (`BASE_URL=http://localhost:4321 npm run ui:shots -- --label kit-browse-edit-p2`) wygląda tak samo jak `.ui-shots/kit-browse-edit-before/`
 
 ### Phase 3: Ilość na liście i usuwanie
@@ -605,10 +605,10 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 
 #### Manual
 
-- [ ] 3.4 Na `http://localhost:4321/apteczka` zmiana ilości i „Zapisz” (oraz Enter) zapisuje się i zostaje po odświeżeniu
-- [ ] 3.5 Ilość 0 pokazuje „Opakowanie puste”, a „Usuń” z okna usuwa pozycję
-- [ ] 3.6 Klawiatura: Tab dochodzi do pola, „Zapisz”, „Usuń”; okno łapie fokus, Esc zamyka; po usunięciu fokus nie ginie
-- [ ] 3.7 Telefon (390 px): wiersz z polem i przyciskami mieści się bez poziomego przewijania
+- [x] 3.4 Na `http://localhost:4321/apteczka` zmiana ilości i „Zapisz” (oraz Enter) zapisuje się i zostaje po odświeżeniu
+- [x] 3.5 Ilość 0 pokazuje „Opakowanie puste”, a „Usuń” z okna usuwa pozycję
+- [x] 3.6 Klawiatura: Tab dochodzi do pola, „Zapisz”, „Usuń”; okno łapie fokus, Esc zamyka; po usunięciu fokus nie ginie — fokus wraca na „Usuń” po Esc i „Anuluj” (9ef0611)
+- [x] 3.7 Telefon (390 px): wiersz z polem i przyciskami mieści się bez poziomego przewijania
 
 ### Phase 4: Panel „Edytuj”
 
@@ -617,11 +617,11 @@ Lista jest wyspą `client:load`, więc dochodzi hydratacja całej listy. Przy ap
 - [x] 4.1 Testy jednostkowe i komponentów przechodzą, w tym niezmieniony `KitAddForm.test.tsx`: `npx vitest run --project unit --project component` — e737b07
 - [x] 4.2 `npm run ui:scan` bez trafień — e737b07
 - [x] 4.3 Lint, typy i build: `npm run lint`, `npx astro check`, `npm run build` — e737b07
-- [ ] 4.4 Pełny zestaw serwerowy jeszcze raz na końcu: `npm run test:db`, `npm run test:api`, `npm run smoke`
+- [x] 4.4 Pełny zestaw serwerowy jeszcze raz na końcu: `npm run test:db`, `npm run test:api`, `npm run smoke`
 
 #### Manual
 
-- [ ] 4.5 Na `http://localhost:4321/apteczka` „Edytuj” → zmiana opakowania (np. Smecta 10 → 30 sasz.) zapisuje się, a limit ilości idzie za opakowaniem
-- [ ] 4.6 Wyczyszczenie daty daje „Ważny do: nieznane” po zapisie i odświeżeniu
-- [ ] 4.7 Pozycja wycofana z rejestru pokazuje obecne opakowanie jako „obecne” i da się zmienić jej ilość
-- [ ] 4.8 Telefon (390 px): panel edycji czytelny i bez poziomego przewijania
+- [x] 4.5 Na `http://localhost:4321/apteczka` „Edytuj” → zmiana opakowania (np. Smecta 10 → 30 sasz.) zapisuje się, a limit ilości idzie za opakowaniem
+- [x] 4.6 Wyczyszczenie daty daje „Ważny do: nieznane” po zapisie i odświeżeniu
+- [x] 4.7 Pozycja wycofana z rejestru pokazuje obecne opakowanie jako „obecne” i da się zmienić jej ilość
+- [x] 4.8 Telefon (390 px): panel edycji czytelny i bez poziomego przewijania
