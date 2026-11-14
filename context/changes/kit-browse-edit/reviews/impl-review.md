@@ -42,7 +42,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - `parseQuantityInput("")` zwraca `{ value: null }`, więc „Zapisz” albo Enter wysyła `PATCH { quantity: null }` i kasuje zapisaną ilość bez ostrzeżenia. Panel „Edytuj” robi to samo.
   - Testy jednostkowe sprawdzają tylko czystą funkcję, nie zachowanie pola w przeglądarce.
 - **Fix**: przy `validity.badInput` pokazać „Podaj liczbę całkowitą, 0 lub większą” zamiast traktować pole jako puste, w obu miejscach. Dodać test komponentu z `badInput`.
-- **Decision**: PENDING
+- **Decision**: FIXED — badInput zgłaszany jako błąd w polu listy i w panelu, testy komponentów i jednostkowy
 
 ### F2 — „Edytuj” w trakcie zapisu ilości może cofnąć świeży zapis
 
@@ -64,7 +64,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - Tradeoff: kasuje to, co użytkownik zdążył wpisać w panelu.
   - Confidence: MED — zachowanie poprawne, ale zaskakujące dla użytkownika.
   - Blind spot: fokus po ponownym montażu.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix A) — stan zapisu ilości w `KitRow`, „Edytuj” i „Usuń” zablokowane na czas PATCH, test
 
 ### F3 — `useKitItemActions` nie loguje przyczyn błędów
 
@@ -77,7 +77,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - To narusza twardą regułę z CLAUDE.md: „Never hide the evidence”.
   - Wzorzec skopiowano ze starszego `KitAddForm.tsx`. Najnowszy sąsiad, `KitImport.tsx:89-91,332-349`, loguje `console.error(cause)` oraz status i payload.
 - **Fix**: przejąć wzorzec `KitImport` we wszystkich czterech miejscach.
-- **Decision**: PENDING
+- **Decision**: FIXED — `console.error` z przyczyną i statusem we wszystkich ścieżkach błędu hooka, test
 
 ### F4 — Pozycja wycofana może nie dostać opcji „obecne”
 
@@ -90,7 +90,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - Kod stosuje ją też dla pozycji `withdrawn`. Gdy produkt ma aktywne opakowanie o tej samej etykiecie, „obecne” się nie pokazuje, a wybór tej opcji niczego nie wysyła. Pozycja po cichu zostaje na wycofanym GTIN.
   - Fixture'y CI tego przypadku nie mają, więc nie wyłapie tego ani test, ani kontrola 4.7.
 - **Fix**: przy `item.withdrawn` zawsze przypinać „obecne” i stosować regułę bliźniaka tylko dla aktywnych pozycji. Dodać test z wycofanym opakowaniem i aktywnym bliźniakiem.
-- **Decision**: PENDING
+- **Decision**: FIXED — pozycja wycofana zawsze dostaje „obecne”, reguła bliźniaka tylko dla aktywnych, test
 
 ### F5 — Pakiet zbiorczy `radix-ui` obok `@radix-ui/react-*`
 
@@ -103,7 +103,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - Pozostałe komponenty `ui/` importują z pojedynczych `@radix-ui/react-*`.
   - Duplikatów dziś nie ma, ale przy przyszłych aktualizacjach mogą się rozjechać wersje.
 - **Fix**: zależność `@radix-ui/react-alert-dialog` zamiast `radix-ui` i import `* as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"`.
-- **Decision**: PENDING
+- **Decision**: FIXED — `@radix-ui/react-alert-dialog` zamiast `radix-ui`
 
 ### F6 — 404 przy usuwaniu zostawia wiersz na liście
 
@@ -113,7 +113,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
 - **Location**: src/components/kit/KitList.tsx:~168-174
 - **Detail**: pozycja usunięta w innej karcie zostaje na liście z komunikatem „odśwież stronę”, choć już wiadomo, że jej nie ma.
 - **Fix**: po 404 z DELETE usunąć wiersz przez `onRemoved(item.id)`, z tym samym przeniesieniem fokusu.
-- **Decision**: PENDING
+- **Decision**: FIXED — 404 przy DELETE usuwa wiersz i przenosi fokus, test
 
 ### F7 — „Sesja wygasła” przy zapisie bez linku do logowania
 
@@ -123,7 +123,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
 - **Location**: src/components/hooks/useKitItemActions.ts:17-19
 - **Detail**: 401 przy wczytywaniu opakowań w panelu pokazuje link „Zaloguj się” (`KitItemEdit.tsx:166`, jak `KitAddForm`). 401 przy zapisie lub usuwaniu pokazuje tylko sam tekst.
 - **Fix**: zwracać `kind: "session"` (jak `KitImport`) i pokazywać link do `/auth/signin`.
-- **Decision**: PENDING
+- **Decision**: FIXED — `kind: "session"` w wynikach hooka i link „Zaloguj się” przy zapisie i usuwaniu, testy
 
 ### F8 — Luki w pokryciu testami i dokumentacji
 
@@ -136,7 +136,7 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
   - `siblings` w testach API to opakowania jednego produktu, więc przeniesienie na import równoległy nie jest pokryte. Zawężenie jest opisane w test-plan.md.
   - AGENTS.md nie wymienia nowych przypadków PATCH i DELETE w `kit-access.test.ts` (404 dla cudzego wiersza, 403 dla obcego `Origin`).
 - **Fix**: dopisać do AGENTS.md jedno zdanie o PATCH i DELETE. Hydratację zostawić kontroli ręcznej 2.5 albo dodać test z `hydrateRoot`.
-- **Decision**: PENDING
+- **Decision**: PARTIAL — zdanie o PATCH i DELETE w AGENTS.md; hydratacja `today` zostaje kontroli ręcznej 2.5
 
 ### F9 — Limit ilości sprawdzany przed zapisem, bez blokady
 
@@ -146,4 +146,4 @@ Bramki uruchomione przy przeglądzie (HEAD `e0b0f3c`):
 - **Location**: src/pages/api/kit/[id].ts:53,92
 - **Detail**: dwa równoległe PATCH tego samego konta (zmiana opakowania i zmiana ilości) mogą zapisać ilość większą niż nowe opakowanie. W bazie nie ma ograniczenia, które by temu zapobiegło. Dotyczy to tylko własnych danych użytkownika.
 - **Fix**: przyjąć jako znaną lukę i dopisać ją do planu albo lessons.
-- **Decision**: PENDING
+- **Decision**: ACCEPTED — znana luka dopisana do „What We're NOT Doing” w plan.md

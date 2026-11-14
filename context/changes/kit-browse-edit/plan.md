@@ -55,6 +55,7 @@ Cudza pozycja daje 404, a każdy błąd jest po polsku. Trigger utrzymuje `updat
 - **Ostrzeżenie o zbliżającym się końcu ważności (S-08).** Tylko znacznik „przeterminowany”.
 - **Nowy test Playwright.** Ścieżki pokrywają testy komponentów, `test:api` i smoke. `tests/e2e/helpers/kit-db.ts` zostaje przy sprzątaniu SQL-em.
 - **Edycja na ekranie importu** (`KitImportRow.tsx` bez zmian).
+- **Blokada równoległych PATCH tej samej pozycji (znana luka, impl-review F9).** Dwa równoległe PATCH tego samego konta (zmiana opakowania i zmiana ilości) mogą zapisać ilość większą niż nowe opakowanie, bo limit jest sprawdzany przed zapisem, a baza nie ma na to ograniczenia. Dotyczy tylko własnych danych użytkownika; UI blokuje ten przypadek (przyciski wiersza są zablokowane na czas zapisu ilości).
 
 ## Implementation Approach
 
