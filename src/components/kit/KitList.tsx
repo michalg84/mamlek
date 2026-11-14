@@ -167,10 +167,13 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
   // Set once the delete succeeded: the dialog must not hand the focus back to a button that is gone (the list has
   // already moved it to a neighbour).
   const removedRef = useRef(false);
+  // The button that opened the dialog: there is no AlertDialogTrigger, so Radix has nothing to give the focus back to.
+  const confirmOpenerRef = useRef<HTMLElement | null>(null);
 
   const description = [item.name, item.strength].filter(Boolean).join(" ");
 
-  function openConfirm() {
+  function openConfirm(event: MouseEvent<HTMLButtonElement>) {
+    confirmOpenerRef.current = event.currentTarget;
     setRemoveError(null);
     setConfirmOpen(true);
   }
@@ -281,8 +284,9 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
       >
         <AlertDialogContent
           onCloseAutoFocus={(event) => {
-            if (removedRef.current) {
-              event.preventDefault();
+            event.preventDefault();
+            if (!removedRef.current) {
+              confirmOpenerRef.current?.focus();
             }
           }}
         >

@@ -433,6 +433,28 @@ describe("KitList", () => {
       expect(screen.getByText("Sortis")).toBeTruthy();
     });
 
+    it("gives the focus back to the button that opened the dialog after „Anuluj” and after Esc", async () => {
+      stubKitItem(() => Promise.reject(new Error("no request expected")));
+      render(<KitList items={[kitItem({ name: "Sortis" })]} today="2026-11-04" />);
+      const opener = rowDeleteButton("Sortis");
+
+      opener.focus();
+      fireEvent.click(opener);
+      fireEvent.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: CANCEL }));
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(document.activeElement).toBe(opener);
+
+      opener.focus();
+      fireEvent.click(opener);
+      fireEvent.keyDown(screen.getByRole("alertdialog"), { key: "Escape" });
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(document.activeElement).toBe(opener);
+    });
+
     it("deletes through the dialog and moves the focus to the next row", async () => {
       const items = [kitItem(), kitItem(), kitItem()];
       const routed = stubKitItem(deleted);
