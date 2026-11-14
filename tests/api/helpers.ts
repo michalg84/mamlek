@@ -150,7 +150,7 @@ function sizeIn(alias: string, lo: number, hi: number): string {
 }
 
 export interface BoundaryData {
-  /** An active pack with a size, its size and its product. */
+  /** An active pack with a size of at least 3 (the PATCH tests store a quantity of 3), its size and its product. */
   sized: { packageId: number; size: number; productId: number; productName: string };
   /** An active pack of an active product without a size. */
   unsized: { packageId: number };
@@ -179,7 +179,7 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
     `select pk.id::float8 as package_id, btrim(pk.units->0->>'count')::int as size, p.id::float8 as product_id, p.name
        from registry_packages pk join registry_products p on p.id = pk.product_id
       where pk.removed_at is null and p.removed_at is null and ${SIZE_SHAPE}
-        and btrim(pk.units->0->>'count')::numeric between 1 and 99999
+        and btrim(pk.units->0->>'count')::numeric between 3 and 99999
       order by pk.id limit 1`,
   );
   const unsized = await one<{ package_id: number }>(
