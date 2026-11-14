@@ -18,6 +18,26 @@ export const kitItemRequest = z
   })
   .strict();
 
+/**
+ * Body of `PATCH /api/kit/[id]`: a partial change with the field rules of `kitItemRequest`. A key that is absent leaves
+ * the stored value alone and `null` clears it (unlike POST, where absent means null). `packageId` cannot be cleared.
+ */
+export const kitItemUpdateRequest = z
+  .object({
+    packageId: kitItemRequest.shape.packageId.optional(),
+    quantity: kitItemRequest.shape.quantity,
+    expiry: kitItemRequest.shape.expiry,
+  })
+  .strict()
+  .refine((body) => Object.keys(body).length > 0, { message: "At least one field is required" });
+
+/** The `[id]` path segment of a kit item: digits only, no sign or leading zero, a safe integer; parsed to a number. */
+export const kitItemIdParam = z
+  .string()
+  .regex(/^[1-9]\d*$/)
+  .refine((id) => Number.isSafeInteger(Number(id)))
+  .transform(Number);
+
 /** Body of `POST /api/kit/import`: one page of the import, 1 to IMPORT_PAGE_SIZE items. */
 export const kitImportRequest = z
   .object({

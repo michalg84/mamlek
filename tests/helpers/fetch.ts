@@ -23,6 +23,7 @@ const SEARCH_LIST_PATH = "/api/registry/search-list";
 const CHECK_PATH = "/api/kit/check";
 const PACKAGES_PATH = "/api/registry/packages";
 const IMPORT_PATH = "/api/kit/import";
+const KIT_ITEM_PATH = /^\/api\/kit\/(\d+)$/;
 
 interface PendingCheck {
   resolve: (response: Response) => void;
@@ -40,11 +41,21 @@ export interface RoutedFetch {
   packageRequests: () => number[];
   /** Body of every `POST /api/kit/import` made so far (parsed JSON), in call order. */
   importRequests: () => unknown[];
+  /** Every `PATCH` / `DELETE /api/kit/<id>` made so far, in call order (body parsed; `undefined` without one). */
+  kitItemRequests: () => KitItemRequest[];
+}
+
+export interface KitItemRequest {
+  method: "PATCH" | "DELETE";
+  id: number;
+  body: unknown;
 }
 
 export interface RoutedFetchOptions {
   /** Answers `POST /api/kit/import`; without it such a request is rejected as unexpected. */
   importKit?: () => Promise<Response>;
+  /** Answers `PATCH` / `DELETE /api/kit/<id>` (recorded first); without it such a request is rejected as unexpected. */
+  kitItem?: (request: KitItemRequest) => Promise<Response>;
 }
 
 /**
@@ -53,8 +64,9 @@ export interface RoutedFetchOptions {
  * A pending request is never rejected on abort: like a response already on its way, it can still arrive late,
  * which is the stronger case for the stale-answer guards.
  * Pack requests (`/api/registry/packages?product=<id>`) are answered at once with `packages[id]`; a product without
- * an entry there is a test error. `POST /api/kit/import` is answered by `options.importKit` (its body is recorded);
- * any other address (`POST /api/kit` included) is rejected as unexpected.
+ * an entry there is a test error. `POST /api/kit/import` is answered by `options.importKit` (its body is recorded),
+ * `PATCH` / `DELETE /api/kit/<id>` by `options.kitItem` (recorded too); any other address (`POST /api/kit` included)
+ * is rejected as unexpected.
  */
 export function stubRoutedFetch(
   list: RegistrySearchListPayload,
@@ -65,6 +77,7 @@ export function stubRoutedFetch(
   const requested: number[] = [];
   const packagesRequested: number[] = [];
   const imports: unknown[] = [];
+  const kitItemRequested: KitItemRequest[] = [];
 
   const fetchMock = vi.fn<typeof fetch>((input, init) => {
     const url = new URL(
@@ -97,6 +110,19 @@ export function stubRoutedFetch(
       imports.push(JSON.parse(init.body));
       return options.importKit();
     }
+    const kitItemPath = KIT_ITEM_PATH.exec(url.pathname);
+    if (kitItemPath && (init?.method === "PATCH" || init?.method === "DELETE") && options.kitItem) {
+      if (init.body !== undefined && typeof init.body !== "string") {
+        return Promise.reject(new Error(`Unexpected body of ${url.pathname}`));
+      }
+      const request: KitItemRequest = {
+        method: init.method,
+        id: Number(kitItemPath[1]),
+        body: init.body === undefined ? undefined : JSON.parse(init.body),
+      };
+      kitItemRequested.push(request);
+      return options.kitItem(request);
+    }
     return Promise.reject(new TypeError(`Unexpected fetch: ${url.pathname}`));
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -115,5 +141,6 @@ export function stubRoutedFetch(
     checkRequests: () => [...requested],
     packageRequests: () => [...packagesRequested],
     importRequests: () => [...imports],
+    kitItemRequests: () => [...kitItemRequested],
   };
 }

@@ -1,12 +1,12 @@
 import { useEffect, useId, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
+import { ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MAX_QUANTITY, packLabel, packQuantity } from "@/lib/kit-format";
+import { packLabel, packQuantity, parseExpiryInput, parseQuantityInput } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 import type { AddKitItemRequest, AddKitItemResponse, RegistryVariant, RegistryVariantPackage } from "@/types";
 
@@ -15,30 +15,9 @@ interface KitAddFormProps {
   version: number;
 }
 
-/** Expiry years offered: from this many years back (expired boxes exist) to this many ahead. */
-const YEARS_BACK = 5;
-const YEARS_AHEAD = 10;
-
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
-
-// Same look as `Input`, for the native selects (a native select is the best control on a phone).
-const SELECT_CLASS =
-  "border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 min-h-11 w-full min-w-0 rounded-md border px-3 py-1 text-base shadow-xs outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50";
-
-const FIELD_LABEL_CLASS = "text-muted-foreground mb-1 block text-sm leading-normal";
-
 interface FieldErrors {
   quantity?: string | undefined;
   expiry?: string | undefined;
-}
-
-function InlineError({ id, children }: { id?: string; children: string }) {
-  return (
-    <p id={id} className="text-destructive mt-1 flex items-start gap-1.5 text-sm font-medium break-words">
-      <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-      <span className="min-w-0">{children}</span>
-    </p>
-  );
 }
 
 function PackForm({ variant }: { variant: RegistryVariant }) {
@@ -68,10 +47,6 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   const packGroupId = useId();
   const quantityId = useId();
   const quantityErrorId = useId();
-  const monthId = useId();
-  const yearId = useId();
-  const expiryGroupId = useId();
-  const expiryErrorId = useId();
 
   // A single pack is chosen for the user.
   const selected: RegistryVariantPackage | null =
@@ -79,30 +54,23 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   const showHolder = new Set(packages.map((pack) => pack.productId)).size > 1;
   const { unit, max } = selected ? packQuantity(selected.units) : { unit: null, max: null };
 
-  const thisYear = new Date().getFullYear();
-  const years = Array.from({ length: YEARS_BACK + YEARS_AHEAD + 1 }, (_, index) => thisYear - YEARS_BACK + index);
-
   function validate(): { quantity: number | null; expiry: AddKitItemRequest["expiry"] } | null {
     const errors: FieldErrors = {};
 
     let parsedQuantity: number | null = null;
-    const trimmed = quantity.trim();
-    if (trimmed !== "") {
-      const value = Number(trimmed);
-      if (!Number.isInteger(value) || value < 0) {
-        errors.quantity = "Podaj liczbę całkowitą, 0 lub większą";
-      } else if (value > (max ?? MAX_QUANTITY)) {
-        errors.quantity = `Ilość nie może być większa niż ${max ?? MAX_QUANTITY}`;
-      } else {
-        parsedQuantity = value;
-      }
+    const quantityResult = parseQuantityInput(quantity, max);
+    if ("error" in quantityResult) {
+      errors.quantity = quantityResult.error;
+    } else {
+      parsedQuantity = quantityResult.value;
     }
 
     let parsedExpiry: AddKitItemRequest["expiry"] = null;
-    if (month !== "" && year !== "") {
-      parsedExpiry = { month: Number(month), year: Number(year) };
-    } else if (month !== "" || year !== "") {
-      errors.expiry = "Wybierz miesiąc i rok albo zostaw oba pola puste";
+    const expiryResult = parseExpiryInput(month, year);
+    if ("error" in expiryResult) {
+      errors.expiry = expiryResult.error;
+    } else {
+      parsedExpiry = expiryResult.value;
     }
 
     setFieldErrors(errors);
@@ -245,85 +213,35 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
             <Label htmlFor={quantityId} className={FIELD_LABEL_CLASS}>
               Ilość w opakowaniu (opcjonalnie)
             </Label>
-            <div className="flex min-w-0 items-center gap-2">
-              <Input
-                id={quantityId}
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={max ?? MAX_QUANTITY}
-                value={quantity}
-                onChange={(event) => {
-                  setQuantity(event.target.value);
-                  setFieldErrors((errors) => ({ ...errors, quantity: undefined }));
-                }}
-                aria-invalid={fieldErrors.quantity ? true : undefined}
-                aria-describedby={fieldErrors.quantity ? quantityErrorId : undefined}
-                className="min-h-11 w-32 flex-none text-base md:text-base"
-              />
-              {max !== null && (
-                <span className="text-muted-foreground min-w-0 text-sm break-words">
-                  z {[max, unit].filter((part) => part !== null).join(" ")}
-                </span>
-              )}
-            </div>
+            <QuantityInput
+              id={quantityId}
+              max={max}
+              unit={unit}
+              value={quantity}
+              onChange={(event) => {
+                setQuantity(event.target.value);
+                setFieldErrors((errors) => ({ ...errors, quantity: undefined }));
+              }}
+              aria-invalid={fieldErrors.quantity ? true : undefined}
+              aria-describedby={fieldErrors.quantity ? quantityErrorId : undefined}
+            />
             {fieldErrors.quantity && <InlineError id={quantityErrorId}>{fieldErrors.quantity}</InlineError>}
           </div>
 
-          <div role="group" aria-labelledby={expiryGroupId} className="min-w-0">
-            <p id={expiryGroupId} className={FIELD_LABEL_CLASS}>
-              Ważny do (opcjonalnie)
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="min-w-0">
-                <Label htmlFor={monthId} className="sr-only">
-                  Miesiąc
-                </Label>
-                <select
-                  id={monthId}
-                  value={month}
-                  onChange={(event) => {
-                    setMonth(event.target.value);
-                    setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
-                  }}
-                  aria-invalid={fieldErrors.expiry ? true : undefined}
-                  aria-describedby={fieldErrors.expiry ? expiryErrorId : undefined}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Miesiąc</option>
-                  {MONTHS.map((value) => (
-                    <option key={value} value={value}>
-                      {String(value).padStart(2, "0")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="min-w-0">
-                <Label htmlFor={yearId} className="sr-only">
-                  Rok
-                </Label>
-                <select
-                  id={yearId}
-                  value={year}
-                  onChange={(event) => {
-                    setYear(event.target.value);
-                    setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
-                  }}
-                  aria-invalid={fieldErrors.expiry ? true : undefined}
-                  aria-describedby={fieldErrors.expiry ? expiryErrorId : undefined}
-                  className={SELECT_CLASS}
-                >
-                  <option value="">Rok</option>
-                  {years.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {fieldErrors.expiry && <InlineError id={expiryErrorId}>{fieldErrors.expiry}</InlineError>}
-          </div>
+          <ExpirySelect
+            label="Ważny do (opcjonalnie)"
+            month={month}
+            year={year}
+            onMonthChange={(value) => {
+              setMonth(value);
+              setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
+            }}
+            onYearChange={(value) => {
+              setYear(value);
+              setFieldErrors((errors) => ({ ...errors, expiry: undefined }));
+            }}
+            error={fieldErrors.expiry}
+          />
         </>
       )}
 

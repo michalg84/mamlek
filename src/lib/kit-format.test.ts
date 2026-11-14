@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { uniquePacks } from "@/lib/kit-format";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  MAX_QUANTITY,
+  expiryInput,
+  parseExpiryInput,
+  parseQuantityInput,
+  todayIso,
+  uniquePacks,
+} from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 
 function tablets(capacity: string): RegistryPackageUnit[] {
@@ -38,5 +45,89 @@ describe("uniquePacks", () => {
       { id: 901, productId: 2, units: tablets("30") },
     ];
     expect(uniquePacks(packs).map((pack) => pack.id)).toEqual([801, 901]);
+  });
+});
+
+describe("todayIso", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("without a time zone is the local date of the runtime", () => {
+    // Built from local parts, so the expectation does not depend on the zone the test runs in.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 31, 23, 30));
+    expect(todayIso()).toBe("2026-10-31");
+  });
+
+  it("in Europe/Warsaw is already the next day at 23:30 UTC on the last day of a month (winter time)", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-30T23:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-12-01");
+  });
+
+  it("in Europe/Warsaw is already the next day at 22:30 UTC on the last day of a month (summer time)", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-06-30T22:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-07-01");
+  });
+
+  it("in Europe/Warsaw is still the same day an hour earlier", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-30T22:30:00Z"));
+    expect(todayIso("Europe/Warsaw")).toBe("2026-11-30");
+  });
+});
+
+describe("parseQuantityInput", () => {
+  it("reads empty or blank text as an unknown quantity", () => {
+    expect(parseQuantityInput("", 30)).toEqual({ value: null });
+    expect(parseQuantityInput("   ", 30)).toEqual({ value: null });
+  });
+
+  it("accepts 0 and the pack size, and refuses one more than the pack size", () => {
+    expect(parseQuantityInput("0", 30)).toEqual({ value: 0 });
+    expect(parseQuantityInput(" 30 ", 30)).toEqual({ value: 30 });
+    expect(parseQuantityInput("31", 30)).toEqual({ error: "Ilość nie może być większa niż 30" });
+  });
+
+  it("caps a pack without a size at MAX_QUANTITY", () => {
+    expect(parseQuantityInput(String(MAX_QUANTITY), null)).toEqual({ value: MAX_QUANTITY });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1), null)).toEqual({
+      error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
+    });
+  });
+
+  it("refuses a negative number, a fraction and text that is no number", () => {
+    const error = { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    expect(parseQuantityInput("-1", 30)).toEqual(error);
+    expect(parseQuantityInput("1.5", 30)).toEqual(error);
+    expect(parseQuantityInput("abc", 30)).toEqual(error);
+  });
+
+  it("refuses an empty value the number field reported as unreadable, instead of reading it as unknown", () => {
+    expect(parseQuantityInput("", 30, true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
+    expect(parseQuantityInput("", 30, false)).toEqual({ value: null });
+  });
+});
+
+describe("parseExpiryInput", () => {
+  it("reads both selects empty as an unknown date and both picked as month and year", () => {
+    expect(parseExpiryInput("", "")).toEqual({ value: null });
+    expect(parseExpiryInput("3", "2027")).toEqual({ value: { month: 3, year: 2027 } });
+  });
+
+  it("refuses only one of the two picked", () => {
+    const error = { error: "Wybierz miesiąc i rok albo zostaw oba pola puste" };
+    expect(parseExpiryInput("3", "")).toEqual(error);
+    expect(parseExpiryInput("", "2027")).toEqual(error);
+  });
+});
+
+describe("expiryInput", () => {
+  it("gives the select values of a stored date, without leading zeros, and empty ones for an unknown date", () => {
+    expect(expiryInput("2027-03-31")).toEqual({ month: "3", year: "2027" });
+    expect(expiryInput("2027-12-15")).toEqual({ month: "12", year: "2027" });
+    expect(expiryInput(null)).toEqual({ month: "", year: "" });
   });
 });

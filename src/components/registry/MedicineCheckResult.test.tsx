@@ -93,6 +93,16 @@ describe("MedicineCheckResult", () => {
     expect(screen.queryByText("Ani leku z tą samą substancją czynną", VISIBLE)).toBeNull();
   });
 
+  it("marks a pack with quantity 0 as „puste” and leaves a pack with some left unmarked", async () => {
+    stubFetch(() => reply(response([item("variant", { quantity: 0 }), item("variant", { quantity: 3 })])));
+    render(<MedicineCheckResult productId={1} />);
+
+    expect(await screen.findByText("Masz ten lek · 2 opakowania", VISIBLE)).toBeTruthy();
+    expect(screen.getByText("Ilość: 0", VISIBLE).textContent).toContain("puste");
+    expect(screen.getByText("Ilość: 3", VISIBLE).textContent).not.toContain("puste");
+    expect(screen.getAllByText("· puste", VISIBLE)).toHaveLength(1);
+  });
+
   it.each([
     ["a 500 answer", () => reply({ error: "boom" }, 500)],
     ["a 404 answer", () => reply({ error: "not found" }, 404)],

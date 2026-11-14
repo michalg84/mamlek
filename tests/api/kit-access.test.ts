@@ -59,6 +59,36 @@ describe("without a session", () => {
   });
 
   it.each([
+    ["a valid body", JSON.stringify({ quantity: 1 }), "application/json"],
+    ["an invalid body", "{", "application/json"],
+    ["an empty object", "{}", "application/json"],
+    ["a wrong Content-Type", JSON.stringify({ quantity: 1 }), "text/plain"],
+  ])("PATCH /api/kit/[id] with %s gets 401 (never 400, 404 or 415)", async (_name, body, contentType) => {
+    const reply = await send(`${KIT}/1`, { method: "PATCH", body, contentType });
+
+    expect(reply.status).toBe(401);
+    expectNoInternals(reply.body);
+  });
+
+  it.each([
+    ["no body", undefined, undefined],
+    ["a JSON body", JSON.stringify({ quantity: 1 }), "application/json"],
+    ["a wrong Content-Type", "x", "text/plain"],
+  ])("DELETE /api/kit/[id] with %s gets 401", async (_name, body, contentType) => {
+    const reply = await send(`${KIT}/1`, { method: "DELETE", body, contentType });
+
+    expect(reply.status).toBe(401);
+    expectNoInternals(reply.body);
+  });
+
+  it("DELETE /api/kit/[id] with a bad id gets 401 (never 400)", async () => {
+    const reply = await send(`${KIT}/abc`, { method: "DELETE" });
+
+    expect(reply.status).toBe(401);
+    expectNoInternals(reply.body);
+  });
+
+  it.each([
     ["a valid product", "?product=1"],
     ["an invalid product", "?product=abc"],
     ["no product", ""],
@@ -148,4 +178,72 @@ describe("account B against the kit of account A", () => {
     expect(page.body.toLowerCase()).not.toContain(name);
     expect(page.body).toContain("Apteczka jest pusta");
   });
+});
+
+describe("editing and deleting the kit of account A", () => {
+  /** A fresh row of A with a known quantity, added through the app. */
+  async function addRowOfA(): Promise<number> {
+    const added = await sendJson(KIT, { packageId: data.sized.packageId, quantity: 1 }, a.jar);
+    expect(added.status).toBe(201);
+    return (JSON.parse(added.body) as { id: number }).id;
+  }
+
+  it("B cannot change A's row: PATCH gets 404 and the row is untouched", async () => {
+    const id = await addRowOfA();
+    const before = await kitRowsById([id]);
+
+    const reply = await sendJson(`${KIT}/${id}`, { quantity: 0 }, b.jar, "PATCH");
+
+    expect(reply.status).toBe(404);
+    expectNoInternals(reply.body);
+    expect(await kitRowsById([id])).toEqual(before);
+  });
+
+  it("B cannot delete A's row: DELETE gets 404 and the row is still there", async () => {
+    const id = await addRowOfA();
+    const before = await kitRowsById([id]);
+
+    const reply = await send(`${KIT}/${id}`, { method: "DELETE", jar: b.jar });
+
+    expect(reply.status).toBe(404);
+    expectNoInternals(reply.body);
+    expect(await kitRowsById([id])).toEqual(before);
+    expect(before).toHaveLength(1);
+  });
+
+  it("DELETE from a foreign Origin gets 403 and deletes nothing", async () => {
+    const id = await addRowOfA();
+    const before = await kitRowsById([id]);
+
+    const reply = await send(`${KIT}/${id}`, { method: "DELETE", jar: a.jar, origin: "http://evil.example" });
+
+    expect(reply.status).toBe(403);
+    expect(await kitRowsById([id])).toEqual(before);
+    expect(before).toHaveLength(1);
+  });
+
+  it("A's own PATCH changes the row and keeps A as the owner", async () => {
+    const id = await addRowOfA();
+
+    const reply = await sendJson(`${KIT}/${id}`, { quantity: 0 }, a.jar, "PATCH");
+
+    expect(reply.status).toBe(200);
+    const [row] = await kitRowsById([id]);
+    expect(row.quantity).toBe(0);
+    expect(row.owner).toBe(a.email);
+  });
+
+  it.each([["userId"], ["user_id"]])(
+    "A cannot hand a row over to B through PATCH (%s = B's id): 400, owner unchanged",
+    async (key) => {
+      const id = await addRowOfA();
+
+      const reply = await sendJson(`${KIT}/${id}`, { quantity: 0, [key]: await userIdOf(b.email) }, a.jar, "PATCH");
+
+      expect(reply.status).toBe(400);
+      const [row] = await kitRowsById([id]);
+      expect(row.owner).toBe(a.email);
+      expect(row.quantity).toBe(1);
+    },
+  );
 });

@@ -135,6 +135,63 @@ describe("kit_items isolation: account A on its own row", () => {
   });
 });
 
+describe("kit_items: the owner edits and deletes their own row", () => {
+  // The whole file runs in one transaction, so now() is the same everywhere in it. A row with an explicit old
+  // updated_at is what lets the test see the trigger move the column.
+  const OLD = "2000-01-01T00:00:00Z";
+
+  async function insertOldRow(): Promise<number> {
+    await actAs(client, userA);
+    const { rows } = await client.query<{ id: number }>(
+      "insert into kit_items (package_id, updated_at) values ($1, $2) returning id::int as id",
+      [medicine.packageId, OLD],
+    );
+    return rows[0].id;
+  }
+
+  it("an update by the owner moves updated_at to now() and leaves created_at alone", async () => {
+    const id = await insertOldRow();
+    const { rows: before } = await client.query<{ created_at: Date; old: boolean }>(
+      "select created_at, updated_at = $2::timestamptz as old from kit_items where id = $1",
+      [id, OLD],
+    );
+    expect(before[0].old).toBe(true);
+
+    const result = await client.query("update kit_items set quantity = 2 where id = $1", [id]);
+
+    expect(result.rowCount).toBe(1);
+    const { rows: after } = await client.query<{ created_at: Date; moved: boolean; now: boolean; quantity: number }>(
+      "select created_at, updated_at > $2::timestamptz as moved, updated_at = now() as now, quantity from kit_items where id = $1",
+      [id, OLD],
+    );
+    expect(after[0]).toEqual({ created_at: before[0].created_at, moved: true, now: true, quantity: 2 });
+  });
+
+  it("an updated_at written by the update itself is overwritten", async () => {
+    const id = await insertOldRow();
+
+    await client.query("update kit_items set quantity = 2, updated_at = $2 where id = $1", [
+      id,
+      "1999-01-01T00:00:00Z",
+    ]);
+
+    const { rows } = await client.query<{ now: boolean }>(
+      "select updated_at = now() as now from kit_items where id = $1",
+      [id],
+    );
+    expect(rows[0].now).toBe(true);
+  });
+
+  it("the owner can delete their own row", async () => {
+    await actAs(client, userA);
+
+    const result = await client.query("delete from kit_items where id = $1", [rowA.id]);
+
+    expect(result.rowCount).toBe(1);
+    expect(await rowAsOwner()).toBeUndefined();
+  });
+});
+
 describe("kit_items without a session", () => {
   it.each([
     ["select", "select id from kit_items"],

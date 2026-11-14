@@ -1,5 +1,5 @@
 // Input boundaries of the kit endpoints, as a black box over HTTP on a running app: POST /api/kit,
-// POST /api/kit/import and GET /api/kit/check. Every rejected request must (1) get the expected 4xx, never a 500,
+// POST /api/kit/import, GET /api/kit/check, and PATCH and DELETE /api/kit/[id]. Every rejected request must (1) get the expected 4xx, never a 500,
 // (2) write nothing, (3) leak nothing from the inside of the server. Every boundary is tested from both sides: the
 // value just past it is rejected, the value on it is accepted. The boundaries come from the sources, not from the
 // validation schema in the code:
@@ -8,10 +8,14 @@
 //     review: a bound far below the integer limit);
 //   - expiry: month 1-12 and a year range of 2000-2100 (same contract); the precision is always month;
 //   - ids: positive integers that exist in the registry as active packs of active products;
-//   - import page: 1 to 30 items, all stored or none (csv-kit-import plan, phase 2: one page of the approval screen).
-import { beforeAll, describe, expect, it } from "vitest";
+//   - import page: 1 to 30 items, all stored or none (csv-kit-import plan, phase 2: one page of the approval screen);
+//   - edit (kit-browse-edit plan, phase 1): a key that is absent leaves the stored value, null clears it; the quantity
+//     cap follows the pack the item will be on (the stored pack when it does not change, even a withdrawn one); the
+//     new pack must be an active pack of the same medicine; the id in the path is digits only.
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   expectNoInternals,
+  insertKitRow,
   kitRowCount,
   kitRowsById,
   loadBoundaryData,
@@ -176,7 +180,13 @@ async function expectImported(
   expect(reply.status, reply.body.slice(0, 200)).toBe(201);
   expect(await kitRowCount(email)).toBe(before + items.length);
   const { ids } = JSON.parse(reply.body) as { ids: number[] };
-  expect(await kitRowsById(ids)).toEqual(
+  const rows = (await kitRowsById(ids)).map(({ id, owner, packageId, quantity }) => ({
+    id,
+    owner,
+    packageId,
+    quantity,
+  }));
+  expect(rows).toEqual(
     items.map((item, i) => ({ id: ids[i], owner: email, packageId: item.packageId, quantity: item.quantity ?? null })),
   );
 }
@@ -319,5 +329,323 @@ describe("GET /api/kit/check: product", () => {
   it("a known product gets 200", async () => {
     const reply = await send(`${CHECK}?product=${data.sized.productId}`, { jar });
     expect(reply.status).toBe(200);
+  });
+});
+
+// --- PATCH and DELETE /api/kit/[id] ------------------------------------------------------------------------------
+
+const EDIT_BAD_IDS = [["abc"], ["0"], ["-1"], ["1.5"], ["01"], ["1e3"], ["9".repeat(500)]];
+
+/** Adds a row through the app and returns its id. */
+async function addRow(body: unknown): Promise<number> {
+  const reply = await sendJson(KIT, body, jar);
+  expect(reply.status, reply.body.slice(0, 200)).toBe(201);
+  return (JSON.parse(reply.body) as { id: number }).id;
+}
+
+function patch(id: number | string, body: unknown): Promise<Reply> {
+  return sendJson(`${KIT}/${id}`, body, jar, "PATCH");
+}
+
+/** The only row with this id, as the database holds it. */
+async function rowOf(id: number) {
+  const rows = await kitRowsById([id]);
+  expect(rows).toHaveLength(1);
+  return rows[0];
+}
+
+/** PATCH that must be refused: the expected 4xx, the row unchanged (same columns before and after), no internals. */
+async function expectPatchRejected(status: number, id: number | string, body: unknown): Promise<Reply> {
+  const ids = typeof id === "number" ? [id] : [];
+  const beforeRows = await kitRowsById(ids);
+  const beforeCount = await kitRowCount(email);
+  const reply = await patch(id, body);
+  expect(reply.status, reply.body.slice(0, 200)).toBe(status);
+  expect(await kitRowsById(ids)).toEqual(beforeRows);
+  expect(await kitRowCount(email)).toBe(beforeCount);
+  expectNoInternals(reply.body);
+  return reply;
+}
+
+/** PATCH that must be accepted; returns the `item` of the reply. */
+async function expectPatched(id: number, body: unknown) {
+  const reply = await patch(id, body);
+  expect(reply.status, reply.body.slice(0, 200)).toBe(200);
+  const { item } = JSON.parse(reply.body) as {
+    item: { id: number; packageId: number; quantity: number | null; expiresOn: string | null };
+  };
+  expect(item.id).toBe(id);
+  return item;
+}
+
+describe("PATCH /api/kit/[id]: wrong request shape", () => {
+  let id: number;
+  beforeAll(async () => {
+    id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+  });
+
+  it.each([
+    ["JSON with Content-Type text/plain", "text/plain"],
+    ["no Content-Type", undefined],
+  ])("%s gets 415", async (_name, contentType) => {
+    const before = await kitRowsById([id]);
+    const reply = await send(`${KIT}/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ quantity: 2 }),
+      contentType,
+      jar,
+    });
+    expect(reply.status).toBe(415);
+    expect(await kitRowsById([id])).toEqual(before);
+    expectNoInternals(reply.body);
+  });
+
+  it.each([["{"], ["[]"], ["null"], ['"x"'], ["{}"]])("body %s gets 400", async (body) => {
+    await expectPatchRejected(400, id, body);
+  });
+
+  it.each([["userId"], ["user_id"], ["extra"]])(
+    "unknown key %s gets 400 (the owner comes from the session)",
+    async (key) => {
+      await expectPatchRejected(400, id, { quantity: 2, [key]: "x" });
+    },
+  );
+
+  it("packageId null gets 400", async () => {
+    await expectPatchRejected(400, id, { packageId: null });
+  });
+
+  it.each(EDIT_BAD_IDS)("id %s in the path gets 400", async (badId) => {
+    await expectPatchRejected(400, badId, { quantity: 2 });
+  });
+
+  it("an id that is no row gets 404", async () => {
+    await expectPatchRejected(404, UNKNOWN_ID, { quantity: 2 });
+  });
+});
+
+describe("PATCH /api/kit/[id]: quantity", () => {
+  it.each([
+    ["negative", -1],
+    ["fractional", 1.5],
+    ["a string", "5"],
+    ["a boolean", true],
+  ])("%s gets 400", async (_name, quantity) => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    await expectPatchRejected(400, id, { quantity });
+  });
+
+  it("above the pack size gets 400", async () => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    await expectPatchRejected(400, id, { quantity: data.sized.size + 1 });
+  });
+
+  it("above 100000 on a pack without a size gets 400", async () => {
+    const id = await addRow({ packageId: data.unsized.packageId, quantity: 1 });
+    await expectPatchRejected(400, id, { quantity: 100_001 });
+  });
+
+  it("zero is stored", async () => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    expect((await expectPatched(id, { quantity: 0 })).quantity).toBe(0);
+    expect((await rowOf(id)).quantity).toBe(0);
+  });
+
+  it("exactly the pack size is stored", async () => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    expect((await expectPatched(id, { quantity: data.sized.size })).quantity).toBe(data.sized.size);
+    expect((await rowOf(id)).quantity).toBe(data.sized.size);
+  });
+
+  it("exactly 100000 is stored on a pack without a size", async () => {
+    const id = await addRow({ packageId: data.unsized.packageId, quantity: 1 });
+    expect((await expectPatched(id, { quantity: 100_000 })).quantity).toBe(100_000);
+    expect((await rowOf(id)).quantity).toBe(100_000);
+  });
+});
+
+describe("PATCH /api/kit/[id]: expiry", () => {
+  it.each([
+    ["month 0", { month: 0, year: 2030 }],
+    ["month 13", { month: 13, year: 2030 }],
+    ["year 1999", { month: 6, year: 1999 }],
+    ["year 2101", { month: 6, year: 2101 }],
+    ["an extra key day", { month: 6, year: 2030, day: 1 }],
+    ["a string", "2026-10"],
+  ])("%s gets 400", async (_name, expiry) => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    await expectPatchRejected(400, id, { expiry });
+  });
+
+  it.each([
+    ["the first month of the range", { month: 1, year: 2000 }, "2000-01-31"],
+    ["the last month of the range", { month: 12, year: 2100 }, "2100-12-31"],
+    ["a leap February", { month: 2, year: 2028 }, "2028-02-29"],
+  ])("%s is stored as the last day of the month", async (_name, expiry, expiresOn) => {
+    const id = await addRow({ packageId: data.sized.packageId });
+    await expectPatched(id, { expiry });
+    expect(await rowOf(id)).toMatchObject({ expiresOn, expiryPrecision: "month" });
+  });
+});
+
+describe("PATCH /api/kit/[id]: only the sent fields change", () => {
+  let id: number;
+  beforeEach(async () => {
+    id = await addRow({ packageId: data.sized.packageId, quantity: 3, expiry: { month: 6, year: 2030 } });
+    expect(await rowOf(id)).toMatchObject({
+      packageId: data.sized.packageId,
+      quantity: 3,
+      expiresOn: "2030-06-30",
+      expiryPrecision: "month",
+    });
+  });
+
+  it("{ quantity } keeps the pack, the date and the precision", async () => {
+    await expectPatched(id, { quantity: 4 });
+    expect(await rowOf(id)).toMatchObject({
+      packageId: data.sized.packageId,
+      quantity: 4,
+      expiresOn: "2030-06-30",
+      expiryPrecision: "month",
+    });
+  });
+
+  it("{ expiry: null } clears the date and the precision and keeps the quantity", async () => {
+    await expectPatched(id, { expiry: null });
+    expect(await rowOf(id)).toMatchObject({
+      packageId: data.sized.packageId,
+      quantity: 3,
+      expiresOn: null,
+      expiryPrecision: null,
+    });
+  });
+
+  it("{ quantity: null } makes the quantity unknown and keeps the date", async () => {
+    await expectPatched(id, { quantity: null });
+    expect(await rowOf(id)).toMatchObject({
+      packageId: data.sized.packageId,
+      quantity: null,
+      expiresOn: "2030-06-30",
+      expiryPrecision: "month",
+    });
+  });
+
+  it("{ expiry } sets a new date and keeps the quantity", async () => {
+    await expectPatched(id, { expiry: { month: 2, year: 2031 } });
+    expect(await rowOf(id)).toMatchObject({ quantity: 3, expiresOn: "2031-02-28", expiryPrecision: "month" });
+  });
+});
+
+describe("PATCH /api/kit/[id]: change of the pack", () => {
+  // The siblings are two active packs of one medicine, `small` and `large` by size (large.size > small.size).
+  it("to a sibling pack of the same medicine gets 200 and the row moves", async () => {
+    const { small, large } = data.siblings;
+    const id = await addRow({ packageId: small.packageId });
+    expect((await expectPatched(id, { packageId: large.packageId })).packageId).toBe(large.packageId);
+    expect((await rowOf(id)).packageId).toBe(large.packageId);
+  });
+
+  it.each([
+    ["a pack of another variant", () => data.otherVariant.packageId],
+    ["a withdrawn pack", () => data.withdrawnPackage.packageId],
+    ["a pack of a withdrawn product", () => data.withdrawnProductPackage.packageId],
+    ["a pack not in the registry", () => UNKNOWN_ID],
+  ])("to %s gets 400", async (_name, target) => {
+    const id = await addRow({ packageId: data.siblings.small.packageId });
+    await expectPatchRejected(400, id, { packageId: target() });
+  });
+
+  it("with a quantity above the new pack's size gets 400, on the new size it gets 200", async () => {
+    const { small, large } = data.siblings;
+    const id = await addRow({ packageId: large.packageId });
+    await expectPatchRejected(400, id, { packageId: small.packageId, quantity: small.size + 1 });
+    await expectPatched(id, { packageId: small.packageId, quantity: small.size });
+    expect(await rowOf(id)).toMatchObject({ packageId: small.packageId, quantity: small.size });
+  });
+
+  it("without a quantity checks the stored one against the new pack (above gets 400, on the size gets 200)", async () => {
+    const { small, large } = data.siblings;
+    const above = await addRow({ packageId: large.packageId, quantity: small.size + 1 });
+    await expectPatchRejected(400, above, { packageId: small.packageId });
+
+    const on = await addRow({ packageId: large.packageId, quantity: small.size });
+    await expectPatched(on, { packageId: small.packageId });
+    expect((await rowOf(on)).packageId).toBe(small.packageId);
+  });
+
+  it("with quantity null clears a stored quantity that would not fit the new pack", async () => {
+    const { small, large } = data.siblings;
+    const id = await addRow({ packageId: large.packageId, quantity: small.size + 1 });
+    await expectPatched(id, { packageId: small.packageId, quantity: null });
+    expect(await rowOf(id)).toMatchObject({ packageId: small.packageId, quantity: null });
+  });
+
+  it("to the stored pack is no change and needs no check of the pack", async () => {
+    const { small } = data.siblings;
+    const id = await addRow({ packageId: small.packageId, quantity: 1 });
+    await expectPatched(id, { packageId: small.packageId });
+    expect((await rowOf(id)).packageId).toBe(small.packageId);
+  });
+});
+
+describe("PATCH /api/kit/[id]: an item on a withdrawn pack", () => {
+  // The app refuses to add such an item, so the row is inserted into the database. The cap is the size of the pack the
+  // item is on, withdrawn or not: both sides of it are tested, so skipping the cap for a withdrawn pack is caught too.
+  let id: number;
+  beforeEach(async () => {
+    id = await insertKitRow(email, data.withdrawnSized.packageId, { quantity: 1 });
+  });
+
+  it("a quantity on the pack size gets 200", async () => {
+    const { size } = data.withdrawnSized;
+    expect((await expectPatched(id, { quantity: size })).quantity).toBe(size);
+    expect((await rowOf(id)).quantity).toBe(size);
+  });
+
+  it("a quantity above the pack size gets 400", async () => {
+    await expectPatchRejected(400, id, { quantity: data.withdrawnSized.size + 1 });
+  });
+
+  it("the same packageId gets 200 (it is no change)", async () => {
+    await expectPatched(id, { packageId: data.withdrawnSized.packageId, quantity: 2 });
+    expect(await rowOf(id)).toMatchObject({ packageId: data.withdrawnSized.packageId, quantity: 2 });
+  });
+});
+
+describe("DELETE /api/kit/[id]", () => {
+  function del(id: number | string): Promise<Reply> {
+    return send(`${KIT}/${id}`, { method: "DELETE", jar });
+  }
+
+  it.each(EDIT_BAD_IDS)("id %s in the path gets 400 and deletes nothing", async (badId) => {
+    const before = await kitRowCount(email);
+    const reply = await del(badId);
+    expect(reply.status).toBe(400);
+    expect(await kitRowCount(email)).toBe(before);
+    expectNoInternals(reply.body);
+  });
+
+  it("an id that is no row gets 404 and deletes nothing", async () => {
+    const before = await kitRowCount(email);
+    const reply = await del(UNKNOWN_ID);
+    expect(reply.status).toBe(404);
+    expect(await kitRowCount(email)).toBe(before);
+    expectNoInternals(reply.body);
+  });
+
+  it("an own row gets 204 and is gone, the second try gets 404", async () => {
+    const id = await addRow({ packageId: data.sized.packageId });
+    const before = await kitRowCount(email);
+
+    const first = await del(id);
+    expect(first.status).toBe(204);
+    expect(first.body).toBe("");
+    expect(await kitRowsById([id])).toEqual([]);
+    expect(await kitRowCount(email)).toBe(before - 1);
+
+    const second = await del(id);
+    expect(second.status).toBe(404);
+    expectNoInternals(second.body);
+    expect(await kitRowCount(email)).toBe(before - 1);
   });
 });

@@ -1,9 +1,10 @@
 import { useEffect, useId, type ReactNode } from "react";
 import { CircleAlert, CircleCheck, CircleMinus, Info, LoaderCircle, type LucideIcon } from "lucide-react";
 import { useMedicineCheck } from "@/components/hooks/useMedicineCheck";
+import { KitItemDetails } from "@/components/kit/KitItemDetails";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { formatExpiry, formatQuantity, isExpired, packLabel, todayIso } from "@/lib/kit-format";
+import { todayIso } from "@/lib/kit-format";
 import { checkVerdict, type CheckVerdict } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
@@ -30,26 +31,11 @@ function Note({ children }: { children: ReactNode }) {
 function ItemList({ items, today }: { items: MedicineCheckItem[]; today: string }) {
   return (
     <ul className="divide-border min-w-0 divide-y rounded-lg border">
-      {items.map((item) => {
-        const details = [item.strength, item.form].filter(Boolean).join(" · ");
-        const expired = isExpired(item.expiresOn, today);
-        return (
-          <li key={item.id} className="min-w-0 px-3 py-3">
-            <p className="text-foreground font-bold break-words">{item.name}</p>
-            {details && <p className="text-muted-foreground text-sm break-words">{details}</p>}
-            {item.substances.length > 0 && (
-              <p className="text-muted-foreground text-sm break-words">{item.substances.join(", ")}</p>
-            )}
-            <p className="text-foreground mt-1 text-sm break-words">{packLabel(item.units)}</p>
-            <p className="text-foreground text-sm break-words">Ilość: {formatQuantity(item.quantity, item.units)}</p>
-            <p className="text-foreground text-sm break-words">
-              Ważny do: {formatExpiry(item.expiresOn, item.expiryPrecision)}
-              {expired && <span className="text-destructive font-medium"> · przeterminowany</span>}
-            </p>
-            {item.withdrawn && <p className="text-muted-foreground text-sm">wycofany z rejestru</p>}
-          </li>
-        );
-      })}
+      {items.map((item) => (
+        <li key={item.id} className="min-w-0 px-3 py-3">
+          <KitItemDetails item={item} today={today} substances={item.substances} />
+        </li>
+      ))}
     </ul>
   );
 }

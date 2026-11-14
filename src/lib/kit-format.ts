@@ -70,6 +70,61 @@ export function packQuantity(units: RegistryPackageUnit[]): { unit: string | nul
   return { unit: present(unit.kind), max };
 }
 
+/**
+ * Quantity typed by the user, checked like the API does: empty text is an unknown quantity (`null`), anything else
+ * must be an integer from 0 up to `max` (the pack size) or, for a pack without one, `MAX_QUANTITY`. `badInput` is the
+ * `validity.badInput` of the number field the text came from.
+ */
+export function parseQuantityInput(
+  text: string,
+  max: number | null,
+  badInput = false,
+): { value: number | null } | { error: string } {
+  const trimmed = text.trim();
+  // A number field answers "" for something it cannot read ("-", "1e"): that is a mistake, not an unknown quantity.
+  if (badInput) {
+    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+  }
+  if (trimmed === "") {
+    return { value: null };
+  }
+  const value = Number(trimmed);
+  if (!Number.isInteger(value) || value < 0) {
+    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+  }
+  const limit = max ?? MAX_QUANTITY;
+  if (value > limit) {
+    return { error: `Ilość nie może być większa niż ${limit}` };
+  }
+  return { value };
+}
+
+/**
+ * Expiry picked in the month and year selects (values as text, "" = not picked): both empty is an unknown date
+ * (`null`), only one of them is an error.
+ */
+export function parseExpiryInput(
+  month: string,
+  year: string,
+): { value: { month: number; year: number } | null } | { error: string } {
+  if (month === "" && year === "") {
+    return { value: null };
+  }
+  if (month === "" || year === "") {
+    return { error: "Wybierz miesiąc i rok albo zostaw oba pola puste" };
+  }
+  return { value: { month: Number(month), year: Number(year) } };
+}
+
+/** Month and year of a stored expiry date as select values ("3", "2027"); both "" for an unknown date. */
+export function expiryInput(expiresOn: string | null): { month: string; year: string } {
+  if (expiresOn === null) {
+    return { month: "", year: "" };
+  }
+  const [year, month] = expiresOn.split("-");
+  return { month: String(Number(month)), year: String(Number(year)) };
+}
+
 /** ISO date (YYYY-MM-DD) of the last day of the given month. `month` is 1-12. */
 export function expiryToDate(month: number, year: number): string {
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -85,10 +140,24 @@ export function formatExpiry(expiresOn: string | null, precision: "month" | "day
   return precision === "day" ? `${day}.${month}.${year}` : `${month}/${year}`;
 }
 
-/** Today's local date as YYYY-MM-DD, comparable with `expiresOn` as a string. */
-export function todayIso(): string {
-  const now = new Date();
-  return `${String(now.getFullYear()).padStart(4, "0")}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+/**
+ * Today's date as YYYY-MM-DD, comparable with `expiresOn` as a string. Without `timeZone` it is the local date of the
+ * runtime; with one (e.g. "Europe/Warsaw") it is the date in that zone, which lets a server running in UTC answer for
+ * a user elsewhere.
+ */
+export function todayIso(timeZone?: string): string {
+  if (timeZone === undefined) {
+    const now = new Date();
+    return `${String(now.getFullYear()).padStart(4, "0")}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: "year" | "month" | "day") => parts.find((entry) => entry.type === type)?.value ?? "";
+  return `${part("year").padStart(4, "0")}-${part("month")}-${part("day")}`;
 }
 
 /**
