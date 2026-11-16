@@ -452,6 +452,24 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 - **`context/foundation/test-plan.md`**: wycofane w liście i w funkcji opakowań, krok pomiaru wydajności.
 - **`AGENTS.md`**: opisy `test:db` (nowy plik testu, F2 nie jest już luką), `test:api` (wycofane opakowanie przyjmowane, `insertKitRow`) i kolejność wdrożenia tej migracji.
 
+### Wyniki fazy 5
+
+ADAPT: zamiast `scripts/perf-withdrawn-fixture.mjs` użyto jednorazowego skryptu w scratchpadzie. W repozytorium nie został żaden plik, a opis kroku jest w `test-plan.md`.
+
+Pomiar z 2026-11-16 na pełnym rejestrze lokalnie. Build uruchomiony przez `wrangler dev`, `npm run perf -- --profile slow`, 5 przebiegów, mediany:
+
+| Stan              | Warianty             | Payload     | Lista gotowa (max) | Szac. z dławionym workerem | Wpisywanie na starcie (max) | Wpisywanie po wczytaniu (max) |
+| ----------------- | -------------------- | ----------- | ------------------ | -------------------------- | --------------------------- | ----------------------------- |
+| Punkt odniesienia | 16 280               | 2 049 569 B | 2336 ms (2555)     | 3005 ms                    | 56 ms (112)                 | 48 ms (72)                    |
+| +1000 wycofanych  | 17 280 (1000 wycof.) | 2 190 890 B | 2479 ms (2645)     | 3082 ms                    | 80 ms (200)                 | 64 ms (88)                    |
+| Po usunięciu      | 16 280               | 2 049 569 B | —                  | —                          | —                           | —                             |
+
+Payload urósł o 141 321 B (+6,9%), a czas do gotowej listy o ok. 140 ms. Wszystkie wyniki mieszczą się w progach.
+
+ADAPT (5.2): na `wrangler dev` dwa przypadki `test:api` („PATCH bez sesji → 401”) dostały 500. W logu serwera było „Network connection lost” od proxy wranglera: proxy zrywa połączenie, gdy worker odpowiada 401 bez czytania treści `PATCH`. Sam worker zwrócił w tych przypadkach 401. Na `astro dev` `test:api` przechodzi w całości (175/175).
+
+ADAPT (5.5): `ui:shots` szuka „ibu”, a w fixture'ach nie ma ibuprofenu, więc stany z podpowiedziami kończą się timeoutem. Zamiast tego zrobiono celowane zrzuty `/szukaj` z wycofanym Crestorem 5 mg z fixture'ów, na 1280 i 390 px. Oznaczenie „wycofany z rejestru” jest w podpowiedzi i na karcie, a wynik sprawdzenia pokazuje się poprawnie. To zamyka też 3.6.
+
 ### Success Criteria:
 
 #### Automated Verification:
@@ -554,31 +572,31 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 
 #### Manual
 
-- [ ] 3.6 Na `/szukaj` (fixture'y) Crestor ma oznaczenie w podpowiedzi i na karcie sprawdzenia
+- [x] 3.6 Na `/szukaj` (fixture'y) Crestor ma oznaczenie w podpowiedzi i na karcie sprawdzenia
 
 ### Phase 4: Wybór opakowania w formularzach
 
 #### Automated
 
-- [x] 4.1 Nowe testy komponentów i `matchRow` są czerwone przed zmianą i zielone po niej
-- [x] 4.2 Celowe zepsucie oznaczenia albo samodzielnego wyboru czerwieni testy
-- [x] 4.3 Testy unit + component + registry przechodzą
-- [x] 4.4 Lint, typy i `ui:scan` przechodzą
+- [x] 4.1 Nowe testy komponentów i `matchRow` są czerwone przed zmianą i zielone po niej — a3a9f0a
+- [x] 4.2 Celowe zepsucie oznaczenia albo samodzielnego wyboru czerwieni testy — a3a9f0a
+- [x] 4.3 Testy unit + component + registry przechodzą — a3a9f0a
+- [x] 4.4 Lint, typy i `ui:scan` przechodzą — a3a9f0a
 
 #### Manual
 
-- [x] 4.5 Dodanie, edycja i import Crestora na lokalnym serwerze działają z oznaczeniami
+- [x] 4.5 Dodanie, edycja i import Crestora na lokalnym serwerze działają z oznaczeniami — a3a9f0a
 
 ### Phase 5: Wydajność, testy końcowe i dokumentacja
 
 #### Automated
 
-- [ ] 5.1 Perf slow z 1000 sztucznymi wycofanymi wariantami mieści się w 5 s, baza przywrócona
-- [ ] 5.2 `registry-import-check`, `test:db`, `smoke` i `test:api` przechodzą na fixture'ach
-- [ ] 5.3 Testy unit + component + registry, lint, typy i `ui:scan` przechodzą
-- [ ] 5.4 PRD, roadmapa, audyt, test-plan i AGENTS.md zaktualizowane, `roadmap:sync` wykonany
+- [x] 5.1 Perf slow z 1000 sztucznymi wycofanymi wariantami mieści się w 5 s, baza przywrócona
+- [x] 5.2 `registry-import-check`, `test:db`, `smoke` i `test:api` przechodzą na fixture'ach
+- [x] 5.3 Testy unit + component + registry, lint, typy i `ui:scan` przechodzą
+- [x] 5.4 PRD, roadmapa, audyt, test-plan i AGENTS.md zaktualizowane, `roadmap:sync` wykonany
 
 #### Manual
 
-- [ ] 5.5 Zrzuty `ui:shots` z wycofanym lekiem obejrzane na 1280 i 390 px
+- [x] 5.5 Zrzuty `ui:shots` z wycofanym lekiem obejrzane na 1280 i 390 px
 - [ ] 5.6 Po merge'u `db push` i sprawdzenie wycofanego leku na produkcji
