@@ -1,8 +1,9 @@
 ---
 project: "MamLek"
-version: 2
-status: draft
+version: 3
+status: active
 created: 2026-09-24
+updated: 2026-11-16 # v3: reguły z audytu zgodności (context/audits/prd-conformance/2026-11-16.md); v2 w archive/2026-11-16-prd.md
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -139,16 +140,20 @@ odnosiły się do tych samych identyfikatorów.
 
 - FR-001: System korzysta z pełnego Rejestru Produktów Leczniczych i odświeża go okresowo. Priority: must-have
   > Socrates: Rozważone kontrargumenty — rejestr zawiera produkty wycofane, odświeżanie to zadanie w tle bez nadzoru, pełny rejestr to nadmiar wobec kilkuset leków realnie przewijających się przez dom. Rozstrzygnięcie: zostaje bez zmian — bez własnej kopii rejestru nie ma substancji czynnych, a bez nich nie ma zamienników.
+  > Doprecyzowanie (v3): „pełny rejestr” to produkty lecznicze stosowane u ludzi, bez opakowań usuniętych z rejestru. Produkt lub opakowanie, które zniknie z eksportu RPL, zostaje w bazie jako wycofane (nie jest kasowane); leków wycofanych przed pierwszym importem (październik 2026) nie ma w bazie wcale. Odświeżanie: codzienny import (patrz Non-Functional Requirements).
 - FR-002: Użytkownik może znaleźć lek w rejestrze, wpisując pierwsze litery; wyszukiwanie obejmuje nazwę produktu, nazwę powszechnie stosowaną i substancje czynne, z pierwszeństwem nazwy produktu. Podpowiedzi pokazują nazwę wraz z mocą i postacią. Priority: must-have
   > Socrates: Kontrargument „recepta często ma nazwę międzynarodową, nie handlową" — unieważniony przez dane: rekord rejestru niesie nazwę powszechnie stosowaną (np. „Paracetamolum") obok nazwy produktu. Rozstrzygnięcie: wymaganie rozszerzone o wyszukiwanie po kilku polach nazwy z ustaloną kolejnością.
+  > Doprecyzowanie (v3): podpowiedzi pojawiają się od 3 wpisanych znaków, lista ma najwyżej 20 pozycji. Pozycją podpowiedzi jest wariant leku — nazwa + moc + postać — a nie pojedynczy produkt z rejestru: produkty o tym samym wariancie (np. ten sam lek od kilku importerów równoległych) są jedną pozycją. Leki wycofane z rejestru nie są dziś podpowiadane (zmiana: wycinek S-13 w roadmapie).
 
 ### Apteczka
 
 - FR-003: Użytkownik może dodać lek do apteczki, wskazując rekord z rejestru i opcjonalnie podając datę ważności oraz pozostałą ilość; jednostka i wielkość opakowania pochodzą z rekordu rejestru. Brak daty lub ilości aplikacja pokazuje wprost jako „nieznane”. Priority: must-have
   > Socrates: Rozważone kontrargumenty — ten sam lek bywa w kilku opakowaniach o różnych datach ważności; data bywa nieczytelna na opakowaniu; świeżo kupione opakowanie jest zawsze pełne, więc pole ilości wydłuża formularz. Rozstrzygnięcie: zostaje bez zmian. Obsługa daty ważności trafiła do pytań otwartych.
   > Socrates (rewizja 2026-09-24): data i ilość stały się opcjonalne — zamyka to pytanie otwarte o datę ważności. Kontrargument „brak daty to też informacja” — przyjęty: aplikacja pokazuje brak wprost jako „nieznane”, inaczej użytkownik uzna go za „ważny”.
+  > Doprecyzowanie (v3): data ważności ma dokładność do miesiąca (miesiąc i rok, jak na opakowaniu). Ilość 0 jest dozwolona (puste opakowanie zostaje na liście); górny limit to wielkość opakowania z rejestru, a gdy rejestr jej nie podaje — 100000.
 - FR-005: Użytkownik może przeglądać apteczkę oraz zmieniać i usuwać jej pozycje, w tym edytować pozostałą ilość bezpośrednio na liście — ten sam ekran służy przeglądowi apteczki przed wizytą u lekarza. Priority: must-have
   > Socrates: Brak kontrargumentu wobec samego przeglądania i edycji. Po rundzie wchłonęło dawne FR-006 (osobny tryb przeglądu), bo przyjęty kontrargument brzmiał: to ten sam ekran, dwa ekrany robiłyby to samo.
+  > Doprecyzowanie (v3): edycja pozycji zmienia opakowanie (wielkość opakowania w obrębie tego samego wariantu), datę ważności i ilość, ale nie lek. Inny lek to usunięcie pozycji i dodanie nowej.
 
 ### Import listy leków
 
@@ -159,6 +164,7 @@ odnosiły się do tych samych identyfikatorów.
 - FR-009: Użytkownik zatwierdza wynik importu, przypisując każdy wiersz do rekordu rejestru lub poprawiając przypisanie; niezatwierdzony import nie trafia do apteczki. Wiersz bez dopasowania jest pokazany na ekranie potwierdzenia — użytkownik musi go poprawić albo usunąć, zanim przejdzie dalej. Nic nie jest pomijane po cichu. Wiersz z lekiem, który już jest w apteczce, jest oznaczony „już masz” — użytkownik decyduje, czy dodać go jako osobne opakowanie, czy usunąć z importu. Priority: must-have
   > Socrates: Kontrargument „nie wiadomo, co z wierszem bez dopasowania" — przyjęty i rozstrzygnięty w treści wymagania: wiersz jest pokazany, użytkownik go poprawia albo usuwa przed przejściem dalej. Ten ekran jest granicą odpowiedzialności: to moment, w którym użytkownik potwierdza dane i przejmuje za nie odpowiedzialność. Dlatego błędny odczyt z zewnętrznego czatu nie obciąża aplikacji.
   > Socrates (rewizja 2026-09-24): dopisane oznaczenie „już masz” dla leku, który już jest w apteczce. Brak kontrargumentu — zostaje.
+  > Doprecyzowanie (v3): plik ma najwyżej 200 wierszy i 256 kB. Zatwierdzanie idzie stronami po 30 wierszy: każda strona zapisuje się w całości albo wcale, więc import przerwany w połowie zostawia w apteczce strony już zatwierdzone (import częściowy, pokazany wprost na ekranie). „Już masz” oznacza ten sam wariant leku, który jest w apteczce.
 
 ### Sprawdzenie leku
 
@@ -187,7 +193,14 @@ odnosiły się do tych samych identyfikatorów.
 
 - Wynik sprawdzenia leku pojawia się w mniej niż 3 sekundy od zatwierdzenia nazwy
   na telefonie obsługującym aktualne wersje wymienionych niżej przeglądarek.
-- Dane rejestru, na których opiera się odpowiedź, nie są starsze niż 7 dni.
+- Dane rejestru, na których opiera się odpowiedź, nie są starsze niż 7 dni. To cel
+  operacyjny, nie gwarancja wymuszana przez aplikację: rejestr jest importowany
+  codziennie, a jego świeżość widać po dacie „Stan rejestru na …” (data stanu
+  z eksportu RPL) na ekranie `/szukaj`. Aplikacja nie porównuje tej daty z dzisiejszą.
+  Nieudany przebieg importu jest zgłaszany autorowi mailem z GitHuba. Harmonogram
+  wyłączony przez GitHuba po 60 dniach bez aktywności w repozytorium nie daje
+  żadnego sygnału poza starzejącą się datą — zabezpieczenie to wycinek S-16
+  (keepalive), poza MVP.
 - Zawartość apteczki jest dostępna wyłącznie po zalogowaniu na konto domu i nie
   jest widoczna dla nikogo spoza tego konta.
 - Aplikacja jest używalna na ekranie telefonu bez powiększania i bez poziomego
@@ -215,6 +228,34 @@ pozostaje po stronie użytkownika. Stąd sformułowanie wyniku mówi „masz lek
 substancją czynną", a nie „masz zamiennik" — to drugie obiecywałoby rozstrzygnięcie,
 którego produkt nie jest w stanie unieść.
 
+### Ten sam lek i ta sama substancja (v3)
+
+Reguła działa na wariantach leku, nie na pojedynczych rekordach rejestru:
+
+- **Ten sam lek** — posiadana pozycja ma ten sam wariant co lek szukany: tę samą
+  nazwę, moc i postać. Wariant łączy produkty z importu równoległego (ten sam lek
+  sprowadzany przez kilku importerów) i obejmuje opakowania już wycofane z rejestru,
+  które leżą w apteczce (pokazane z oznaczeniem „wycofany z rejestru”).
+- **Ta sama substancja** — posiadana pozycja nie jest tym samym lekiem, ale ma ten
+  sam zbiór substancji czynnych co lek szukany **albo** tę samą nazwę powszechnie
+  stosowaną (porównywaną jako zbiór jej części, np. „Paracetamolum + Coffeinum”).
+  Druga ścieżka jest potrzebna, bo RPL zapisuje tę samą substancję na różne sposoby:
+  raz jako sól, raz bez niej (naproxenum / naproxenum natricum), z przedrostkiem lub
+  bez (fluorouracilum / 5-fluorouracilum), a niektóre produkty nie mają w rejestrze
+  substancji wcale (Pradaxa). Bez niej aplikacja odpowiadałaby „nie masz” o leku,
+  który leży w domu.
+- **Ogólniki nigdy nie pasują** — nazwa powszechna będąca ogólnikiem (np. „produkt
+  złożony”) albo brak danych daje pusty zbiór, a pusty zbiór nie pasuje do niczego.
+  Zgodnie z bezpiecznikiem: lepiej „nie masz” niż fałszywe wskazanie.
+- Zbiory leku szukanego pochodzą z reprezentanta jego wariantu.
+
+Znane ryzyko ścieżki po nazwie powszechnej: pomiar z 2026-11-16 znalazł 351 nazw
+powszechnych, pod którymi są produkty o rozłącznych zbiorach substancji (9 236 par).
+Przejrzane przykłady to ta sama substancja zapisana inaczej, ale próbka nie jest
+pełna — przegląd jest częścią S-06. Wiersz apteczki nie pokazuje nazwy powszechnej,
+więc przy takim dopasowaniu użytkownik widzi dwie różne listy substancji pod wynikiem
+„ta sama substancja czynna”.
+
 Leki złożone, z kilkoma substancjami czynnymi, obsługuje wybierany przez użytkownika
 poziom dopasowania — trzy stopnie, od najostrzejszego do najluźniejszego:
 
@@ -229,6 +270,11 @@ aplikacji zgadującej, jak bardzo chce być pobłażliwa. Dzięki temu reguła o
 zarówno lek jednoskładnikowy, jak i złożony, bez dorabiania wyjątków. Który poziom
 jest domyślny — patrz Open Questions.
 
+Stan na v3: aplikacja ma jeden stały poziom — zgodność zbioru substancji albo
+nazwy powszechnej, opisaną wyżej. Wybór poziomu (FR-016) wnosi wycinek S-06; przed
+jego planowaniem trzeba rozstrzygnąć, czy ścieżka po nazwie powszechnej należy do
+poziomu „precyzyjnego”.
+
 ## Access Control
 
 Jedno konto na gospodarstwo domowe, dzielone przez domowników. Jedna fizyczna
@@ -238,8 +284,12 @@ zapraszania użytkowników ani współdzielenia apteczki między kontami.
 Model płaski: każdy, kto zalogował się na konto domu, może dodać lek, zmienić stan,
 usunąć pozycję i wyszukiwać zamienniki. Brak ról, brak podziału na podgląd i edycję.
 
-Konkretna metoda logowania (hasło, link na e-mail, konto zewnętrzne) nie została
-rozstrzygnięta — patrz Open Questions.
+Metoda logowania (v3): e-mail + hasło, jedno konto Supabase na dom. Rejestracja
+jest wyłączana w produkcyjnym projekcie Supabase zaraz po założeniu konta domu —
+to ustawienie projektu, nie kod; bez tego każdy z adresem e-mail mógłby założyć
+własne konto z pustą apteczką (dane innych kont i tak chroni RLS). Lokalny Supabase
+zostaje z otwartą rejestracją, bo `npm run smoke` i `npm run test:api` zakładają
+konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals).
 
 ## Non-Goals
 
@@ -266,7 +316,18 @@ rozstrzygnięta — patrz Open Questions.
 - Pozycje spoza rejestru (suplementy, maści z zagranicy, leki recepturowe) — było
   FR-004, wycięte w rundzie wyzwań. Powód: własny wpis to furtka na wolny tekst,
   a bezpiecznik mówi, że żaden lek nie wchodzi do apteczki jako tekst. Apteczka
-  zawiera wyłącznie leki z rejestru.
+  zawiera wyłącznie leki z rejestru. Do przemyślenia po MVP (autor, 2026-11-16):
+  - Za: apteczka pokazywałaby całą prawdę (witamina D, magnez, leki z zagranicy);
+    import listy z czatu nie gubiłby takich pozycji; własne wpisy byłyby prywatnym
+    rejestrem domu.
+  - Przeciw: łamie bezpiecznik „aplikacja nigdy nie zgaduje”; bez ustrukturyzowanych
+    substancji „ta sama substancja” jest niemożliwa albo działa tylko po nazwie;
+    literówki i duplikaty; niejasne zachowanie przy sprawdzeniu leku.
+  - Kierunki: osobna kategoria „spoza rejestru” z wyraźnym oznaczeniem, która nigdy
+    nie daje zielonego „Masz ten lek”; rejestr suplementów GIS (sprawdzić, czy dane
+    są dostępne do pobrania).
+- Zmiana i reset hasła w aplikacji (v3). Konto domu jest jedno i dzielone, więc
+  zapomniane hasło resetuje autor w panelu Supabase.
 - Koszyk do konsultacji — zapamiętanie sprawdzonych leków jako lista lub raport
   do pokazania farmaceucie, zamiast wyszukiwania każdego osobno przy okienku.
   Pomysł autora z rundy wyzwań; pokrywa się częściowo z FR-015.
@@ -279,8 +340,9 @@ rozstrzygnięta — patrz Open Questions.
 
 1. **Jak działają istniejące aplikacje do apteczki i czy któraś oferuje wyszukiwanie
    zamiennika?** — konkurencja nie została sprawdzona. Owner: autor. Blokuje: nie.
-2. **Jaką metodą loguje się użytkownik do konta domu?** — hasło, link na e-mail albo
-   konto zewnętrzne; nierozstrzygnięte. Owner: autor. Blokuje: nie.
+2. ~~**Jaką metodą loguje się użytkownik do konta domu?**~~ — rozstrzygnięte w v3
+   (2026-11-16): e-mail + hasło, rejestracja wyłączona na produkcji po założeniu
+   konta domu, reset hasła poza zakresem — patrz Access Control i Non-Goals.
 3. **Ile dni przed końcem ważności aplikacja ostrzega?** — okres do ustalenia.
    Owner: autor. Blokuje: nie.
 4. **Który poziom dopasowania substancji czynnych jest domyślny?** — bezpiecznik

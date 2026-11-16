@@ -9,8 +9,10 @@ workers_dev_subdomain: mig-app
 # Pierwsze wdrożenie produkcyjne
 
 Pierwsze ręczne wdrożenie wygenerowanego szkieletu (logowanie przez Supabase +
-chroniony `/dashboard`, jeszcze bez funkcji produktu) na Cloudflare Workers,
-zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`.
+chroniona strona startowa szkieletu, jeszcze bez funkcji produktu) na Cloudflare Workers,
+zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`. Strony
+szkieletu już nie ma: chronione są dziś `/szukaj` i `/apteczka` (`PROTECTED_ROUTES`
+w `src/middleware.ts`), a stan na 2026-11-16 opisuje README (sekcje CI i Deployment).
 
 ## Co zostało zrobione
 
@@ -35,9 +37,9 @@ zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`.
      `mig-app` przez **Workers & Pages → Overview → Your subdomain → Change**.
 6. Sprawdzone od początku do końca:
    - `GET /` → 200
-   - `GET /dashboard` (bez logowania) → 302 na `/auth/signin`
+   - `GET` chronionej strony szkieletu (bez logowania) → 302 na `/auth/signin`
    - Prawdziwa rejestracja → potwierdzenie e-maila → logowanie → wejście na
-     `/dashboard`, co dowodzi, że wdrożony Worker łączy się z projektem
+     chronioną stronę szkieletu, co dowodzi, że wdrożony Worker łączy się z projektem
      Supabase w chmurze.
    - `wrangler deployments list` pokazuje oba zapisane wdrożenia (cofnięcie
      możliwe przez `wrangler rollback <VERSION_ID>`).
@@ -51,8 +53,9 @@ zgodnie z decyzją o platformie w `context/foundation/infrastructure.md`.
 
 ## Dalszy krok: automatyczne wdrożenie po merge'u w CI
 
-`ci.yml` ma teraz job `deploy` (uruchamiany po przejściu `ci` i `smoke`, przy
-każdym pushu do `main`), który wykonuje `npm run build`, a potem
+`ci.yml` ma teraz job `deploy` (uruchamiany przy każdym pushu do `main` po
+przejściu joba `ci`; `smoke` działa tylko na PR, a kod trafia do `main` wyłącznie
+przez PR, który go już przeszedł), który wykonuje `npm run build`, a potem
 `cloudflare/wrangler-action@v4` z ograniczonym sekretem repozytorium
 `CLOUDFLARE_API_TOKEN`. Ręczne `wrangler deploy` z lokalnej maszyny zostaje
 jako wyjście awaryjne.
@@ -66,5 +69,7 @@ zmiana nie dotyka kodu logowania, middleware ani Supabase).
 
 ## Świadomie pominięte w tym przebiegu
 
-- Codzienny job GitHub Actions importujący rejestr (PRD FR-001) — nie ma
-  jeszcze dla niego kodu produktu.
+- Codzienny job GitHub Actions importujący rejestr (PRD FR-001) — wtedy nie
+  było jeszcze kodu produktu. Dziś istnieje: `.github/workflows/registry-import.yml`
+  (codziennie 04:17 UTC, opis w README, sekcja CI); keepalive harmonogramu to
+  wycinek S-16 w roadmapie.
