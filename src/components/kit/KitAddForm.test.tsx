@@ -4,7 +4,7 @@ import KitAddForm from "@/components/kit/KitAddForm";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { reply, stubRoutedFetch, type RoutedFetch, type RoutedFetchOptions } from "../../../tests/helpers/fetch";
-import type { RegistryVariantPackage } from "@/types";
+import type { RegistrySearchListPayload, RegistryVariantPackage } from "@/types";
 
 // The texts below are pinned on purpose, like in RegistrySearch.test.tsx.
 const ADD_BUTTON = "Dodaj do apteczki";
@@ -40,11 +40,15 @@ async function openForm({
     [ID.ibuprom400]: [pack(1001, ID.ibuprom400)],
     [ID.ibupromMax400]: [pack(1002, ID.ibupromMax400)],
   },
+  list = registrySearchList,
   ...options
-}: RoutedFetchOptions & { packages?: Partial<Record<number, RegistryVariantPackage[]>> } = {}) {
-  const routed = stubRoutedFetch(registrySearchList, packages, options);
+}: RoutedFetchOptions & {
+  packages?: Partial<Record<number, RegistryVariantPackage[]>>;
+  list?: RegistrySearchListPayload;
+} = {}) {
+  const routed = stubRoutedFetch(list, packages, options);
   const Worker = stubSearchWorker();
-  render(<KitAddForm version={registrySearchList.version} />);
+  render(<KitAddForm version={list.version} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
   const created = Worker.last;
   if (!created) {
@@ -277,6 +281,24 @@ describe("KitAddForm", () => {
       await waitFor(() => {
         expect(addRequests(form.routed)).toEqual([{ packageId: 1001, quantity: null, expiry: null }]);
       });
+    });
+
+    it("says „wycofany z rejestru” under the picked medicine when the whole medicine is withdrawn", async () => {
+      // Ibuprom 400 mg withdrawn as a whole: its tuple gets the 7th element.
+      const list: RegistrySearchListPayload = {
+        ...registrySearchList,
+        variants: registrySearchList.variants.map((tuple) =>
+          tuple[0] === ID.ibuprom400 ? [...tuple.slice(0, 6), true] : tuple,
+        ) as RegistrySearchListPayload["variants"],
+      };
+      const form = await openForm({
+        list,
+        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { withdrawn: true })] },
+      });
+
+      await form.choose(A_OPTION + "wycofany z rejestru");
+
+      expect(chosen()).toBe(A_CHOSEN + "wycofany z rejestru");
     });
 
     it("says there are no packs of the medicine in the registry when the list is empty", async () => {
