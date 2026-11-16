@@ -95,7 +95,7 @@ export async function getPackage(supabase: SupabaseClient, packageId: number): P
     .eq("id", packageId)
     .maybeSingle();
   if (error) {
-    throw new Error(`Failed to read registry package ${packageId}: ${error.message}`);
+    throw new Error(`Failed to read registry package ${packageId}: ${error.message}`, { cause: error });
   }
   const row = data as unknown as PackageRow | null;
   if (!row) {

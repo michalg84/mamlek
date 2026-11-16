@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import { WithdrawnPackMark } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -364,11 +365,6 @@ function CurrentVariant({ variant }: { variant: RegistryVariant }) {
       {variant.withdrawn && <WithdrawnVariantNote />}
     </p>
   );
-}
-
-/** Same wording as in the search suggestions (MedicineSuggest) and the kit item details. */
-function WithdrawnVariantNote() {
-  return <span className="text-muted-foreground block text-sm">wycofany z rejestru</span>;
 }
 
 /** Which medicine the row is: the assignment, the suggestions to pick from, or the search field. */

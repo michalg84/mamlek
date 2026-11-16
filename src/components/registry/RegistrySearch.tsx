@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import type { MedicineCheckResponse, RegistryVariant } from "@/types";
 
 interface Props {
@@ -23,7 +24,7 @@ function VariantCard({ variant, withdrawn }: { variant: SearchedMedicine; withdr
   return (
     <Card role="region" aria-label="Wybrany lek" className="min-w-0 gap-0 p-4">
       <h2 className="text-foreground text-lg font-semibold break-words">{variant.name}</h2>
-      {withdrawn && <p className="text-muted-foreground text-sm">wycofany z rejestru</p>}
+      {withdrawn && <WithdrawnVariantNote as="p" />}
       <dl className="mt-3 space-y-3">
         {variant.strength && <Field label="Moc">{variant.strength}</Field>}
         {variant.form && <Field label="Postać">{variant.form}</Field>}

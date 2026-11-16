@@ -249,6 +249,29 @@ describe("KitAddForm", () => {
       expect(addButton()?.hasAttribute("disabled")).toBe(false);
     });
 
+    // A withdrawn GTIN of the same product and label as an active one is no real choice: `uniquePacks` keeps only
+    // the active pack (it comes first), so the variant counts as having one pack and that pack is chosen itself.
+    it("hides a withdrawn twin of an active pack and chooses the active one itself", async () => {
+      const form = await openForm({
+        [ID.ibuprom400]: [pack(1001, ID.ibuprom400), pack(1004, ID.ibuprom400, { withdrawn: true })],
+      });
+
+      await form.choose(A_OPTION);
+
+      const radios = screen.getAllByRole("radio");
+      expect(radios).toHaveLength(1);
+      expect(screen.getByRole("radio", { name: "30 tabletki" }).getAttribute("aria-checked")).toBe("true");
+      const button = addButton();
+      if (!button) {
+        throw new Error("No add button");
+      }
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(addRequests(form.routed)).toEqual([{ packageId: 1001, quantity: null, expiry: null }]);
+      });
+    });
+
     it("says there are no packs of the medicine in the registry when the list is empty", async () => {
       const form = await openForm({ [ID.ibuprom400]: [] });
 

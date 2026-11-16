@@ -151,6 +151,25 @@ describe("KitItemEdit", () => {
     });
   });
 
+  it("pins the item's withdrawn pack as „obecne” when the registry lists it but `uniquePacks` hides it behind its active twin", async () => {
+    // 1009 (withdrawn) and 1001 (active) share product and label; the list keeps only 1001, so 1009 is pinned.
+    const item = kitItem({ packageId: 1009, units: sachets("10"), withdrawn: true });
+    const { routed } = renderEdit(item, [pack(1001, "10"), pack(1002, "30"), pack(1009, "10", PRODUCT, true)]);
+
+    const radios = await screen.findAllByRole("radio");
+    expect(radios).toHaveLength(3);
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["true", "false", "false"]);
+    expect(screen.getByRole("radio", { name: /^10 saszetki\s*· obecne$/ })).toBe(radios[0]);
+    expect(screen.queryByText("· wycofane")).toBeNull();
+
+    fireEvent.click(radios[1]);
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { packageId: 1001 } }]);
+    });
+  });
+
   it("shows the item's own withdrawn pack, listed by the registry, once as „obecne”, and saving without a change sends no packageId", async () => {
     // The registry now lists withdrawn packs too, so the item's pack (20 sachets) arrives on the list by itself.
     const item = kitItem({ packageId: 1009, units: sachets("20"), withdrawn: true });

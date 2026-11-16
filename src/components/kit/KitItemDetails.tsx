@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { formatExpiry, formatQuantity, isExpired, packLabel } from "@/lib/kit-format";
 import type { KitItem } from "@/types";
 
@@ -41,7 +42,7 @@ export function KitItemDetails({ item, today, substances, quantitySlot }: KitIte
         Ważny do: {formatExpiry(item.expiresOn, item.expiryPrecision)}
         {expired && <span className="text-destructive font-medium"> · przeterminowany</span>}
       </p>
-      {item.withdrawn && <p className="text-muted-foreground text-sm">wycofany z rejestru</p>}
+      {item.withdrawn && <WithdrawnVariantNote as="p" />}
     </>
   );
 }

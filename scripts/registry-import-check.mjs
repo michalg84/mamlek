@@ -55,6 +55,8 @@ async function refreshAs(role) {
 //   900000002  active, IR                 -> loses to the non-IR product
 //   900000003  active, NAR                -> the representative (the variant is active: no marker)
 //   900000004  removed, NAR, own variant  -> a variant withdrawn as a whole: listed, with the marker `true`
+//   900000005  active, IR, own variant    -> the representative over 900000006: "active" outranks "not IR"
+//   900000006  removed, NAR, same variant -> loses (with the two keys swapped it would win and mark the variant)
 // The first three differ only by letter case, so they form one variant.
 async function syntheticCollapse() {
   await client.query("begin");
@@ -67,7 +69,9 @@ async function syntheticCollapse() {
         (900000001, 'Synthetic Variant', '10 mg', 'tabletki', 'NAR', now()),
         (900000002, 'SYNTHETIC VARIANT', '10 MG', 'Tabletki', 'IR', null),
         (900000003, 'Synthetic variant', '10 Mg', 'TABLETKI', 'NAR', null),
-        (900000004, 'Synthetic Withdrawn', '20 mg', 'tabletki', 'NAR', now())`);
+        (900000004, 'Synthetic Withdrawn', '20 mg', 'tabletki', 'NAR', now()),
+        (900000005, 'Synthetic Pair', '5 mg', 'tabletki', 'IR', null),
+        (900000006, 'Synthetic Pair', '5 mg', 'tabletki', 'NAR', now())`);
     await client.query("select public.registry_refresh_search_list()");
     const after = await value(`select jsonb_build_object(
         'version', l.version,
@@ -81,7 +85,10 @@ async function syntheticCollapse() {
                 where lower(v ->> 1) = 'synthetic variant'),
         'withdrawnTuples', (select coalesce(jsonb_agg(v), '[]'::jsonb)
                 from jsonb_array_elements(l.payload::jsonb -> 'variants') v
-                where lower(v ->> 1) = 'synthetic withdrawn')
+                where lower(v ->> 1) = 'synthetic withdrawn'),
+        'pairTuples', (select coalesce(jsonb_agg(v), '[]'::jsonb)
+                from jsonb_array_elements(l.payload::jsonb -> 'variants') v
+                where lower(v ->> 1) = 'synthetic pair')
       ) as value from registry_search_list l`);
     return { before, after };
   } finally {
@@ -250,10 +257,13 @@ const checks = [
       after.withdrawnTuples[0][0] === 900000004 &&
       after.withdrawnTuples[0].length === 7 &&
       after.withdrawnTuples[0][6] === true &&
-      after.variants === before.variants + 2 &&
+      after.pairTuples.length === 1 &&
+      after.pairTuples[0][0] === 900000005 &&
+      after.pairTuples[0].length === 6 &&
+      after.variants === before.variants + 3 &&
       after.listed === after.variants &&
       after.version > before.version,
-    "one variant with the active non-IR product (900000003) and no 7th element, the fully withdrawn variant (900000004) listed with 7th element true, variants +2, version grows",
+    "one variant with the active non-IR product (900000003) and no 7th element, the fully withdrawn variant (900000004) listed with 7th element true, the active IR product (900000005) representing its pair with no 7th element, variants +3, version grows",
   ],
 ];
 

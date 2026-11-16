@@ -36,6 +36,7 @@ Lek wycofany z rejestru (Rejestr Produktów Leczniczych, RPL) ma być widoczny w
 - Podpowiedzi na `/szukaj`, w dodawaniu i w imporcie zawierają wycofane warianty. Pod nazwą wariantu stoi „wycofany z rejestru”. W obrębie poziomu dopasowania wycofany stoi za wszystkimi aktywnymi, a przed słabszymi poziomami.
 - Wariant jest wycofany, gdy wycofane są wszystkie produkty o jego kluczu. Jeśli choć jeden produkt jest aktywny, przedstawicielem jest aktywny produkt i wariant jest aktywny.
 - Lista opakowań wariantu zawiera wycofane opakowania (także wycofanych produktów-rodzeństwa) z oznaczeniem „wycofane”, za aktywnymi. Opakowanie wybiera się samo tylko wtedy, gdy lista ma dokładnie jedno opakowanie, licząc też wycofane.
+  - ADAPT (przegląd implementacji, F3): `uniquePacks` zwija opakowania tego samego produktu o tej samej etykiecie bez względu na `withdrawn`. Aktywne idą pierwsze, więc wycofany bliźniak aktywnego opakowania nie pojawia się na liście i nie liczy się do reguły „dokładnie jedno”. Takie dwie pozycje nie dają użytkownikowi realnego wyboru, a `medicine_check` dopasowuje po wariancie. W edycji pozycja na ukrytym bliźniaku jest przypinana jako „obecne”. Oba przypadki przypinają testy w `KitAddForm.test.tsx` i `KitItemEdit.test.tsx`.
 - `POST /api/kit`, `POST /api/kit/import` i `PATCH /api/kit/[id]` przyjmują wycofane opakowanie. Nieistniejące opakowanie dalej dostaje 400.
 - Karta sprawdzenia na `/szukaj` pokazuje „wycofany z rejestru” dla wycofanego leku. Wynik `medicine_check` się nie zmienia.
 - Nowy kod działa też na starej bazie: krotka 6-elementowa oznacza aktywny wariant, a brak kolumny `withdrawn` w RPC oznacza `false`.
@@ -153,6 +154,7 @@ Nowa migracja:
 **File**: `tests/db/registry-import-fixtures.ts`
 
 - Dodaj nową migrację do `REGISTRY_MIGRATIONS`, jeśli wymaga tego test strażnik. Migracja zmienia `registry_variant_packages`, która pochodzi z `kit_items.sql`. Sprawdź regułę strażnika: migracja dotykająca `kit_items` może nie należeć do listy, a wtedy `registry_refresh_search_list` w bazie testowej importu zostaje w starej wersji. Wybierz to, czego wymaga strażnik, i zapisz decyzję w Progress jako ADAPT.
+- ADAPT (przegląd implementacji, F5): migracja jest w `REGISTRY_MIGRATIONS`. Redefiniuje `registry_refresh_search_list`, którą woła importer, więc bez niej baza testowa importu sprawdzałaby starą listę. `registry_variant_packages` usuwa przez `drop ... if exists`, dlatego migracja działa też na bazie bez `kit_items`. Strażnik (`registry-import.test.ts`, regex `auth.|kit_items`) tej decyzji nie wymusza, bo nagłówek migracji wspomina `kit_items` i strażnik przyjąłby też jej pominięcie. AGENTS.md mówi teraz wprost, że ta reguła jest ręczna.
 
 #### 4. Golden `search:check`
 
@@ -572,7 +574,7 @@ ADAPT (5.5): `ui:shots` szuka „ibu”, a w fixture'ach nie ma ibuprofenu, wię
 
 #### Manual
 
-- [x] 3.6 Na `/szukaj` (fixture'y) Crestor ma oznaczenie w podpowiedzi i na karcie sprawdzenia
+- [x] 3.6 Na `/szukaj` (fixture'y) Crestor ma oznaczenie w podpowiedzi i na karcie sprawdzenia — 49f1065
 
 ### Phase 4: Wybór opakowania w formularzach
 
@@ -591,12 +593,12 @@ ADAPT (5.5): `ui:shots` szuka „ibu”, a w fixture'ach nie ma ibuprofenu, wię
 
 #### Automated
 
-- [x] 5.1 Perf slow z 1000 sztucznymi wycofanymi wariantami mieści się w 5 s, baza przywrócona
-- [x] 5.2 `registry-import-check`, `test:db`, `smoke` i `test:api` przechodzą na fixture'ach
-- [x] 5.3 Testy unit + component + registry, lint, typy i `ui:scan` przechodzą
-- [x] 5.4 PRD, roadmapa, audyt, test-plan i AGENTS.md zaktualizowane, `roadmap:sync` wykonany
+- [x] 5.1 Perf slow z 1000 sztucznymi wycofanymi wariantami mieści się w 5 s, baza przywrócona — 49f1065
+- [x] 5.2 `registry-import-check`, `test:db`, `smoke` i `test:api` przechodzą na fixture'ach — 49f1065
+- [x] 5.3 Testy unit + component + registry, lint, typy i `ui:scan` przechodzą — 49f1065
+- [x] 5.4 PRD, roadmapa, audyt, test-plan i AGENTS.md zaktualizowane, `roadmap:sync` wykonany — 49f1065
 
 #### Manual
 
-- [x] 5.5 Zrzuty `ui:shots` z wycofanym lekiem obejrzane na 1280 i 390 px
+- [x] 5.5 Zrzuty `ui:shots` z wycofanym lekiem obejrzane na 1280 i 390 px — 49f1065
 - [ ] 5.6 Po merge'u `db push` i sprawdzenie wycofanego leku na produkcji

@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistrySearch } from "@/components/hooks/useRegistrySearch";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -219,7 +220,7 @@ export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku
                 <span className="line-clamp-2 block font-bold break-words">{variant.name}</span>
                 {details && <span className="text-muted-foreground block truncate text-sm">{details}</span>}
                 {/* Inside the option, so it is part of the option's accessible name. */}
-                {variant.withdrawn && <span className="text-muted-foreground block text-xs">wycofany z rejestru</span>}
+                {variant.withdrawn && <WithdrawnVariantNote className="text-xs" />}
               </li>
             );
           })}

@@ -1,7 +1,7 @@
 ---
 change_id: withdrawn-medicine-in-kit
 title: Withdrawn registry medicines in suggestions, kit add, CSV import and check
-status: implementing
+status: impl_reviewed
 created: 2026-11-16
 updated: 2026-11-16
 archived_at: null
