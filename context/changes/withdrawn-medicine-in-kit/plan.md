@@ -372,6 +372,7 @@ Dodawanie, import i edycja pokazują wycofane opakowania z oznaczeniem „wycofa
 #### 3. Formularze
 
 - **`src/components/kit/KitAddForm.tsx`**: oznaczenie wycofanych opakowań i komunikat pustej listy. Reguła samodzielnego wyboru (`packages.length === 1`) zostaje: lista zawiera teraz wycofane, więc jedno aktywne z jednym wycofanym daje wybór użytkownika. Komentarz mówi to wprost.
+  - ADAPT (ręczne sprawdzenie na produkcji, PR #81): plan nie przewidywał oznaczenia wycofanego wariantu po wyborze, więc przy leku wycofanym w całości (np. Batrafen) linia „Wybrano: …” nie mówiła, że wycofany jest cały lek, a nie tylko opakowanie. Pod tą linią stoi teraz `WithdrawnVariantNote`, jak na karcie `/szukaj`. Przypina to test w `KitAddForm.test.tsx`.
 - **`src/components/kit/KitImportRow.tsx`**:
   - oznaczenie opakowań (`RowPack`);
   - komunikat pustej listy (`:125-130`);
