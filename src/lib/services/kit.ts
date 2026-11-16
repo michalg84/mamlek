@@ -10,6 +10,8 @@ interface VariantPackageRow {
   availability_category: string | null;
   units: RegistryPackageUnit[] | null;
   marketing_authorization_holder: string | null;
+  /** Missing on a database before the withdrawn-medicine-in-kit migration, whose function returned active packs only. */
+  withdrawn?: boolean;
 }
 
 interface PackageRow {
@@ -18,7 +20,8 @@ interface PackageRow {
   gtin: string | null;
   availability_category: string | null;
   units: RegistryPackageUnit[] | null;
-  registry_products: { marketing_authorization_holder: string | null; removed_at: string | null } | null;
+  removed_at: string | null;
+  registry_products: { marketing_authorization_holder: string | null; removed_at: string | null };
 }
 
 interface KitItemRow {
@@ -42,7 +45,10 @@ interface KitItemRow {
   };
 }
 
-/** Active packs of every active product sharing the variant of `productId` (the picked suggestion). */
+/**
+ * Packs of every product sharing the variant of `productId` (the picked suggestion), active ones first; withdrawn ones
+ * (the pack or its product) are flagged, since a withdrawn medicine can still be kept in the kit.
+ */
 export async function getVariantPackages(
   supabase: SupabaseClient,
   productId: number,
@@ -58,26 +64,15 @@ export async function getVariantPackages(
     availabilityCategory: row.availability_category,
     units: row.units ?? [],
     holder: row.marketing_authorization_holder,
+    withdrawn: row.withdrawn ?? false,
   }));
 }
 
-/** The pack with its units, or null when it does not exist or is withdrawn (pack or product removed). */
-export async function getPackage(supabase: SupabaseClient, packageId: number): Promise<RegistryVariantPackage | null> {
-  const { data, error } = await supabase
-    .from("registry_packages")
-    .select(
-      "id, product_id, gtin, availability_category, units, registry_products!inner(marketing_authorization_holder, removed_at)",
-    )
-    .eq("id", packageId)
-    .is("removed_at", null)
-    .maybeSingle();
-  if (error) {
-    throw new Error(`Failed to read registry package ${packageId}: ${error.message}`);
-  }
-  const row = data as unknown as PackageRow | null;
-  if (row?.registry_products?.removed_at !== null) {
-    return null;
-  }
+// The pack's own `removed_at` and its product's: either one makes the pack withdrawn.
+const PACKAGE_SELECT =
+  "id, product_id, gtin, availability_category, units, removed_at, registry_products!inner(marketing_authorization_holder, removed_at)";
+
+function toPackage(row: PackageRow): RegistryVariantPackage {
   return {
     packageId: row.id,
     productId: row.product_id,
@@ -85,12 +80,33 @@ export async function getPackage(supabase: SupabaseClient, packageId: number): P
     availabilityCategory: row.availability_category,
     units: row.units ?? [],
     holder: row.registry_products.marketing_authorization_holder,
+    withdrawn: row.removed_at !== null || row.registry_products.removed_at !== null,
   };
 }
 
 /**
- * The active packs among `ids`, by id, in one query; the same rule as `getPackage` (a pack missing from the map does
- * not exist or is withdrawn, the pack or its product).
+ * The pack with its units, or null when it does not exist. A withdrawn pack (the pack or its product removed from the
+ * registry) is returned too, flagged `withdrawn`: a withdrawn medicine can still be kept in the kit.
+ */
+export async function getPackage(supabase: SupabaseClient, packageId: number): Promise<RegistryVariantPackage | null> {
+  const { data, error } = await supabase
+    .from("registry_packages")
+    .select(PACKAGE_SELECT)
+    .eq("id", packageId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Failed to read registry package ${packageId}: ${error.message}`);
+  }
+  const row = data as unknown as PackageRow | null;
+  if (!row) {
+    return null;
+  }
+  return toPackage(row);
+}
+
+/**
+ * The packs among `ids`, by id, in one query; the same rule as `getPackage` (withdrawn packs are included and flagged, a
+ * pack missing from the map does not exist).
  */
 export async function getPackages(
   supabase: SupabaseClient,
@@ -101,28 +117,12 @@ export async function getPackages(
   if (unique.length === 0) {
     return packages;
   }
-  const { data, error } = await supabase
-    .from("registry_packages")
-    .select(
-      "id, product_id, gtin, availability_category, units, registry_products!inner(marketing_authorization_holder, removed_at)",
-    )
-    .in("id", unique)
-    .is("removed_at", null);
+  const { data, error } = await supabase.from("registry_packages").select(PACKAGE_SELECT).in("id", unique);
   if (error) {
     throw new Error(`Failed to read ${unique.length} registry packages: ${error.message}`, { cause: error });
   }
   for (const row of data as unknown as PackageRow[]) {
-    if (row.registry_products?.removed_at !== null) {
-      continue;
-    }
-    packages.set(row.id, {
-      packageId: row.id,
-      productId: row.product_id,
-      gtin: row.gtin,
-      availabilityCategory: row.availability_category,
-      units: row.units ?? [],
-      holder: row.registry_products.marketing_authorization_holder,
-    });
+    packages.set(row.id, toPackage(row));
   }
   return packages;
 }
@@ -209,8 +209,8 @@ export async function listKitItems(supabase: SupabaseClient): Promise<KitItem[]>
 }
 
 /**
- * One kit item of the signed-in account, or null when it does not exist or is another account's (RLS hides it). Unlike
- * `getPackage`, withdrawn packs and products are not filtered out: the item keeps its pack and its `units`.
+ * One kit item of the signed-in account, or null when it does not exist or is another account's (RLS hides it). The item
+ * keeps its pack and its `units` whether the pack is active or withdrawn (flagged `withdrawn`).
  */
 export async function getKitItem(supabase: SupabaseClient, id: number): Promise<KitItem | null> {
   const { data, error } = await supabase.from("kit_items").select(KIT_ITEM_SELECT).eq("id", id).maybeSingle();

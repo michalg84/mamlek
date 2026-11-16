@@ -7,15 +7,16 @@
 //     one (add-medicine-to-kit plan, contract of POST /api/kit); 100000 is the cap otherwise (F1 of that change's
 //     review: a bound far below the integer limit);
 //   - expiry: month 1-12 and a year range of 2000-2100 (same contract); the precision is always month;
-//   - ids: positive integers that exist in the registry as active packs of active products;
+//   - ids: positive integers that exist in the registry as packs, active or withdrawn (the pack or its product): a
+//     medicine withdrawn from the registry can still be kept in the kit (withdrawn-medicine-in-kit plan, phase 2);
 //   - import page: 1 to 30 items, all stored or none (csv-kit-import plan, phase 2: one page of the approval screen);
 //   - edit (kit-browse-edit plan, phase 1): a key that is absent leaves the stored value, null clears it; the quantity
 //     cap follows the pack the item will be on (the stored pack when it does not change, even a withdrawn one); the
-//     new pack must be an active pack of the same medicine; the id in the path is digits only.
+//     new pack must be a pack of the same medicine, active or withdrawn (withdrawn-medicine-in-kit plan, phase 2); the
+//     id in the path is digits only.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   expectNoInternals,
-  insertKitRow,
   kitRowCount,
   kitRowsById,
   loadBoundaryData,
@@ -100,13 +101,29 @@ describe("POST /api/kit: packageId", () => {
     ["null", () => ({ packageId: null })],
     ["2^53", () => ({ packageId: 2 ** 53 })],
     ["1e20", () => ({ packageId: 1e20 })],
-    ["not in the registry", () => ({ packageId: UNKNOWN_ID })],
-    ["a withdrawn pack", (d) => ({ packageId: d.withdrawnPackage.packageId })],
-    ["a pack of a withdrawn product", (d) => ({ packageId: d.withdrawnProductPackage.packageId })],
   ];
 
   it.each(cases)("%s gets 400", async (_name, body) => {
     await expectRejected(400, () => sendJson(KIT, body(data), jar));
+  });
+
+  it("not in the registry gets 400 Package not found", async () => {
+    const reply = await expectRejected(400, () => sendJson(KIT, { packageId: UNKNOWN_ID }, jar));
+    expect((JSON.parse(reply.body) as { error?: string }).error).toBe("Package not found");
+  });
+
+  // A medicine withdrawn from the registry can still be in the cabinet, so its pack is accepted.
+  it.each([
+    ["a withdrawn pack", () => data.withdrawnPackage.packageId],
+    ["a pack of a withdrawn product", () => data.withdrawnProductPackage.packageId],
+  ])("%s gets 201 and the row is stored on it", async (_name, target) => {
+    const packageId = target();
+    const before = await kitRowCount(email);
+    const reply = await sendJson(KIT, { packageId, quantity: 1 }, jar);
+    expect(reply.status, reply.body.slice(0, 200)).toBe(201);
+    const { id } = JSON.parse(reply.body) as { id: number };
+    expect(await kitRowCount(email)).toBe(before + 1);
+    expect(await kitRowsById([id])).toMatchObject([{ id, owner: email, packageId, quantity: 1 }]);
   });
 });
 
@@ -279,13 +296,26 @@ describe("POST /api/kit/import: items", () => {
 
   const rejectedAfterLookup: Case[] = [
     ["a pack not in the registry", () => ({ packageId: UNKNOWN_ID })],
-    ["a withdrawn pack", (d) => ({ packageId: d.withdrawnPackage.packageId })],
-    ["a pack of a withdrawn product", (d) => ({ packageId: d.withdrawnProductPackage.packageId })],
     ["a quantity above the pack size", (d) => ({ packageId: d.sized.packageId, quantity: d.sized.size + 1 })],
   ];
 
   it.each(rejectedAfterLookup)("%s gets 400 naming the item", async (_name, item) => {
     await expectItemRejected([{ packageId: data.sized.packageId }, item(data)], 1);
+  });
+
+  it("a pack not in the registry gets 400 Package not found with its index", async () => {
+    const reply = await expectRejected(400, () =>
+      sendJson(IMPORT, { items: [{ packageId: data.sized.packageId }, { packageId: UNKNOWN_ID }] }, jar),
+    );
+    expect(JSON.parse(reply.body)).toEqual({ error: "Package not found", index: 1 });
+  });
+
+  // A medicine withdrawn from the registry can still be in the cabinet, so its pack is imported like an active one.
+  it.each([
+    ["a withdrawn pack", () => data.withdrawnPackage.packageId],
+    ["a pack of a withdrawn product", () => data.withdrawnProductPackage.packageId],
+  ])("%s is stored", async (_name, target) => {
+    await expectImported([{ packageId: data.sized.packageId }, { packageId: target(), quantity: 1 }]);
   });
 
   it(`${PAGE_SIZE - 1} good items and a bad last one store nothing (all or none)`, async () => {
@@ -547,12 +577,26 @@ describe("PATCH /api/kit/[id]: change of the pack", () => {
 
   it.each([
     ["a pack of another variant", () => data.otherVariant.packageId],
-    ["a withdrawn pack", () => data.withdrawnPackage.packageId],
-    ["a pack of a withdrawn product", () => data.withdrawnProductPackage.packageId],
+    ["a withdrawn pack of another variant", () => data.otherVariantWithdrawn.packageId],
     ["a pack not in the registry", () => UNKNOWN_ID],
   ])("to %s gets 400", async (_name, target) => {
     const id = await addRow({ packageId: data.siblings.small.packageId });
     await expectPatchRejected(400, id, { packageId: target() });
+  });
+
+  // A withdrawn medicine can be kept, so a withdrawn pack of the same medicine is a valid target.
+  it("to a withdrawn pack of the same medicine gets 200 and the row moves", async () => {
+    const target = data.siblingWithdrawn.packageId;
+    const id = await addRow({ packageId: data.siblings.small.packageId });
+    expect((await expectPatched(id, { packageId: target })).packageId).toBe(target);
+    expect((await rowOf(id)).packageId).toBe(target);
+  });
+
+  it("from a pack of a withdrawn product to another pack of it gets 200 and the row moves", async () => {
+    const { from, to } = data.withdrawnProductPair;
+    const id = await addRow({ packageId: from.packageId });
+    expect((await expectPatched(id, { packageId: to.packageId })).packageId).toBe(to.packageId);
+    expect((await rowOf(id)).packageId).toBe(to.packageId);
   });
 
   it("with a quantity above the new pack's size gets 400, on the new size it gets 200", async () => {
@@ -589,11 +633,11 @@ describe("PATCH /api/kit/[id]: change of the pack", () => {
 });
 
 describe("PATCH /api/kit/[id]: an item on a withdrawn pack", () => {
-  // The app refuses to add such an item, so the row is inserted into the database. The cap is the size of the pack the
-  // item is on, withdrawn or not: both sides of it are tested, so skipping the cap for a withdrawn pack is caught too.
+  // The item is added through the app (a withdrawn pack is accepted). The cap is the size of the pack the item is on,
+  // withdrawn or not: both sides of it are tested, so skipping the cap for a withdrawn pack is caught too.
   let id: number;
   beforeEach(async () => {
-    id = await insertKitRow(email, data.withdrawnSized.packageId, { quantity: 1 });
+    id = await addRow({ packageId: data.withdrawnSized.packageId, quantity: 1 });
   });
 
   it("a quantity on the pack size gets 200", async () => {

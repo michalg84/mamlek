@@ -58,7 +58,7 @@ function variant(
   strength: string | null = null,
   form: string | null = null,
 ): RegistryVariant {
-  return { id, name, strength, form, commonName: null, substances: [] };
+  return { id, name, strength, form, commonName: null, substances: [], withdrawn: false };
 }
 
 function tuple(v: RegistryVariant): RegistryVariantTuple {

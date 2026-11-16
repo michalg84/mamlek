@@ -25,6 +25,7 @@ function pack(packageId: number, productId: number): RegistryVariantPackage {
     availabilityCategory: null,
     units: [{ count: "30", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
     holder: null,
+    withdrawn: false,
   };
 }
 

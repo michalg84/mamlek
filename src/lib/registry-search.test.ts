@@ -197,6 +197,8 @@ describe("searchVariants", () => {
       form: null,
       commonName: null,
       substances: [],
+      // A six-element tuple (no 7th element) is an active variant.
+      withdrawn: false,
     });
   });
 

@@ -14,6 +14,7 @@ const NO_SPA_TABLET: RegistryVariant = {
   form: "tabletki",
   commonName: "Drotaverini hydrochloridum",
   substances: ["Drotaverini hydrochloridum"],
+  withdrawn: false,
 };
 const IBUPROM_400: RegistryVariant = {
   id: 10,
@@ -22,6 +23,7 @@ const IBUPROM_400: RegistryVariant = {
   form: "tabletki powlekane",
   commonName: "Ibuprofenum",
   substances: ["Ibuprofenum"],
+  withdrawn: false,
 };
 const IBUPROM_MAX_400: RegistryVariant = {
   id: 12,
@@ -30,6 +32,7 @@ const IBUPROM_MAX_400: RegistryVariant = {
   form: "tabletki powlekane",
   commonName: "Ibuprofenum",
   substances: ["Ibuprofenum"],
+  withdrawn: false,
 };
 
 // Only the tablet has "tabletki" among strength and form, so the first query hits once: assigned on its own.

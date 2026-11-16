@@ -33,6 +33,7 @@ function pack(packageId: number, productId: number): RegistryVariantPackage {
     availabilityCategory: null,
     units: [{ count: "30", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
     holder: null,
+    withdrawn: false,
   };
 }
 
@@ -381,7 +382,7 @@ describe("KitImport", () => {
 
   it("marks the row the server rejected by its index among the sent rows", async () => {
     await review(csv(NO_SPA, UNKNOWN, RUTINOSCORBIN), {
-      importKit: () => reply({ error: "Package not found or withdrawn from the registry", index: 1 }, 400),
+      importKit: () => reply({ error: "Package not found", index: 1 }, 400),
     });
     pickSuggestion(4, /^Rutinoscorbin/);
     await packChosen(2);

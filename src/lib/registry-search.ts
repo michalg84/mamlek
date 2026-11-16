@@ -88,21 +88,24 @@ function compareEntries(a: RegistrySearchEntry, b: RegistrySearchEntry): number 
 
 /** Decodes the tuples, normalizes every field once and sorts the variants once (level order does not depend on the query). */
 export function buildSearchIndex(payload: RegistrySearchListPayload): RegistrySearchIndex {
-  const entries = payload.variants.map(([id, name, strength, form, commonName, substances]): RegistrySearchEntry => {
-    const nameWords = wordsOf(name);
-    const commonWords = wordsOf(commonName);
-    const substanceWords = substances.flatMap(wordsOf);
-    const extraWords = [...wordsOf(strength), ...wordsOf(form)];
-    return {
-      variant: { id, name, strength, form, commonName, substances },
-      nameLength: name.length,
-      nameWords,
-      commonWords,
-      substanceWords,
-      extraWords,
-      haystack: ` ${[...nameWords, ...commonWords, ...substanceWords, ...extraWords].join(" ")}`,
-    };
-  });
+  const entries = payload.variants.map(
+    ([id, name, strength, form, commonName, substances, withdrawn]): RegistrySearchEntry => {
+      const nameWords = wordsOf(name);
+      const commonWords = wordsOf(commonName);
+      const substanceWords = substances.flatMap(wordsOf);
+      const extraWords = [...wordsOf(strength), ...wordsOf(form)];
+      return {
+        // The 7th tuple element is present only for a withdrawn variant; a list without it reads as all active.
+        variant: { id, name, strength, form, commonName, substances, withdrawn: withdrawn === true },
+        nameLength: name.length,
+        nameWords,
+        commonWords,
+        substanceWords,
+        extraWords,
+        haystack: ` ${[...nameWords, ...commonWords, ...substanceWords, ...extraWords].join(" ")}`,
+      };
+    },
+  );
   entries.sort(compareEntries);
   return { version: payload.version, snapshotDate: payload.snapshotDate, entries };
 }

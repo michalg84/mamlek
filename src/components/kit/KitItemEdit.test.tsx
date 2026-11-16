@@ -21,7 +21,15 @@ function sachets(count: string): RegistryPackageUnit[] {
 }
 
 function pack(packageId: number, count: string, productId = PRODUCT): RegistryVariantPackage {
-  return { packageId, productId, gtin: null, availabilityCategory: null, units: sachets(count), holder: null };
+  return {
+    packageId,
+    productId,
+    gtin: null,
+    availabilityCategory: null,
+    units: sachets(count),
+    holder: null,
+    withdrawn: false,
+  };
 }
 
 function kitItem(overrides: Partial<KitItem> = {}): KitItem {

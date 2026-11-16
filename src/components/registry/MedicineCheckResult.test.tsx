@@ -49,6 +49,7 @@ function response(items: MedicineCheckItem[], comparable = true): MedicineCheckR
       form: "tabletki powlekane",
       commonName: "Atorvastatinum",
       substances: ["Atorvastatinum calcicum"],
+      withdrawn: false,
     },
     comparable,
     items,

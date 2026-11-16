@@ -525,22 +525,22 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 
 #### Automated
 
-- [x] 1.1 Nowe testy `test:db` i oczekiwania `registry-import-check` są czerwone przed migracją i zielone po niej
-- [x] 1.2 Celowe zepsucie kolejności przedstawiciela albo znacznika czerwieni `registry-import-check`
-- [x] 1.3 `registry-import-check` przechodzi po `db reset` i imporcie v1, v1, v2
-- [x] 1.4 `npm run test:db` przechodzi
-- [x] 1.5 Golden `search:check` zapisany na pełnym rejestrze z nową migracją
+- [x] 1.1 Nowe testy `test:db` i oczekiwania `registry-import-check` są czerwone przed migracją i zielone po niej — d9db50d
+- [x] 1.2 Celowe zepsucie kolejności przedstawiciela albo znacznika czerwieni `registry-import-check` — d9db50d
+- [x] 1.3 `registry-import-check` przechodzi po `db reset` i imporcie v1, v1, v2 — d9db50d
+- [x] 1.4 `npm run test:db` przechodzi — d9db50d
+- [x] 1.5 Golden `search:check` zapisany na pełnym rejestrze z nową migracją — d9db50d
 
 ### Phase 2: Kontrakt serwera i API
 
 #### Automated
 
-- [ ] 2.1 Zmienione testy `test:api` i nowe testy `kit.ts` są czerwone przed zmianą i zielone po niej
-- [ ] 2.2 Celowe przywrócenie filtra `removed_at` w `getPackage` czerwieni testy
-- [ ] 2.3 Testy unit + component + registry przechodzą
-- [ ] 2.4 Lint przechodzi
-- [ ] 2.5 Typy przechodzą (`npx astro check`)
-- [ ] 2.6 `npm run test:api` przechodzi na lokalnym serwerze z fixture'ami
+- [x] 2.1 Zmienione testy `test:api` i nowe testy `kit.ts` są czerwone przed zmianą i zielone po niej
+- [x] 2.2 Celowe przywrócenie filtra `removed_at` w `getPackage` czerwieni testy
+- [x] 2.3 Testy unit + component + registry przechodzą
+- [x] 2.4 Lint przechodzi
+- [x] 2.5 Typy przechodzą (`npx astro check`)
+- [x] 2.6 `npm run test:api` przechodzi na lokalnym serwerze z fixture'ami
 
 ### Phase 3: Podpowiedzi i karta sprawdzenia
 
