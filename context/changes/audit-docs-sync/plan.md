@@ -360,9 +360,9 @@ README, test-plan, deploy-plan i infrastructure.md opisują dzisiejszy stan; `bo
 
 #### Automated
 
-- [x] 3.1 Prettier akceptuje pliki: `npx prettier --check README.md context/foundation/test-plan.md context/deployment/deploy-plan.md context/foundation/infrastructure.md`
-- [x] 3.2 Nieaktualne frazy zniknęły (grep nic nie zwraca)
-- [x] 3.3 `context/changes/` zawiera tylko foldery z `change.md`
+- [x] 3.1 Prettier akceptuje pliki: `npx prettier --check README.md context/foundation/test-plan.md context/deployment/deploy-plan.md context/foundation/infrastructure.md` — fde8926
+- [x] 3.2 Nieaktualne frazy zniknęły (grep nic nie zwraca) — fde8926
+- [x] 3.3 `context/changes/` zawiera tylko foldery z `change.md` — fde8926
 
 #### Manual
 
