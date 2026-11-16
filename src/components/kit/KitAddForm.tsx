@@ -9,6 +9,7 @@ import {
   WithdrawnPackMark,
 } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -228,6 +229,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
       <p className="text-foreground min-w-0 text-sm break-words">
         Wybrano: <span className="font-bold">{variant.name}</span>
         {details && <span className="text-muted-foreground"> · {details}</span>}
+        {variant.withdrawn && <WithdrawnVariantNote />}
       </p>
 
       {packStep}
