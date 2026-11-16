@@ -32,7 +32,8 @@ Weryfikacja: testy jednostkowe `matchRow` i testy komponentu `KitImport` (nowe i
 
 ## What We're NOT Doing
 
-- Nie sprawdzamy dokładnej zgodności mocy i postaci. Moc i postać nadal dopasowują się prefiksowo w zapytaniu: wiersz `X;400 mg;tabletki` może dostać automatycznie jedyny wariant „X 400 mg tabletki powlekane”. Decyzja autora obejmuje równość nazwy; test jednostkowy przypina to zachowanie.
+- Nie sprawdzamy dokładnej zgodności postaci. Postać nadal dopasowuje się prefiksowo w zapytaniu: wiersz `X;400 mg;tabletki` może dostać automatycznie jedyny wariant „X 400 mg tabletki powlekane”. Test jednostkowy przypina to zachowanie.
+  > Addendum (impl-review F1, 2026-11-16): moc nie jest już dopasowywana tylko prefiksowo przy przypisaniu automatycznym. Wiersz `No-Spa;4 mg;tabletki` trafiał jedynie w „No-Spa 40 mg” i dostawał go sam. Teraz każde słowo mocy z wiersza musi być całym słowem mocy trafienia (`hasEveryWord`), inaczej trafienie jest tylko propozycją.
 - Nie zmieniamy `searchVariants`, `normalizeText` ani `wordsOf`. Wyszukiwarka na `/szukaj` działa tak samo, więc `npm run search:check` nie jest potrzebny.
 - Nie zmieniamy zapytań zastępczych (nazwa + moc, sama nazwa) ani limitu 5 propozycji.
 - Nie zmieniamy API (`POST /api/kit/import`) ani bazy, więc bez `test:db` i `test:api`.

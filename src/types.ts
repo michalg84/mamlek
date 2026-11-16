@@ -157,6 +157,11 @@ export interface RowMatchRequest {
    * own, and only when the hit has this name. Null for an incomplete row: it only gets suggestions.
    */
   exactName: string | null;
+  /**
+   * The row's strength, set together with `exactName`. Search matches strength words by prefix ("4" finds "40 mg"),
+   * so an automatic assignment also needs each of these words as a whole word of the hit's strength.
+   */
+  exactStrength: string | null;
 }
 
 /**

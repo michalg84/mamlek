@@ -36,13 +36,15 @@ const IBUPROM_MAX_400: RegistryVariant = {
 const NO_SPA_ROW: RowMatchRequest = {
   queries: ["No-Spa 40 mg tabletki", "No-Spa 40 mg", "No-Spa"],
   exactName: "No-Spa",
+  exactStrength: "40 mg",
 };
 // Nothing in the list starts with "xyzabc".
-const UNKNOWN_ROW: RowMatchRequest = { queries: ["Xyzabc"], exactName: null };
+const UNKNOWN_ROW: RowMatchRequest = { queries: ["Xyzabc"], exactName: null, exactStrength: null };
 // Ibuprom 400 mg and Ibuprom Max 400 mg both match the first query (Ibuprom 200 mg lacks "400"); shorter name first.
 const IBUPROM_ROW: RowMatchRequest = {
   queries: ["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"],
   exactName: "Ibuprom",
+  exactStrength: "400 mg",
 };
 
 const NO_SPA_MATCH: RowMatch = { kind: "auto", variant: NO_SPA_TABLET };

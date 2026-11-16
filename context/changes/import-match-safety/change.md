@@ -1,7 +1,7 @@
 ---
 change_id: import-match-safety
 title: CSV import auto-assigns a medicine only on an unambiguous exact match
-status: implemented
+status: impl_reviewed
 created: 2026-11-16
 updated: 2026-11-16
 archived_at: null

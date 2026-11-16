@@ -1,6 +1,6 @@
 import { IMPORT_MAX_ROWS } from "@/lib/kit-import-csv";
 import type { ParsedExpiry, ParsedQuantity, ParsedRow } from "@/lib/kit-import-csv";
-import { isQueryLongEnough, sameName, searchVariants } from "@/lib/registry-search";
+import { hasEveryWord, isQueryLongEnough, sameName, searchVariants } from "@/lib/registry-search";
 import type { RegistrySearchIndex } from "@/lib/registry-search";
 import type { KitItem, RegistryVariant, RowMatch, RowMatchRequest } from "@/types";
 
@@ -93,23 +93,25 @@ export function rowQueries(row: ParsedRow): string[] {
 }
 
 /**
- * The match request of a row: its queries, and its name when the row is complete (name, strength AND form), so that
+ * The match request of a row: its queries, and its name and strength when the row is complete (name, strength AND form), so that
  * `matchRow` knows whether an automatic assignment is allowed at all.
  */
 export function rowMatchRequest(row: ParsedRow): RowMatchRequest {
   const queries = rowQueries(row);
-  const complete = queries.length > 0 && (row.strength ?? "") !== "" && (row.form ?? "") !== "";
-  return { queries, exactName: complete ? row.name : null };
+  const strength = row.strength ?? "";
+  const complete = queries.length > 0 && strength !== "" && (row.form ?? "") !== "";
+  return { queries, exactName: complete ? row.name : null, exactStrength: complete ? strength : null };
 }
 
 /**
  * Assigns on its own only when the row is complete (`exactName` set), the first (most specific) query has exactly
- * one hit and that hit has the row's name (`sameName`). Any other hit, including a single one from a fallback query
- * or of another name, gives suggestions (at most IMPORT_SUGGESTIONS); no hit at all gives none. Strength and form are
- * still matched by word prefix, not compared for equality.
+ * one hit, that hit has the row's name (`sameName`) and every word of the row's strength is a whole word of the hit's
+ * strength (`hasEveryWord`: "4 mg" is not "40 mg"). Any other hit, including a single one from a fallback query, of
+ * another name or of another strength, gives suggestions (at most IMPORT_SUGGESTIONS); no hit at all gives none. The
+ * form is still matched by word prefix ("tabletki" finds "tabletki powlekane").
  */
 export function matchRow(index: RegistrySearchIndex, request: RowMatchRequest): RowMatch {
-  const { queries, exactName } = request;
+  const { queries, exactName, exactStrength } = request;
   for (let i = 0; i < queries.length; i++) {
     if (!isQueryLongEnough(queries[i])) {
       continue;
@@ -118,8 +120,16 @@ export function matchRow(index: RegistrySearchIndex, request: RowMatchRequest): 
     if (total === 0) {
       continue;
     }
-    if (i === 0 && total === 1 && exactName !== null && sameName(results[0].name, exactName)) {
-      return { kind: "auto", variant: results[0] };
+    const hit = results[0];
+    if (
+      i === 0 &&
+      total === 1 &&
+      exactName !== null &&
+      exactStrength !== null &&
+      sameName(hit.name, exactName) &&
+      hasEveryWord(exactStrength, hit.strength)
+    ) {
+      return { kind: "auto", variant: hit };
     }
     return { kind: "choices", variants: results, total };
   }

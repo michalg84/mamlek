@@ -59,6 +59,15 @@ export function sameName(a: string, b: string): boolean {
   return left.length === right.length && left.every((word, i) => word === right[i]);
 }
 
+/**
+ * Whether every word of `text` is a whole word of `within` after normalization (not just the start of one), so a
+ * strength of "4 mg" is not found in "40 mg".
+ */
+export function hasEveryWord(text: string, within: string | null): boolean {
+  const words = new Set(wordsOf(within));
+  return wordsOf(text).every((word) => words.has(word));
+}
+
 /** Whether the query has enough letters/digits (after normalization, separators excluded) to search. */
 export function isQueryLongEnough(query: string): boolean {
   let length = 0;
