@@ -1,10 +1,10 @@
 ---
 change_id: audit-code-cleanup
 title: Small code cleanup from the PRD conformance audit (F5 and error hygiene)
-status: impl_reviewed
+status: archived
 created: 2026-11-16
 updated: 2026-11-16
-archived_at: null
+archived_at: 2026-11-16T16:26:16Z
 ---
 
 ## Notes
