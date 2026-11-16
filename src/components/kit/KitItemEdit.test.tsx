@@ -156,6 +156,20 @@ describe("KitItemEdit", () => {
     expect(routed.kitItemRequests()).toEqual([]);
   });
 
+  it("reads an unreadable quantity from the field even when typing it fired no change event", async () => {
+    const { routed } = renderEdit(kitItem({ quantity: null }), SMECTA_PACKS);
+    await screen.findAllByRole("radio");
+
+    // The stored quantity is unknown, so the field is empty. Typing "-" leaves the value empty, so React fires no change
+    // event; only `validity.badInput` on the field tells the form. Another field changes, so there is something to save.
+    Object.defineProperty(quantityField(), "validity", { value: { badInput: true } });
+    fireEvent.change(screen.getByLabelText("Miesiąc"), { target: { value: "3" } });
+    fireEvent.click(saveButton());
+
+    expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+    expect(routed.kitItemRequests()).toEqual([]);
+  });
+
   it("shows a GTIN hidden by uniquePacks as one checked option, and saving it sends no packageId", async () => {
     // 1001 and 1003 are the same product and the same label: uniquePacks keeps 1001 only, the item is on 1003.
     const item = kitItem({ packageId: 1003 });

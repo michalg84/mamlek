@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import KitAddForm from "@/components/kit/KitAddForm";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
-import { stubRoutedFetch } from "../../../tests/helpers/fetch";
+import { reply, stubRoutedFetch, type RoutedFetchOptions } from "../../../tests/helpers/fetch";
 import type { RegistryVariantPackage } from "@/types";
 
 // The texts below are pinned on purpose, like in RegistrySearch.test.tsx.
@@ -11,8 +11,9 @@ const ADD_BUTTON = "Dodaj do apteczki";
 const QUANTITY_LABEL = "Ilość w opakowaniu (opcjonalnie)";
 
 // Medicine A: Ibuprom 400 mg. Medicine B: Ibuprom Max 400 mg. Both come from the query "ibuprom".
-const A_OPTION = "Ibuprom400 mg · tabletki powlekane";
-const B_OPTION = "Ibuprom Max400 mg · tabletki powlekane";
+// An option shows the name, the strength and the form, each on its own line.
+const A_OPTION = "Ibuprom400 mgtabletki powlekane";
+const B_OPTION = "Ibuprom Max400 mgtabletki powlekane";
 const A_CHOSEN = "Wybrano: Ibuprom · 400 mg · tabletki powlekane";
 const B_CHOSEN = "Wybrano: Ibuprom Max · 400 mg · tabletki powlekane";
 
@@ -29,11 +30,15 @@ function pack(packageId: number, productId: number): RegistryVariantPackage {
 }
 
 /** Renders the form and waits until the search list is loaded and the (fake) worker has built its index. */
-async function openForm() {
-  const routed = stubRoutedFetch(registrySearchList, {
-    [ID.ibuprom400]: [pack(1001, ID.ibuprom400)],
-    [ID.ibupromMax400]: [pack(1002, ID.ibupromMax400)],
-  });
+async function openForm(options: RoutedFetchOptions = {}) {
+  const routed = stubRoutedFetch(
+    registrySearchList,
+    {
+      [ID.ibuprom400]: [pack(1001, ID.ibuprom400)],
+      [ID.ibupromMax400]: [pack(1002, ID.ibupromMax400)],
+    },
+    options,
+  );
   const Worker = stubSearchWorker();
   render(<KitAddForm version={registrySearchList.version} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
@@ -58,7 +63,7 @@ async function openForm() {
     });
   }
 
-  /** Clicks the option with this text (name directly followed by "moc · postać"). */
+  /** Clicks the option with this text (name, strength and form, each on its own line). */
   function pick(optionText: string) {
     const option = screen.getAllByRole("option").find((candidate) => candidate.textContent === optionText);
     if (!option) {
@@ -88,6 +93,10 @@ function addButton() {
 
 function quantityField() {
   return screen.getByLabelText<HTMLInputElement>(QUANTITY_LABEL);
+}
+
+function addPosts(routed: { fetchMock: { mock: { calls: Parameters<typeof fetch>[] } } }) {
+  return routed.fetchMock.mock.calls.filter(([input, init]) => input === "/api/kit" && init?.method === "POST");
 }
 
 describe("KitAddForm", () => {
@@ -148,8 +157,7 @@ describe("KitAddForm", () => {
         });
       }
 
-      const posts = form.routed.fetchMock.mock.calls.filter(([, init]) => init?.method === "POST");
-      expect(posts).toEqual([]);
+      expect(addPosts(form.routed)).toEqual([]);
     });
 
     it("shows the pack form of the medicine picked afterwards, also of another variant than before", async () => {
@@ -180,6 +188,53 @@ describe("KitAddForm", () => {
       expect(quantityField().value).toBe("");
       expect(screen.getByLabelText<HTMLSelectElement>("Miesiąc").value).toBe("");
       expect(screen.getByLabelText<HTMLSelectElement>("Rok").value).toBe("");
+    });
+  });
+
+  describe("errors", () => {
+    it("does not read an unreadable quantity as an unknown one and sends nothing", async () => {
+      const form = await openForm({ addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+
+      // What the browser reports for "-" or "1e": an empty value with `validity.badInput`. The field was empty already, so
+      // the value does not change and React fires no change event: the form must read the flag from the field.
+      Object.defineProperty(quantityField(), "validity", { value: { badInput: true } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+      expect(addPosts(form.routed)).toEqual([]);
+    });
+
+    it("shows a Polish message for a rejected add, never the text of the server, and logs the answer", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const form = await openForm({ addKit: () => reply({ error: "Invalid package" }, 400) });
+      await form.choose(A_OPTION);
+
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      const alert = await screen.findByRole("alert");
+      expect(alert.textContent).toBe("Nie udało się dodać leku — sprawdź dane albo wybierz lek ponownie");
+      expect(screen.queryByText(/Invalid package/)).toBeNull();
+      expect(log).toHaveBeenCalledWith("Adding a kit item failed", 400, { error: "Invalid package" });
+    });
+
+    it("shows the retry message for a server failure and logs the cause of a network failure", async () => {
+      const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      let answer = () => reply({ error: "Kit storage unavailable" }, 503);
+      const form = await openForm({ addKit: () => answer() });
+      await form.choose(A_OPTION);
+
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      expect((await screen.findByRole("alert")).textContent).toBe(
+        "Nie udało się dodać leku do apteczki, spróbuj ponownie",
+      );
+      expect(log).toHaveBeenCalledWith("Adding a kit item failed", 503, { error: "Kit storage unavailable" });
+
+      const cause = new TypeError("Failed to fetch");
+      answer = () => Promise.reject(cause);
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      await screen.findByText("Nie udało się połączyć z serwerem, spróbuj ponownie");
+      expect(log).toHaveBeenCalledWith(cause);
     });
   });
 });

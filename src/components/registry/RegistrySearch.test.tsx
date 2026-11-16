@@ -16,8 +16,8 @@ const VISIBLE = { ignore: "[role=status]" };
 
 // Medicine A: Ibuprom 400 mg, the kit holds it. Medicine B: Ibuprom Max 400 mg, the kit does not. Both come from the
 // same query, so B is picked right after A without editing the text (the check component stays mounted).
-const A_OPTION = "Ibuprom400 mg · tabletki powlekane";
-const B_OPTION = "Ibuprom Max400 mg · tabletki powlekane";
+const A_OPTION = "Ibuprom400 mgtabletki powlekane";
+const B_OPTION = "Ibuprom Max400 mgtabletki powlekane";
 const A_ID = ID.ibuprom400;
 const B_ID = ID.ibupromMax400;
 
@@ -175,9 +175,9 @@ describe("RegistrySearch", () => {
 
     const options = await screen.findAllByRole("option");
     expect(options.map((option) => option.textContent)).toEqual([
-      "Ibuprom200 mg · tabletki powlekane",
-      "Ibuprom400 mg · tabletki powlekane",
-      "Ibuprom Max400 mg · tabletki powlekane",
+      "Ibuprom200 mgtabletki powlekane",
+      "Ibuprom400 mgtabletki powlekane",
+      "Ibuprom Max400 mgtabletki powlekane",
     ]);
   });
 
@@ -332,14 +332,18 @@ describe("RegistrySearch", () => {
   });
 
   describe("options", () => {
-    it("shows strength and form under every name, so variants with the same name can be told apart", async () => {
+    it("shows strength and form, each on its own line, under every name, so variants with the same name can be told apart", async () => {
       const screenUnderTest = await openSearch();
 
       await screenUnderTest.search("ibuprom");
       const ibuprom = screen.getAllByRole("option");
-      expect(within(ibuprom[0]).getByText("200 mg · tabletki powlekane")).toBeTruthy();
-      expect(within(ibuprom[1]).getByText("400 mg · tabletki powlekane")).toBeTruthy();
-      expect(within(ibuprom[2]).getByText("400 mg · tabletki powlekane")).toBeTruthy();
+      // Strength and form are separate elements: a long strength can no longer cut the form off.
+      expect(within(ibuprom[0]).getByText("200 mg")).toBeTruthy();
+      expect(within(ibuprom[1]).getByText("400 mg")).toBeTruthy();
+      expect(within(ibuprom[2]).getByText("400 mg")).toBeTruthy();
+      for (const option of ibuprom) {
+        expect(within(option).getByText("tabletki powlekane")).toBeTruthy();
+      }
 
       // Same name and strength, different form.
       await screenUnderTest.search("no spa");
@@ -348,8 +352,8 @@ describe("RegistrySearch", () => {
       expect(within(noSpa[0]).getByText("No-Spa")).toBeTruthy();
       expect(within(noSpa[1]).getByText("No-Spa")).toBeTruthy();
       expect(noSpa.map((option) => option.textContent)).toEqual([
-        "No-Spa40 mg · roztwór do wstrzykiwań",
-        "No-Spa40 mg · tabletki",
+        "No-Spa40 mgroztwór do wstrzykiwań",
+        "No-Spa40 mgtabletki",
       ]);
     });
   });
