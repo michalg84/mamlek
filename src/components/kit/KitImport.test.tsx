@@ -139,6 +139,32 @@ describe("KitImport", () => {
     expect(saveBlocked()).toBe(false);
   });
 
+  it("blocks saving while a row with a medicine has the search open, and Anuluj restores it (audit F3)", async () => {
+    const routed = await review(csv(NO_SPA), { importKit: () => reply({ ids: [1] }, 201) });
+    await packChosen(2);
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Zmień" }));
+
+    expect(text(2)).toContain("Obecnie: No-Spa · 40 mg · tabletki");
+    expect(text(2)).toContain("dokończ wybór leku albo anuluj");
+    expect(saveBlocked()).toBe(true);
+    expect(document.getElementById(saveButton().getAttribute("aria-describedby") ?? "")?.textContent).toBe(
+      "1 wiersz wymaga decyzji",
+    );
+    fireEvent.click(saveButton());
+    expect(routed.importRequests()).toEqual([]);
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Anuluj" }));
+    await packChosen(2);
+    expect(saveBlocked()).toBe(false);
+    fireEvent.click(saveButton());
+    await waitFor(() => {
+      expect(routed.importRequests()).toEqual([
+        { items: [{ packageId: 801, quantity: 20, expiry: { month: 3, year: 2027 } }] },
+      ]);
+    });
+  });
+
   it("offers a row without strength or form as a suggestion instead of assigning it (audit F1)", async () => {
     await review(csv(RUTINOSCORBIN, ALTACET));
 

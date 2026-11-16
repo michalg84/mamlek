@@ -282,9 +282,11 @@ function ImportReview({
     // A pack kept from an earlier variant of the row does not count.
     return pack?.packageId === rows[index].packageId ? packQuantity(pack.units).max : null;
   };
-  const issues = rows.map((row, index) =>
-    rowIssues(row, { kitKeys, earlierKeys: earlier[index], packMax: packMaxOf(index) }),
-  );
+  const issues = rows.map((row, index) => {
+    const found = rowIssues(row, { kitKeys, earlierKeys: earlier[index], packMax: packMaxOf(index) });
+    // An open medicine change hides the medicine that would be saved: finish it or cancel it first (audit F3).
+    return editing === index && row.variant && !row.removed ? ["choosing-variant" as const, ...found] : found;
+  });
   const pageIndices = pageOf(
     rows.map((_, index) => index),
     page,

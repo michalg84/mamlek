@@ -19,8 +19,12 @@ const LIST_STRENGTH_MAX = 80;
 /** Result of matching one row against the registry list; lives in `src/types.ts` because the worker protocol uses it. */
 export type { RowMatch, RowMatchRequest };
 
-/** Why a row blocks saving its page. */
+/**
+ * Why a row blocks saving its page. "choosing-variant" (the row has a medicine and its search is open) is screen
+ * state, added by the screen; `rowIssues` never returns it.
+ */
 export type RowIssue =
+  | "choosing-variant"
   | "no-variant"
   | "no-package"
   | "invalid-expiry"

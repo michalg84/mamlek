@@ -236,27 +236,27 @@ Test nie wpisuje tekstu w pole szukania; sam tryb edycji wystarcza do odtworzeni
 
 #### Automated
 
-- [x] 1.1 Nowe i zmienione testy jednostkowe `matchRow` są czerwone przed zmianą i zielone po niej
-- [x] 1.2 Celowe zepsucie warunku pełnego wiersza i warunku równej nazwy czerwieni testy jednostkowe
-- [x] 1.3 Testy unit + component + registry przechodzą
-- [x] 1.4 Lint przechodzi
-- [x] 1.5 Typy przechodzą (`npx astro check`)
+- [x] 1.1 Nowe i zmienione testy jednostkowe `matchRow` są czerwone przed zmianą i zielone po niej — ff0775d
+- [x] 1.2 Celowe zepsucie warunku pełnego wiersza i warunku równej nazwy czerwieni testy jednostkowe — ff0775d
+- [x] 1.3 Testy unit + component + registry przechodzą — ff0775d
+- [x] 1.4 Lint przechodzi — ff0775d
+- [x] 1.5 Typy przechodzą (`npx astro check`) — ff0775d
 
 #### Manual
 
-- [ ] 1.6 Import na lokalnym serwerze: tylko pełny wiersz o równej nazwie dostaje lek automatycznie z nowym napisem
+- [x] 1.6 Import na lokalnym serwerze: tylko pełny wiersz o równej nazwie dostaje lek automatycznie z nowym napisem — ff0775d
 
 ### Phase 2: Blokada zapisu w trybie edycji (F3)
 
 #### Automated
 
-- [ ] 2.1 Nowy test komponentu jest czerwony przed zmianą i zielony po niej
-- [ ] 2.2 Celowe zepsucie powodu trybu edycji czerwieni test
-- [ ] 2.3 Testy unit + component + registry przechodzą
-- [ ] 2.4 Lint przechodzi
-- [ ] 2.5 Typy przechodzą (`npx astro check`)
-- [ ] 2.6 Skan widoków przechodzi (`npm run ui:scan`)
+- [x] 2.1 Nowy test komponentu jest czerwony przed zmianą i zielony po niej
+- [x] 2.2 Celowe zepsucie powodu trybu edycji czerwieni test
+- [x] 2.3 Testy unit + component + registry przechodzą
+- [x] 2.4 Lint przechodzi
+- [x] 2.5 Typy przechodzą (`npx astro check`)
+- [x] 2.6 Skan widoków przechodzi (`npm run ui:scan`)
 
 #### Manual
 
-- [ ] 2.7 Tryb edycji na lokalnym serwerze: „Obecnie: …”, zapis zablokowany, „Anuluj” odblokowuje, nowy wybór działa
+- [x] 2.7 Tryb edycji na lokalnym serwerze: „Obecnie: …”, zapis zablokowany, „Anuluj” odblokowuje, nowy wybór działa
