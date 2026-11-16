@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistryMatch } from "@/components/hooks/useRegistryMatch";
 import { KitImportRow } from "@/components/kit/KitImportRow";
@@ -264,7 +264,9 @@ function ImportReview({
   const firstRender = useRef(true);
 
   // A new page starts at the top, with the focus on its heading, not on the button that was just pressed at the bottom.
-  useEffect(() => {
+  // A layout effect runs in the same commit that shows the new page, so the page is never painted (or seen by a test)
+  // at the old scroll position with the focus still on the button; a passive effect ran later and left that gap.
+  useLayoutEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       return;
