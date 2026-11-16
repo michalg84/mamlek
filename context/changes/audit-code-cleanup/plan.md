@@ -309,26 +309,26 @@ Strength and form are no longer cut together, so the form is always visible.
 
 #### Automated
 
-- [x] 2.1 New `KitAddForm` tests fail before the change and pass after it
-- [x] 2.2 Unit + component + registry tests pass
-- [x] 2.3 Lint passes
-- [x] 2.4 Types pass (`npx astro check`)
-- [x] 2.5 `npm run ui:scan` passes
+- [x] 2.1 New `KitAddForm` tests fail before the change and pass after it — 8188ee4
+- [x] 2.2 Unit + component + registry tests pass — 8188ee4
+- [x] 2.3 Lint passes — 8188ee4
+- [x] 2.4 Types pass (`npx astro check`) — 8188ee4
+- [x] 2.5 `npm run ui:scan` passes — 8188ee4
 
 #### Manual
 
-- [x] 2.6 Typing "-" or "1e" in the quantity shows the quantity error and adds nothing
+- [x] 2.6 Typing "-" or "1e" in the quantity shows the quantity error and adds nothing — 8188ee4
 
 ### Phase 3: Form of the medicine on its own line in suggestions
 
 #### Automated
 
-- [ ] 3.1 Unit + component + registry tests pass
-- [ ] 3.2 Lint passes
-- [ ] 3.3 Types pass (`npx astro check`)
-- [ ] 3.4 `npm run ui:scan` passes
+- [x] 3.1 Unit + component + registry tests pass
+- [x] 3.2 Lint passes
+- [x] 3.3 Types pass (`npx astro check`)
+- [x] 3.4 `npm run ui:scan` passes
 
 #### Manual
 
-- [ ] 3.5 `ui:shots` suggestions state shows the form on its own line at 390 and 1280 px
-- [ ] 3.6 On `/szukaj` at phone width a long-strength medicine shows its form
+- [x] 3.5 `ui:shots` suggestions state shows the form on its own line at 390 and 1280 px
+- [x] 3.6 On `/szukaj` at phone width a long-strength medicine shows its form

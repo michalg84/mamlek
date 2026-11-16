@@ -11,8 +11,9 @@ const ADD_BUTTON = "Dodaj do apteczki";
 const QUANTITY_LABEL = "Ilość w opakowaniu (opcjonalnie)";
 
 // Medicine A: Ibuprom 400 mg. Medicine B: Ibuprom Max 400 mg. Both come from the query "ibuprom".
-const A_OPTION = "Ibuprom400 mg · tabletki powlekane";
-const B_OPTION = "Ibuprom Max400 mg · tabletki powlekane";
+// An option shows the name, the strength and the form, each on its own line.
+const A_OPTION = "Ibuprom400 mgtabletki powlekane";
+const B_OPTION = "Ibuprom Max400 mgtabletki powlekane";
 const A_CHOSEN = "Wybrano: Ibuprom · 400 mg · tabletki powlekane";
 const B_CHOSEN = "Wybrano: Ibuprom Max · 400 mg · tabletki powlekane";
 
@@ -62,7 +63,7 @@ async function openForm(options: RoutedFetchOptions = {}) {
     });
   }
 
-  /** Clicks the option with this text (name directly followed by "moc · postać"). */
+  /** Clicks the option with this text (name, strength and form, each on its own line). */
   function pick(optionText: string) {
     const option = screen.getAllByRole("option").find((candidate) => candidate.textContent === optionText);
     if (!option) {
