@@ -3,7 +3,7 @@ project: "MamLek"
 version: 3
 status: active
 created: 2026-09-24
-updated: 2026-11-16 # v3: reguły z audytu zgodności (context/audits/prd-conformance/2026-11-16.md); v2 w archive/2026-11-16-prd.md
+updated: 2026-11-16 # v3: reguły z audytu zgodności (context/audits/prd-conformance/2026-11-16.md); v2 w archive/2026-11-16-prd.md; tego samego dnia autor zmienił decyzję o rejestracji: zostaje otwarta
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -285,11 +285,15 @@ Model płaski: każdy, kto zalogował się na konto domu, może dodać lek, zmie
 usunąć pozycję i wyszukiwać zamienniki. Brak ról, brak podziału na podgląd i edycję.
 
 Metoda logowania (v3): e-mail + hasło, jedno konto Supabase na dom. Rejestracja
-jest wyłączana w produkcyjnym projekcie Supabase zaraz po założeniu konta domu —
-to ustawienie projektu, nie kod; bez tego każdy z adresem e-mail mógłby założyć
-własne konto z pustą apteczką (dane innych kont i tak chroni RLS). Lokalny Supabase
-zostaje z otwartą rejestracją, bo `npm run smoke` i `npm run test:api` zakładają
-konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals).
+jest otwarta (decyzja autora 2026-11-16): każdy dom zakłada konto sam, na własny
+adres e-mail, i dostaje własną, pustą apteczkę; dane innych kont chroni RLS.
+Aplikacja nie jest docelowo tylko dla domu autora. Produkcja służy też autorowi
+do testów, więc są na niej jego konta testowe; osobnego środowiska deweloperskiego
+nie ma. Jeśli nadużycia (np. masowe rejestracje botów) zaczną szkodzić aplikacji,
+rejestrację da się wyłączyć ustawieniem projektu Supabase, bez zmiany kodu. Lokalny
+Supabase ma otwartą rejestrację, bo `npm run smoke` i `npm run test:api` zakładają
+konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals). Co
+trzeba dołożyć przed szerszym udostępnieniem innym — Open Question 6.
 
 ## Non-Goals
 
@@ -326,8 +330,8 @@ konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals).
   - Kierunki: osobna kategoria „spoza rejestru” z wyraźnym oznaczeniem, która nigdy
     nie daje zielonego „Masz ten lek”; rejestr suplementów GIS (sprawdzić, czy dane
     są dostępne do pobrania).
-- Zmiana i reset hasła w aplikacji (v3). Konto domu jest jedno i dzielone, więc
-  zapomniane hasło resetuje autor w panelu Supabase.
+- Zmiana i reset hasła w aplikacji (v3). Dziś zapomniane hasło resetuje autor
+  w panelu Supabase; przy otwartej rejestracji wraca to jako Open Question 6.
 - Koszyk do konsultacji — zapamiętanie sprawdzonych leków jako lista lub raport
   do pokazania farmaceucie, zamiast wyszukiwania każdego osobno przy okienku.
   Pomysł autora z rundy wyzwań; pokrywa się częściowo z FR-015.
@@ -341,8 +345,8 @@ konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals).
 1. **Jak działają istniejące aplikacje do apteczki i czy któraś oferuje wyszukiwanie
    zamiennika?** — konkurencja nie została sprawdzona. Owner: autor. Blokuje: nie.
 2. ~~**Jaką metodą loguje się użytkownik do konta domu?**~~ — rozstrzygnięte w v3
-   (2026-11-16): e-mail + hasło, rejestracja wyłączona na produkcji po założeniu
-   konta domu, reset hasła poza zakresem — patrz Access Control i Non-Goals.
+   (2026-11-16): e-mail + hasło, rejestracja otwarta (każdy dom zakłada konto
+   sam), reset hasła poza zakresem — patrz Access Control i Non-Goals.
 3. **Ile dni przed końcem ważności aplikacja ostrzega?** — okres do ustalenia.
    Owner: autor. Blokuje: nie.
 4. **Który poziom dopasowania substancji czynnych jest domyślny?** — bezpiecznik
@@ -359,3 +363,16 @@ konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals).
    że leki można zamieniać. Zapytaj farmaceutę lub lekarza.") różni się od
    sformułowania w Guardrails („decyzję konsultuj z farmaceutą lub lekarzem");
    weryfikacja ma objąć obie wersje i wskazać jedną. Owner: autor. Blokuje: nie.
+6. **Co dołożyć, zanim aplikacja trafi szerzej do innych użytkowników?** — rejestracja
+   jest otwarta (Access Control), ale do rozważenia później, przy szerszym
+   udostępnieniu (autor, 2026-11-16):
+   - własny serwer SMTP — wbudowana poczta Supabase wysyła tylko kilka e-maili na
+     godzinę, więc przy kilku rejestracjach naraz część osób nie dostanie linku
+     potwierdzającego;
+   - potwierdzanie adresu e-mail na produkcji (w projekcie w chmurze domyślnie
+     włączone; sprawdzić);
+   - lista leków w domu to dane o zdrowiu (RODO): informacja o prywatności
+     i usunięcie konta przez użytkownika; do tego reset hasła bez udziału autora;
+   - ochrona przed botami (np. CAPTCHA w Supabase Auth), gdyby pojawiły się masowe
+     rejestracje.
+     Owner: autor. Blokuje: nie.
