@@ -18,7 +18,7 @@ import {
   pageCount,
   pageOf,
   rowIssues,
-  rowQueries,
+  rowMatchRequest,
   toImportItem,
   type ImportRow,
 } from "@/lib/kit-import";
@@ -519,8 +519,8 @@ function ImportReview({
  */
 export default function KitImport({ version, kitVariantKeys }: KitImportProps) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
-  const queries = useMemo(() => (parsed ? parsed.map(rowQueries) : null), [parsed]);
-  const { status, matches, retry } = useRegistryMatch(version, queries);
+  const requests = useMemo(() => (parsed ? parsed.map(rowMatchRequest) : null), [parsed]);
+  const { status, matches, retry } = useRegistryMatch(version, requests);
   const matchedRows = useMemo(
     () => (parsed && matches ? parsed.map((row, index) => createImportRow(row, matches[index])) : null),
     [parsed, matches],

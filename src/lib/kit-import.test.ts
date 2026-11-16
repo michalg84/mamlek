@@ -12,21 +12,24 @@ import {
   pageCount,
   pageOf,
   rowIssues,
+  rowMatchRequest,
   rowQueries,
   toImportItem,
   variantKey,
 } from "@/lib/kit-import";
 import type { ImportRow, RowIssueContext, RowMatch } from "@/lib/kit-import";
 import type { ParsedRow } from "@/lib/kit-import-csv";
-import { buildSearchIndex } from "@/lib/registry-search";
+import { buildSearchIndex, sameName } from "@/lib/registry-search";
 import type { KitItem, RegistryVariant, RegistryVariantTuple } from "@/types";
 
 // Expected values are written by hand from the rules of the S-04 plan (phase 1 and "Critical Implementation
 // Details"), none from a run of the code:
 //   - queries of a row: "name strength form", "name strength", "name"; empty parts skipped, repeats dropped;
 //     none for a row without a name or a malformed one
-//   - a row is assigned on its own only when the FIRST query has exactly one hit; every other hit gives
-//     suggestions (at most 5), no hit gives "none"; queries under 3 letters/digits are skipped
+//   - a row is assigned on its own only when it is complete (name, strength AND form), its FIRST query has exactly
+//     one hit, and that hit's name equals the row's name after search normalization (case, Polish letters and
+//     separators ignored; audit F1 + F2); every other hit gives suggestions (at most 5), no hit gives "none";
+//     queries under 3 letters/digits are skipped
 //   - variant key: lower(name) | lower(strength) | lower(form), null as ""; the strength of a kit item longer than
 //     80 characters is cut to its first 79 plus "…" first, as the suggestion list does
 //   - blocking reasons (fixed order): no-variant, no-package, invalid-expiry, invalid-quantity, quantity-over-pack,
@@ -69,6 +72,8 @@ const ibuprom400 = variant(1, "Ibuprom", "400 mg", "tabletki powlekane");
 const ibuprom200 = variant(2, "Ibuprom", "200 mg", "tabletki powlekane");
 const paracetamol = variant(3, "Paracetamol Hasco", "500 mg", "tabletki");
 const rutinoscorbin = variant(4, "Rutinoscorbin");
+const ibupromMax = variant(5, "Ibuprom Max", "400 mg", "tabletki powlekane");
+const noSpa = variant(6, "No-Spa", "40 mg", "tabletki");
 
 describe("constants", () => {
   it("has the limits of the plan", () => {
@@ -108,38 +113,133 @@ describe("rowQueries", () => {
   });
 });
 
-describe("matchRow", () => {
-  const index = indexOf([ibuprom400, ibuprom200, paracetamol, rutinoscorbin]);
+describe("rowMatchRequest", () => {
+  it("carries the queries and the exact name of a complete row", () => {
+    expect(rowMatchRequest(parsedRow({ strength: "400 mg", form: "tabletki powlekane" }))).toEqual({
+      queries: ["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"],
+      exactName: "Ibuprom",
+    });
+  });
 
-  it("assigns on its own when the first query has exactly one hit", () => {
-    // "Ibuprom 400 mg tabletki powlekane": only the 400 mg row has the word 400.
-    expect(matchRow(index, ["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"])).toEqual({
+  it("has no exact name without a strength, without a form or with neither", () => {
+    expect(rowMatchRequest(parsedRow({ form: "tabletki" })).exactName).toBeNull();
+    expect(rowMatchRequest(parsedRow({ strength: "400 mg" })).exactName).toBeNull();
+    expect(rowMatchRequest(parsedRow()).exactName).toBeNull();
+  });
+
+  it("has no queries and no exact name for a row without a name or a malformed one", () => {
+    expect(rowMatchRequest(parsedRow({ name: "", strength: "400 mg", form: "tabletki" }))).toEqual({
+      queries: [],
+      exactName: null,
+    });
+    expect(rowMatchRequest(parsedRow({ strength: "400 mg", form: "tabletki", malformed: true }))).toEqual({
+      queries: [],
+      exactName: null,
+    });
+  });
+});
+
+describe("sameName", () => {
+  it("ignores letter case, Polish letters and separators", () => {
+    expect(sameName("NO-SPA", "No Spa")).toBe(true);
+    expect(sameName("No-Spa", "No Spa")).toBe(true);
+    expect(sameName("Żołądkowa Gorzka", "zoladkowa-gorzka")).toBe(true);
+  });
+
+  it("tells a joined word from separate ones and a longer name from a shorter one", () => {
+    expect(sameName("Nospa", "No-Spa")).toBe(false);
+    expect(sameName("Ibuprom", "Ibuprom Max")).toBe(false);
+  });
+});
+
+describe("matchRow", () => {
+  const index = indexOf([ibuprom400, ibuprom200, paracetamol, rutinoscorbin, ibupromMax, noSpa]);
+
+  function request(queries: string[], exactName: string | null = null) {
+    return { queries, exactName };
+  }
+
+  it("assigns on its own for a complete row whose first query has exactly one hit of the same name", () => {
+    // Only the Paracetamol row has the words 500 and tabletki in its strength and form.
+    expect(
+      matchRow(
+        index,
+        request(
+          ["Paracetamol Hasco 500 mg tabletki", "Paracetamol Hasco 500 mg", "Paracetamol Hasco"],
+          "Paracetamol Hasco",
+        ),
+      ),
+    ).toEqual({ kind: "auto", variant: paracetamol });
+  });
+
+  it("assigns on its own when the name differs only in case, Polish letters or separators", () => {
+    expect(matchRow(index, request(["NO SPA 40 mg tabletki"], "NO SPA"))).toEqual({ kind: "auto", variant: noSpa });
+    expect(matchRow(index, request(["no-spa 40 mg tabletki"], "no-spa"))).toEqual({ kind: "auto", variant: noSpa });
+  });
+
+  it("gives suggestions for a name alone that is unique (audit F1)", () => {
+    expect(matchRow(index, request(["Rutinoscorbin"]))).toEqual({
+      kind: "choices",
+      variants: [rutinoscorbin],
+      total: 1,
+    });
+  });
+
+  it("gives suggestions for a name and strength without a form, even with one hit (audit F1)", () => {
+    expect(matchRow(index, request(["Paracetamol Hasco 500 mg", "Paracetamol Hasco"]))).toEqual({
+      kind: "choices",
+      variants: [paracetamol],
+      total: 1,
+    });
+  });
+
+  it("gives suggestions when the only hit has another name (audit F2)", () => {
+    // The registry holds Ibuprom Max 400 mg but no plain Ibuprom: the row "Ibuprom" must not get Ibuprom Max on its own.
+    const onlyMax = indexOf([ibupromMax, paracetamol]);
+
+    expect(
+      matchRow(onlyMax, request(["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"], "Ibuprom")),
+    ).toEqual({ kind: "choices", variants: [ibupromMax], total: 1 });
+  });
+
+  it("does not take No-Spa for a row written Nospa (no suggestion either: no word starts with nospa)", () => {
+    // "nospa" starts no word of "No-Spa", so a name written that way finds nothing at all; the row does not get No-Spa.
+    expect(matchRow(index, request(["Nospa 40 mg tabletki", "Nospa 40 mg", "Nospa"], "Nospa"))).toEqual({
+      kind: "none",
+    });
+  });
+
+  it("still assigns when the form of the row is only the start of the variant's form", () => {
+    // Strength and form are matched by prefix, not compared for equality: "tabletki" finds "tabletki powlekane".
+    // The label says "o tej nazwie, mocy i postaci"; this test pins what the rule really checks.
+    expect(matchRow(indexOf([ibuprom400]), request(["Ibuprom 400 mg tabletki"], "Ibuprom"))).toEqual({
       kind: "auto",
       variant: ibuprom400,
     });
   });
 
-  it("assigns on its own for a name alone that is unique", () => {
-    expect(matchRow(index, ["Rutinoscorbin"])).toEqual({ kind: "auto", variant: rutinoscorbin });
-  });
-
   it("gives suggestions, not an assignment, for one hit of a fallback query", () => {
     // The form "syrop" matches nothing; "Ibuprom 400 mg" has one hit, but it is the second query.
-    expect(matchRow(index, ["Ibuprom 400 mg syrop", "Ibuprom 400 mg", "Ibuprom"])).toEqual({
-      kind: "choices",
-      variants: [ibuprom400],
-      total: 1,
-    });
+    expect(
+      matchRow(
+        indexOf([ibuprom400, ibuprom200]),
+        request(["Ibuprom 400 mg syrop", "Ibuprom 400 mg", "Ibuprom"], "Ibuprom"),
+      ),
+    ).toEqual({ kind: "choices", variants: [ibuprom400], total: 1 });
   });
 
   it("gives suggestions when the first query has several hits, shorter strength first", () => {
     // Same name length and name: the strength order decides, "200 mg" before "400 mg".
-    expect(matchRow(index, ["Ibuprom"])).toEqual({ kind: "choices", variants: [ibuprom200, ibuprom400], total: 2 });
+    expect(matchRow(indexOf([ibuprom400, ibuprom200]), request(["Ibuprom"]))).toEqual({
+      kind: "choices",
+      variants: [ibuprom200, ibuprom400],
+      total: 2,
+    });
   });
 
   it("stops at the first query that has hits", () => {
     // Both Ibuprom rows match the form; the name-only query (also two hits) is never reached.
-    expect(matchRow(index, ["Ibuprom tabletki powlekane", "Ibuprom"])).toEqual({
+    expect(matchRow(indexOf([ibuprom400, ibuprom200]), request(["Ibuprom tabletki powlekane", "Ibuprom"]))).toEqual({
       kind: "choices",
       variants: [ibuprom200, ibuprom400],
       total: 2,
@@ -147,21 +247,21 @@ describe("matchRow", () => {
   });
 
   it("gives none when no query has a hit", () => {
-    expect(matchRow(index, ["Nurofen 400 mg", "Nurofen"])).toEqual({ kind: "none" });
+    expect(matchRow(index, request(["Nurofen 400 mg", "Nurofen"]))).toEqual({ kind: "none" });
   });
 
   it("gives none for no queries", () => {
-    expect(matchRow(index, [])).toEqual({ kind: "none" });
+    expect(matchRow(index, request([]))).toEqual({ kind: "none" });
   });
 
   it("skips queries shorter than the minimum, so a two-letter name gives none", () => {
-    expect(matchRow(index, ["Ib"])).toEqual({ kind: "none" });
+    expect(matchRow(index, request(["Ib"]))).toEqual({ kind: "none" });
   });
 
   it("limits the suggestions to five and reports the total", () => {
     const apap = [100, 200, 300, 400, 500, 600, 700].map((mg, i) => variant(101 + i, "Apap", `${mg} mg`, "tabletki"));
 
-    const match = matchRow(indexOf(apap), ["Apap"]);
+    const match = matchRow(indexOf(apap), request(["Apap"]));
 
     // Same name, so the strength order decides: 100, 200, 300, 400, 500 mg.
     expect(match).toEqual({ kind: "choices", variants: apap.slice(0, 5), total: 7 });

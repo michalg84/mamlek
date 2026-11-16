@@ -376,7 +376,9 @@ function RowVariant({
           {details && <span className="text-muted-foreground"> · {details}</span>}
         </p>
         {automatic && (
-          <p className="text-muted-foreground text-sm">Przypisano automatycznie — jedyny pasujący lek w rejestrze</p>
+          <p className="text-muted-foreground text-sm">
+            Przypisano automatycznie — jedyny lek w rejestrze o tej nazwie, mocy i postaci
+          </p>
         )}
         <Button type="button" variant="link" className="h-auto px-0 py-1" onClick={onStartEdit}>
           Zmień

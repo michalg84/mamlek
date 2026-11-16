@@ -165,6 +165,7 @@ odnosiły się do tych samych identyfikatorów.
   > Socrates: Kontrargument „nie wiadomo, co z wierszem bez dopasowania" — przyjęty i rozstrzygnięty w treści wymagania: wiersz jest pokazany, użytkownik go poprawia albo usuwa przed przejściem dalej. Ten ekran jest granicą odpowiedzialności: to moment, w którym użytkownik potwierdza dane i przejmuje za nie odpowiedzialność. Dlatego błędny odczyt z zewnętrznego czatu nie obciąża aplikacji.
   > Socrates (rewizja 2026-09-24): dopisane oznaczenie „już masz” dla leku, który już jest w apteczce. Brak kontrargumentu — zostaje.
   > Doprecyzowanie (v3): plik ma najwyżej 200 wierszy i 256 kB. Zatwierdzanie idzie stronami po 30 wierszy: każda strona zapisuje się w całości albo wcale, więc import przerwany w połowie zostawia w apteczce strony już zatwierdzone (import częściowy, pokazany wprost na ekranie). „Już masz” oznacza ten sam wariant leku, który jest w apteczce.
+  > Doprecyzowanie (import-match-safety, 2026-11-16): lek jest przypisany bez kliknięcia tylko wierszowi z nazwą, mocą i postacią, gdy najdokładniejsze wyszukiwanie daje jeden wariant o tej samej nazwie (wielkość liter, polskie znaki i separatory nie mają znaczenia; „Nospa” to nie „No-Spa”). W każdym innym przypadku użytkownik wybiera z podpowiedzi.
 
 ### Sprawdzenie leku
 

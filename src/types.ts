@@ -148,14 +148,25 @@ export type RowMatch =
   | { kind: "choices"; variants: RegistryVariant[]; total: number }
   | { kind: "none" };
 
+/** What `matchRow` needs to know about one kit-import row (built by `rowMatchRequest` in `src/lib/kit-import.ts`). */
+export interface RowMatchRequest {
+  /** Search queries, most specific first. */
+  queries: string[];
+  /**
+   * The row's name when the row is complete (name, strength and form); only then may a single hit be assigned on its
+   * own, and only when the hit has this name. Null for an incomplete row: it only gets suggestions.
+   */
+  exactName: string | null;
+}
+
 /**
- * Page -> search worker: the raw list bytes (transferred, not copied), then queries. `match` carries the search
- * queries of each kit-import row (`rowQueries`), in row order.
+ * Page -> search worker: the raw list bytes (transferred, not copied), then queries. `match` carries the match
+ * request of each kit-import row (`rowMatchRequest`), in row order.
  */
 export type RegistrySearchWorkerRequest =
   | { type: "load"; buffer: ArrayBuffer }
   | { type: "search"; id: number; query: string }
-  | { type: "match"; id: number; rows: string[][] };
+  | { type: "match"; id: number; rows: RowMatchRequest[] };
 
 /**
  * Search worker -> page. `results` echo the `id` and `query` of the request they answer; `matches` echo the `id` and

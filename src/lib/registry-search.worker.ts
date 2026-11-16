@@ -42,9 +42,9 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
   }
   const built = index;
   if (message.type === "match") {
-    const matches = message.rows.map((queries, row): RowMatch => {
+    const matches = message.rows.map((request, row): RowMatch => {
       try {
-        return matchRow(built, queries);
+        return matchRow(built, request);
       } catch (error) {
         // One failing row must not fail the whole import: it is shown as "no match" and the user searches by hand.
         // eslint-disable-next-line no-console -- the only trace of the failure; the row stays usable

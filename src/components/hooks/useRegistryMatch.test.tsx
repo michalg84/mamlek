@@ -4,7 +4,7 @@ import { useRegistryMatch } from "@/components/hooks/useRegistryMatch";
 import { registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { reply, stubFetch, stubRoutedFetch } from "../../../tests/helpers/fetch";
-import type { RegistryVariant, RowMatch } from "@/types";
+import type { RegistryVariant, RowMatch, RowMatchRequest } from "@/types";
 
 // Expected variants copied by hand from tests/fixtures/registry-search-list.ts.
 const NO_SPA_TABLET: RegistryVariant = {
@@ -33,11 +33,17 @@ const IBUPROM_MAX_400: RegistryVariant = {
 };
 
 // Only the tablet has "tabletki" among strength and form, so the first query hits once: assigned on its own.
-const NO_SPA_ROW = ["No-Spa 40 mg tabletki", "No-Spa 40 mg", "No-Spa"];
+const NO_SPA_ROW: RowMatchRequest = {
+  queries: ["No-Spa 40 mg tabletki", "No-Spa 40 mg", "No-Spa"],
+  exactName: "No-Spa",
+};
 // Nothing in the list starts with "xyzabc".
-const UNKNOWN_ROW = ["Xyzabc"];
+const UNKNOWN_ROW: RowMatchRequest = { queries: ["Xyzabc"], exactName: null };
 // Ibuprom 400 mg and Ibuprom Max 400 mg both match the first query (Ibuprom 200 mg lacks "400"); shorter name first.
-const IBUPROM_ROW = ["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"];
+const IBUPROM_ROW: RowMatchRequest = {
+  queries: ["Ibuprom 400 mg tabletki powlekane", "Ibuprom 400 mg", "Ibuprom"],
+  exactName: "Ibuprom",
+};
 
 const NO_SPA_MATCH: RowMatch = { kind: "auto", variant: NO_SPA_TABLET };
 const UNKNOWN_MATCH: RowMatch = { kind: "none" };

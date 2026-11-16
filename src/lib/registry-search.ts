@@ -52,6 +52,13 @@ function wordsOf(text: string | null): string[] {
   return normalizeText(text).match(/[a-z0-9]+/g) ?? [];
 }
 
+/** Whether two names are the same word list after normalization: case, Polish letters and separators are ignored. */
+export function sameName(a: string, b: string): boolean {
+  const left = wordsOf(a);
+  const right = wordsOf(b);
+  return left.length === right.length && left.every((word, i) => word === right[i]);
+}
+
 /** Whether the query has enough letters/digits (after normalization, separators excluded) to search. */
 export function isQueryLongEnough(query: string): boolean {
   let length = 0;
