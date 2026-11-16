@@ -10,7 +10,7 @@ const collator = new Intl.Collator("pl");
 /** A variant with its precomputed normalized words; internal to the matcher. */
 export interface RegistrySearchEntry {
   variant: RegistryVariant;
-  /** Length of the original product name, the first sort key. */
+  /** Length of the original product name, the first sort key after the withdrawn flag. */
   nameLength: number;
   nameWords: string[];
   commonWords: string[];
@@ -79,6 +79,7 @@ export function isQueryLongEnough(query: string): boolean {
 
 function compareEntries(a: RegistrySearchEntry, b: RegistrySearchEntry): number {
   return (
+    Number(a.variant.withdrawn) - Number(b.variant.withdrawn) ||
     a.nameLength - b.nameLength ||
     collator.compare(a.variant.name, b.variant.name) ||
     collator.compare(a.variant.strength ?? "", b.variant.strength ?? "") ||
@@ -86,7 +87,11 @@ function compareEntries(a: RegistrySearchEntry, b: RegistrySearchEntry): number 
   );
 }
 
-/** Decodes the tuples, normalizes every field once and sorts the variants once (level order does not depend on the query). */
+/**
+ * Decodes the tuples, normalizes every field once and sorts the variants once (level order does not depend on the query).
+ * Active variants sort before withdrawn ones; `searchVariants` fills the levels in this order, so inside every level
+ * the active variants come first, while a withdrawn variant still beats every variant of a weaker level.
+ */
 export function buildSearchIndex(payload: RegistrySearchListPayload): RegistrySearchIndex {
   const entries = payload.variants.map(
     ([id, name, strength, form, commonName, substances, withdrawn]): RegistrySearchEntry => {

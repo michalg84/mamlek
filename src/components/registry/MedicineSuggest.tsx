@@ -218,6 +218,8 @@ export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku
               >
                 <span className="line-clamp-2 block font-bold break-words">{variant.name}</span>
                 {details && <span className="text-muted-foreground block truncate text-sm">{details}</span>}
+                {/* Inside the option, so it is part of the option's accessible name. */}
+                {variant.withdrawn && <span className="text-muted-foreground block text-xs">wycofany z rejestru</span>}
               </li>
             );
           })}

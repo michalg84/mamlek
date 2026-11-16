@@ -535,22 +535,22 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 
 #### Automated
 
-- [x] 2.1 Zmienione testy `test:api` i nowe testy `kit.ts` są czerwone przed zmianą i zielone po niej
-- [x] 2.2 Celowe przywrócenie filtra `removed_at` w `getPackage` czerwieni testy
-- [x] 2.3 Testy unit + component + registry przechodzą
-- [x] 2.4 Lint przechodzi
-- [x] 2.5 Typy przechodzą (`npx astro check`)
-- [x] 2.6 `npm run test:api` przechodzi na lokalnym serwerze z fixture'ami
+- [x] 2.1 Zmienione testy `test:api` i nowe testy `kit.ts` są czerwone przed zmianą i zielone po niej — bf649df
+- [x] 2.2 Celowe przywrócenie filtra `removed_at` w `getPackage` czerwieni testy — bf649df
+- [x] 2.3 Testy unit + component + registry przechodzą — bf649df
+- [x] 2.4 Lint przechodzi — bf649df
+- [x] 2.5 Typy przechodzą (`npx astro check`) — bf649df
+- [x] 2.6 `npm run test:api` przechodzi na lokalnym serwerze z fixture'ami — bf649df
 
 ### Phase 3: Podpowiedzi i karta sprawdzenia
 
 #### Automated
 
-- [ ] 3.1 Nowe testy kolejności i etykiety są czerwone przed zmianą i zielone po niej
-- [ ] 3.2 Celowe zepsucie klucza `withdrawn` albo etykiety czerwieni testy
-- [ ] 3.3 Testy unit + component + registry przechodzą
-- [ ] 3.4 Lint, typy i `ui:scan` przechodzą
-- [ ] 3.5 `npm run search:check` na pełnym rejestrze bez różnic
+- [x] 3.1 Nowe testy kolejności i etykiety są czerwone przed zmianą i zielone po niej
+- [x] 3.2 Celowe zepsucie klucza `withdrawn` albo etykiety czerwieni testy
+- [x] 3.3 Testy unit + component + registry przechodzą
+- [x] 3.4 Lint, typy i `ui:scan` przechodzą
+- [x] 3.5 `npm run search:check` na pełnym rejestrze bez różnic
 
 #### Manual
 

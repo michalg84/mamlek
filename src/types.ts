@@ -144,8 +144,11 @@ export interface MedicineCheckItem {
 
 /** Body of a successful `GET /api/kit/check` (200). Items: variant matches first, then nearest expiry, newest first. */
 export interface MedicineCheckResponse {
-  /** The checked medicine with its full (untruncated) strength. */
-  searched: RegistryVariant;
+  /**
+   * The checked medicine with its full (untruncated) strength. The RPC does not say whether it is withdrawn: the
+   * screen takes that from the picked suggestion.
+   */
+  searched: Omit<RegistryVariant, "withdrawn">;
   /** The searched medicine has a usable common name or substance set, so "substance" matches were possible. */
   comparable: boolean;
   items: MedicineCheckItem[];
