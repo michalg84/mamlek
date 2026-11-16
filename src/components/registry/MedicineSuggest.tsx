@@ -201,29 +201,30 @@ export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku
           }}
           className="bg-popover text-popover-foreground divide-border mt-1 max-h-[min(24rem,50vh)] divide-y overflow-x-hidden overflow-y-auto rounded-lg border shadow-md"
         >
-          {results.map((variant, position) => {
-            const details = [variant.strength, variant.form].filter(Boolean).join(" · ");
-            return (
-              <li
-                key={variant.id}
-                id={`${listboxId}-${position}`}
-                role="option"
-                aria-selected={position === active}
-                onClick={() => {
-                  select(variant);
-                }}
-                className={cn(
-                  "hover:bg-accent hover:text-accent-foreground min-h-11 min-w-0 cursor-pointer overflow-hidden px-3 py-2",
-                  position === active && "bg-accent text-accent-foreground",
-                )}
-              >
-                <span className="line-clamp-2 block font-bold break-words">{variant.name}</span>
-                {details && <span className="text-muted-foreground block truncate text-sm">{details}</span>}
-                {/* Inside the option, so it is part of the option's accessible name. */}
-                {variant.withdrawn && <WithdrawnVariantNote className="text-xs" />}
-              </li>
-            );
-          })}
+          {results.map((variant, position) => (
+            <li
+              key={variant.id}
+              id={`${listboxId}-${position}`}
+              role="option"
+              aria-selected={position === active}
+              onClick={() => {
+                select(variant);
+              }}
+              className={cn(
+                "hover:bg-accent hover:text-accent-foreground min-h-11 min-w-0 cursor-pointer overflow-hidden px-3 py-2",
+                position === active && "bg-accent text-accent-foreground",
+              )}
+            >
+              <span className="line-clamp-2 block font-bold break-words">{variant.name}</span>
+              {/* Strength and form each get a wrapping line: cut together, a long strength used to hide the form. */}
+              {variant.strength && (
+                <span className="text-muted-foreground block text-sm break-words">{variant.strength}</span>
+              )}
+              {variant.form && <span className="text-muted-foreground block text-sm break-words">{variant.form}</span>}
+              {/* Inside the option, so it is part of the option's accessible name. */}
+              {variant.withdrawn && <WithdrawnVariantNote className="text-xs" />}
+            </li>
+          ))}
         </ul>
       )}
       <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">

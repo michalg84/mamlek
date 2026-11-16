@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type SubmitEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import {
@@ -31,6 +31,10 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
 
   const [chosenId, setChosenId] = useState<number | null>(null);
   const [quantity, setQuantity] = useState("");
+  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `validity.badInput` set. It
+  // is read from the field when the value is used: typing "-" into an empty field changes no value, so React fires no
+  // change event that could carry it.
+  const quantityRef = useRef<HTMLInputElement>(null);
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -65,7 +69,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
     const errors: FieldErrors = {};
 
     let parsedQuantity: number | null = null;
-    const quantityResult = parseQuantityInput(quantity, max);
+    const quantityResult = parseQuantityInput(quantity, max, quantityRef.current?.validity.badInput);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else {
@@ -113,10 +117,23 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
       if (response.status === 401) {
         setFormError("Sesja wygasła — zaloguj się ponownie");
       } else {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        setFormError(payload?.error ?? "Nie udało się dodać leku do apteczki");
+        // The server's error text is for the log, not for the user: the form shows a Polish message by status.
+        const payload: unknown = await response.json().catch((cause: unknown) => {
+          // eslint-disable-next-line no-console -- the cause of an unreadable error body; the form shows a generic message
+          console.error(cause);
+          return null;
+        });
+        // eslint-disable-next-line no-console -- the only trace of the failed add; the form shows a generic message
+        console.error("Adding a kit item failed", response.status, payload);
+        setFormError(
+          response.status === 400
+            ? "Nie udało się dodać leku — sprawdź dane albo wybierz lek ponownie"
+            : "Nie udało się dodać leku do apteczki, spróbuj ponownie",
+        );
       }
-    } catch {
+    } catch (cause) {
+      // eslint-disable-next-line no-console -- network failure; the form shows a generic message
+      console.error(cause);
       setFormError("Nie udało się połączyć z serwerem, spróbuj ponownie");
     }
     setSaving(false);
@@ -222,6 +239,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
               Ilość w opakowaniu (opcjonalnie)
             </Label>
             <QuantityInput
+              ref={quantityRef}
               id={quantityId}
               max={max}
               unit={unit}

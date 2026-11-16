@@ -1,8 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { authErrorMessage } from "@/lib/auth-errors";
 import SignUpForm from "@/components/auth/SignUpForm";
 
-const error = Astro.url.searchParams.get("error");
+// Only a known code becomes a message; any other text in the link shows the generic one, never itself.
+const error = authErrorMessage(Astro.url.searchParams.get("error"));
 ---
 
 <Layout title="Sign up">
