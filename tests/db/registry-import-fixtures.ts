@@ -13,10 +13,14 @@ export const SCRATCH_DATABASE = "registry_import_test";
 
 // Every migration the importer needs: the registry tables and the search list it refreshes. The other migrations
 // (kit_items, medicine_check) need the auth schema, which a plain scratch database does not have.
+// withdrawn_medicine_in_kit redefines registry_refresh_search_list (withdrawn variants in the list), which the importer
+// calls, so it belongs here. It also redefines registry_variant_packages, which the kit_items migration creates and the
+// scratch database does not have: the migration drops that function with `if exists`, so it runs here all the same.
 export const REGISTRY_MIGRATIONS = [
   "20261001120000_registry_tables.sql",
   "20261002120000_registry_search_list.sql",
   "20261002130000_registry_search_list_version.sql",
+  "20261116120000_withdrawn_medicine_in_kit.sql",
 ];
 
 export const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url));

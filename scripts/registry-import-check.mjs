@@ -51,10 +51,11 @@ async function refreshAs(role) {
 
 // Variant collapse on synthetic rows (the fixtures have no duplicate variants). Runs in a transaction that is
 // always rolled back, so nothing is left behind. Ids start high to stay clear of the fixtures.
-//   900000001  removed, NAR, lowest id    -> must be ignored (removed_at is set)
+//   900000001  removed, NAR, lowest id    -> loses to every active product (an active one is preferred)
 //   900000002  active, IR                 -> loses to the non-IR product
-//   900000003  active, NAR                -> the representative
-// All three differ only by letter case, so they form one variant.
+//   900000003  active, NAR                -> the representative (the variant is active: no marker)
+//   900000004  removed, NAR, own variant  -> a variant withdrawn as a whole: listed, with the marker `true`
+// The first three differ only by letter case, so they form one variant.
 async function syntheticCollapse() {
   await client.query("begin");
   try {
@@ -65,7 +66,8 @@ async function syntheticCollapse() {
       values
         (900000001, 'Synthetic Variant', '10 mg', 'tabletki', 'NAR', now()),
         (900000002, 'SYNTHETIC VARIANT', '10 MG', 'Tabletki', 'IR', null),
-        (900000003, 'Synthetic variant', '10 Mg', 'TABLETKI', 'NAR', null)`);
+        (900000003, 'Synthetic variant', '10 Mg', 'TABLETKI', 'NAR', null),
+        (900000004, 'Synthetic Withdrawn', '20 mg', 'tabletki', 'NAR', now())`);
     await client.query("select public.registry_refresh_search_list()");
     const after = await value(`select jsonb_build_object(
         'version', l.version,
@@ -73,7 +75,13 @@ async function syntheticCollapse() {
         'listed', jsonb_array_length(l.payload::jsonb -> 'variants'),
         'ids', (select coalesce(jsonb_agg(v -> 0), '[]'::jsonb)
                 from jsonb_array_elements(l.payload::jsonb -> 'variants') v
-                where lower(v ->> 1) = 'synthetic variant')
+                where lower(v ->> 1) = 'synthetic variant'),
+        'activeTupleLengths', (select coalesce(jsonb_agg(jsonb_array_length(v)), '[]'::jsonb)
+                from jsonb_array_elements(l.payload::jsonb -> 'variants') v
+                where lower(v ->> 1) = 'synthetic variant'),
+        'withdrawnTuples', (select coalesce(jsonb_agg(v), '[]'::jsonb)
+                from jsonb_array_elements(l.payload::jsonb -> 'variants') v
+                where lower(v ->> 1) = 'synthetic withdrawn')
       ) as value from registry_search_list l`);
     return { before, after };
   } finally {
@@ -162,13 +170,13 @@ const checks = [
           'count', l.variant_count,
           'distinct', (select count(*) from (
             select distinct lower(name), lower(coalesce(strength, '')), lower(coalesce(pharmaceutical_form, ''))
-            from registry_products where removed_at is null
+            from registry_products
           ) keys),
           'listed', jsonb_array_length(l.payload::jsonb -> 'variants')
         ) as value from registry_search_list l`,
       ),
     (v) => v !== null && v.count > 0 && v.count === v.distinct && v.count === v.listed,
-    "variant_count = distinct variant keys of active products = payload.variants length (> 0)",
+    "variant_count = distinct variant keys of all products (withdrawn included) = payload.variants length (> 0)",
   ],
   [
     "search list version",
@@ -184,14 +192,38 @@ const checks = [
     () =>
       value(
         `select jsonb_build_object(
-          'crestor', exists (select 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $1),
+          'crestor', (select v -> 6 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $1),
           'varenzin', exists (select 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $2),
           'sinupret', (select v ->> 1 from jsonb_array_elements(l.payload::jsonb -> 'variants') v where v ->> 0 = $3)
         ) as value from registry_search_list l`,
         [CRESTOR, VARENZIN, SINUPRET],
       ),
-    (v) => v !== null && v.crestor === false && v.varenzin === false && v.sinupret === "Sinupret Zmieniony",
-    `no Crestor, no Varenzin, Sinupret named "Sinupret Zmieniony"`,
+    (v) => v !== null && v.crestor === true && v.varenzin === false && v.sinupret === "Sinupret Zmieniony",
+    `Crestor (withdrawn in v2) listed with the 7th element true, no Varenzin, Sinupret named "Sinupret Zmieniony"`,
+  ],
+  [
+    "search list marks only withdrawn variants",
+    () =>
+      value(
+        `select jsonb_build_object(
+          'marked', (select coalesce(jsonb_agg(v ->> 0 order by v ->> 0), '[]'::jsonb)
+                     from jsonb_array_elements(l.payload::jsonb -> 'variants') v where jsonb_array_length(v) = 7),
+          'markedValues', (select coalesce(jsonb_agg(distinct v -> 6), '[]'::jsonb)
+                     from jsonb_array_elements(l.payload::jsonb -> 'variants') v where jsonb_array_length(v) = 7),
+          'unmarkedWithdrawn', (select count(*)::int
+                     from jsonb_array_elements(l.payload::jsonb -> 'variants') v
+                     join registry_products p on p.id = (v ->> 0)::bigint
+                     where jsonb_array_length(v) = 6 and p.removed_at is not null)
+        ) as value from registry_search_list l`,
+      ),
+    (v) =>
+      v !== null &&
+      v.marked.length === 1 &&
+      v.marked[0] === CRESTOR &&
+      v.markedValues.length === 1 &&
+      v.markedValues[0] === true &&
+      v.unmarkedWithdrawn === 0,
+    `only Crestor has a 7th element (true); no listed variant of a withdrawn product has a 6-element tuple`,
   ],
   ["RLS hides search list from anon", () => countAs("anon", "registry_search_list"), (v) => v === 0, "0"],
   [
@@ -212,10 +244,16 @@ const checks = [
     ({ before, after }) =>
       after.ids.length === 1 &&
       after.ids[0] === 900000003 &&
-      after.variants === before.variants + 1 &&
+      after.activeTupleLengths.length === 1 &&
+      after.activeTupleLengths[0] === 6 &&
+      after.withdrawnTuples.length === 1 &&
+      after.withdrawnTuples[0][0] === 900000004 &&
+      after.withdrawnTuples[0].length === 7 &&
+      after.withdrawnTuples[0][6] === true &&
+      after.variants === before.variants + 2 &&
       after.listed === after.variants &&
       after.version > before.version,
-    "one variant with the active non-IR product (900000003), variants +1, version grows",
+    "one variant with the active non-IR product (900000003) and no 7th element, the fully withdrawn variant (900000004) listed with 7th element true, variants +2, version grows",
   ],
 ];
 
