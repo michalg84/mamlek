@@ -2,7 +2,14 @@ import { useId, useState, type ReactNode, type SubmitEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useKitItemActions } from "@/components/hooks/useKitItemActions";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
-import { ActionError, ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
+import {
+  ActionError,
+  ExpirySelect,
+  FIELD_LABEL_CLASS,
+  InlineError,
+  QuantityInput,
+  WithdrawnPackMark,
+} from "@/components/kit/kit-fields";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,7 +30,9 @@ interface PackOption {
   productId: number;
   units: RegistryPackageUnit[];
   holder: string | null;
-  /** The item's own pack, missing from the active packs of the variant (withdrawn): pinned first as "obecne". */
+  /** The pack is withdrawn from the registry. */
+  withdrawn: boolean;
+  /** The item's own pack when it is withdrawn: shown as "obecne" instead of "wycofane" (it is the pack in the kit). */
   current: boolean;
 }
 
@@ -40,16 +49,21 @@ function quantityText(quantity: number | null): string {
  * The packs the item can move to, with the item's own pack always among them. `uniquePacks` may have hidden the item's
  * GTIN under an option of the same product with the same label: that option takes over the item's `packageId`, so
  * picking it means "no change" (one label, not two). A withdrawn pack is never merged that way: an active pack that
- * only looks the same is a real change, so the item's own pack is pinned first as "obecne", as it is when no such
- * option exists at all.
+ * only looks the same is a real change.
+ *
+ * The registry lists the withdrawn packs of the variant too, so the item's own pack, withdrawn or not, normally comes
+ * with the list: it appears once, marked "obecne" when it is withdrawn. The pinning below is the fallback for an own
+ * pack that is not on the list at all (e.g. `uniquePacks` hid it behind another pack of the same label, or the
+ * registry no longer returns it): it is pinned first as "obecne".
  */
 function packOptions(item: KitItem, packages: RegistryVariantPackage[]): PackOption[] {
-  const options = packages.map((pack) => ({
+  const options: PackOption[] = packages.map((pack) => ({
     packageId: pack.packageId,
     productId: pack.productId,
     units: pack.units,
     holder: pack.holder,
-    current: false,
+    withdrawn: pack.withdrawn,
+    current: pack.withdrawn && pack.packageId === item.packageId,
   }));
   if (options.some((option) => option.packageId === item.packageId)) {
     return options;
@@ -62,7 +76,14 @@ function packOptions(item: KitItem, packages: RegistryVariantPackage[]): PackOpt
     return options.map((option, index) => (index === twin ? { ...option, packageId: item.packageId } : option));
   }
   return [
-    { packageId: item.packageId, productId: item.productId, units: item.units, holder: item.holder, current: true },
+    {
+      packageId: item.packageId,
+      productId: item.productId,
+      units: item.units,
+      holder: item.holder,
+      withdrawn: item.withdrawn,
+      current: true,
+    },
     ...options,
   ];
 }
@@ -214,7 +235,11 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
                 <RadioGroupItem id={optionId} value={String(option.packageId)} className="mt-0.5" />
                 <Label htmlFor={optionId} className="block min-w-0 flex-1 cursor-pointer leading-snug break-words">
                   {packLabel(option.units)}
-                  {option.current && <span className="text-muted-foreground font-normal"> · obecne</span>}
+                  {option.current ? (
+                    <span className="text-muted-foreground font-normal"> · obecne</span>
+                  ) : (
+                    option.withdrawn && <WithdrawnPackMark />
+                  )}
                   {showHolder && option.holder && (
                     <span className="text-muted-foreground block font-normal">{option.holder}</span>
                   )}

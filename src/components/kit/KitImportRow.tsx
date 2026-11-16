@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
+import { WithdrawnPackMark } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +94,7 @@ function RowPack({
     }
   }, [single, packageId, onPick]);
 
+  // `packages` holds the withdrawn packs too, so a single pack may be a withdrawn one: it is picked and marked.
   // A single pack is picked by the effect above; until the pick lands, the row still waits for it.
   if (status === "loading" || (single && packageId !== single.packageId)) {
     return (
@@ -125,12 +127,17 @@ function RowPack({
   if (packages.length === 0) {
     return (
       <p className="text-muted-foreground text-sm break-words">
-        Brak aktywnych opakowań tego leku w rejestrze — wybierz inny lek albo usuń wiersz
+        Brak opakowań tego leku w rejestrze — wybierz inny lek albo usuń wiersz
       </p>
     );
   }
   if (single) {
-    return <p className="text-foreground text-sm break-words">Opakowanie: {packLabel(single.units)}</p>;
+    return (
+      <p className="text-foreground text-sm break-words">
+        Opakowanie: {packLabel(single.units)}
+        {single.withdrawn && <WithdrawnPackMark />}
+      </p>
+    );
   }
 
   const showHolder = new Set(packages.map((pack) => pack.productId)).size > 1;
@@ -163,6 +170,7 @@ function RowPack({
               <RadioGroupItem id={itemId} value={String(pack.packageId)} className="mt-0.5" />
               <Label htmlFor={itemId} className="block min-w-0 flex-1 cursor-pointer leading-snug break-words">
                 {packLabel(pack.units)}
+                {pack.withdrawn && <WithdrawnPackMark />}
                 {showHolder && pack.holder && (
                   <span className="text-muted-foreground block font-normal">{pack.holder}</span>
                 )}
@@ -353,8 +361,14 @@ function CurrentVariant({ variant }: { variant: RegistryVariant }) {
     <p className="text-muted-foreground min-w-0 text-sm break-words">
       Obecnie: <span className="text-foreground font-bold">{variant.name}</span>
       {details && <span> · {details}</span>}
+      {variant.withdrawn && <WithdrawnVariantNote />}
     </p>
   );
+}
+
+/** Same wording as in the search suggestions (MedicineSuggest) and the kit item details. */
+function WithdrawnVariantNote() {
+  return <span className="text-muted-foreground block text-sm">wycofany z rejestru</span>;
 }
 
 /** Which medicine the row is: the assignment, the suggestions to pick from, or the search field. */
@@ -387,6 +401,7 @@ function RowVariant({
         <p className="text-foreground min-w-0 text-sm break-words">
           Lek: <span className="font-bold">{variant.name}</span>
           {details && <span className="text-muted-foreground"> · {details}</span>}
+          {variant.withdrawn && <WithdrawnVariantNote />}
         </p>
         {automatic && (
           <p className="text-muted-foreground text-sm">
@@ -431,6 +446,7 @@ function RowVariant({
                   >
                     <span className="block font-bold break-words">{choice.name}</span>
                     {details && <span className="text-muted-foreground block text-sm break-words">{details}</span>}
+                    {choice.withdrawn && <WithdrawnVariantNote />}
                   </Button>
                 </li>
               );

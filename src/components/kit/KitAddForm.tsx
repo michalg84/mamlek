@@ -1,7 +1,13 @@
 import { useEffect, useId, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
-import { ExpirySelect, FIELD_LABEL_CLASS, InlineError, QuantityInput } from "@/components/kit/kit-fields";
+import {
+  ExpirySelect,
+  FIELD_LABEL_CLASS,
+  InlineError,
+  QuantityInput,
+  WithdrawnPackMark,
+} from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -48,7 +54,8 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   const quantityId = useId();
   const quantityErrorId = useId();
 
-  // A single pack is chosen for the user.
+  // A single pack is chosen for the user. The list holds the withdrawn packs too, so "one pack" may be a withdrawn
+  // one (it is chosen and marked); an active pack next to a withdrawn one is never chosen for the user.
   const selected: RegistryVariantPackage | null =
     packages.find((pack) => pack.packageId === chosenId) ?? (packages.length === 1 ? packages[0] : null);
   const showHolder = new Set(packages.map((pack) => pack.productId)).size > 1;
@@ -150,7 +157,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
       </div>
     );
   } else if (packages.length === 0) {
-    packStep = <p className="text-muted-foreground text-sm">Brak aktywnych opakowań tego leku w rejestrze</p>;
+    packStep = <p className="text-muted-foreground text-sm">Brak opakowań tego leku w rejestrze</p>;
   } else {
     packStep = (
       <>
@@ -180,6 +187,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
                 <RadioGroupItem id={itemId} value={String(pack.packageId)} className="mt-0.5" />
                 <Label htmlFor={itemId} className="block min-w-0 flex-1 cursor-pointer leading-snug break-words">
                   {packLabel(pack.units)}
+                  {pack.withdrawn && <WithdrawnPackMark />}
                   {showHolder && pack.holder && (
                     <span className="text-muted-foreground block font-normal">{pack.holder}</span>
                   )}

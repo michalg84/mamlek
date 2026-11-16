@@ -20,7 +20,7 @@ function sachets(count: string): RegistryPackageUnit[] {
   return [{ count, kind: "saszetki", capacity: null, capacity_unit: null, info: null }];
 }
 
-function pack(packageId: number, count: string, productId = PRODUCT): RegistryVariantPackage {
+function pack(packageId: number, count: string, productId = PRODUCT, withdrawn = false): RegistryVariantPackage {
   return {
     packageId,
     productId,
@@ -28,7 +28,7 @@ function pack(packageId: number, count: string, productId = PRODUCT): RegistryVa
     availabilityCategory: null,
     units: sachets(count),
     holder: null,
-    withdrawn: false,
+    withdrawn,
   };
 }
 
@@ -148,6 +148,45 @@ describe("KitItemEdit", () => {
 
     await waitFor(() => {
       expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { packageId: 1001 } }]);
+    });
+  });
+
+  it("shows the item's own withdrawn pack, listed by the registry, once as „obecne”, and saving without a change sends no packageId", async () => {
+    // The registry now lists withdrawn packs too, so the item's pack (20 sachets) arrives on the list by itself.
+    const item = kitItem({ packageId: 1009, units: sachets("20"), withdrawn: true });
+    const { routed } = renderEdit(item, [pack(1001, "10"), pack(1002, "30"), pack(1009, "20", PRODUCT, true)]);
+
+    const radios = await screen.findAllByRole("radio");
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false", "true"]);
+    expect(screen.getAllByText(/^20 saszetki/)).toHaveLength(1);
+    expect(screen.getAllByText("· obecne")).toHaveLength(1);
+    expect(screen.getByRole("radio", { name: /^20 saszetki\s*· obecne$/ })).toBe(radios[2]);
+    expect(saveButton().disabled).toBe(true);
+
+    fireEvent.change(quantityField(), { target: { value: "20" } });
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 20 } }]);
+    });
+  });
+
+  it("marks another withdrawn pack of the medicine „wycofane”, and moving to it sends its packageId", async () => {
+    const item = kitItem();
+    const { routed } = renderEdit(item, [pack(1001, "10"), pack(1002, "30"), pack(1008, "50", PRODUCT, true)]);
+
+    const radios = await screen.findAllByRole("radio");
+    expect(radios).toHaveLength(3);
+    // Only the withdrawn pack carries the mark; the active ones and the item's own pack do not.
+    expect(screen.getAllByText("· wycofane")).toHaveLength(1);
+    expect(screen.getByRole("radio", { name: /^50 saszetki\s*· wycofane$/ })).toBe(radios[2]);
+    expect(screen.queryByText("· obecne")).toBeNull();
+
+    fireEvent.click(radios[2]);
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { packageId: 1008 } }]);
     });
   });
 

@@ -62,7 +62,10 @@ function variant(
 }
 
 function tuple(v: RegistryVariant): RegistryVariantTuple {
-  return [v.id, v.name, v.strength, v.form, v.commonName, v.substances];
+  // The 7th element is present only for a withdrawn variant.
+  return v.withdrawn
+    ? [v.id, v.name, v.strength, v.form, v.commonName, v.substances, true]
+    : [v.id, v.name, v.strength, v.form, v.commonName, v.substances];
 }
 
 function indexOf(variants: RegistryVariant[]) {
@@ -284,6 +287,19 @@ describe("matchRow", () => {
       variants: [ibuprom200, ibuprom400],
       total: 2,
     });
+  });
+
+  it("gives suggestions, never an assignment, when the second hit is a withdrawn variant", () => {
+    // A withdrawn variant counts as any other hit (S-13): two hits of the first query mean the user decides, active first.
+    const active = variant(8, "Zodac", "10 mg", "tabletki powlekane");
+    const withdrawn: RegistryVariant = { ...variant(9, "Zodac", "10 mg", "tabletki"), withdrawn: true };
+
+    expect(
+      matchRow(
+        indexOf([withdrawn, active]),
+        request(["Zodac 10 mg tabletki", "Zodac 10 mg", "Zodac"], "Zodac", "10 mg"),
+      ),
+    ).toEqual({ kind: "choices", variants: [active, withdrawn], total: 2 });
   });
 
   it("gives none when no query has a hit", () => {

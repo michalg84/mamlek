@@ -546,11 +546,11 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 
 #### Automated
 
-- [x] 3.1 Nowe testy kolejności i etykiety są czerwone przed zmianą i zielone po niej
-- [x] 3.2 Celowe zepsucie klucza `withdrawn` albo etykiety czerwieni testy
-- [x] 3.3 Testy unit + component + registry przechodzą
-- [x] 3.4 Lint, typy i `ui:scan` przechodzą
-- [x] 3.5 `npm run search:check` na pełnym rejestrze bez różnic
+- [x] 3.1 Nowe testy kolejności i etykiety są czerwone przed zmianą i zielone po niej — 6ad405f
+- [x] 3.2 Celowe zepsucie klucza `withdrawn` albo etykiety czerwieni testy — 6ad405f
+- [x] 3.3 Testy unit + component + registry przechodzą — 6ad405f
+- [x] 3.4 Lint, typy i `ui:scan` przechodzą — 6ad405f
+- [x] 3.5 `npm run search:check` na pełnym rejestrze bez różnic — 6ad405f
 
 #### Manual
 
@@ -560,14 +560,14 @@ Alternatywa zamiast skryptu: jednorazowy SQL w scratchpadzie. Wtedy w repozytori
 
 #### Automated
 
-- [ ] 4.1 Nowe testy komponentów i `matchRow` są czerwone przed zmianą i zielone po niej
-- [ ] 4.2 Celowe zepsucie oznaczenia albo samodzielnego wyboru czerwieni testy
-- [ ] 4.3 Testy unit + component + registry przechodzą
-- [ ] 4.4 Lint, typy i `ui:scan` przechodzą
+- [x] 4.1 Nowe testy komponentów i `matchRow` są czerwone przed zmianą i zielone po niej
+- [x] 4.2 Celowe zepsucie oznaczenia albo samodzielnego wyboru czerwieni testy
+- [x] 4.3 Testy unit + component + registry przechodzą
+- [x] 4.4 Lint, typy i `ui:scan` przechodzą
 
 #### Manual
 
-- [ ] 4.5 Dodanie, edycja i import Crestora na lokalnym serwerze działają z oznaczeniami
+- [x] 4.5 Dodanie, edycja i import Crestora na lokalnym serwerze działają z oznaczeniami
 
 ### Phase 5: Wydajność, testy końcowe i dokumentacja
 
