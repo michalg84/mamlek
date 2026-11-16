@@ -337,8 +337,8 @@ README, test-plan, deploy-plan i infrastructure.md opisują dzisiejszy stan; `bo
 
 #### Automated
 
-- [x] 1.1 Prettier akceptuje plik: `npx prettier --check context/foundation/prd.md`
-- [x] 1.2 Frontmatter ma wersję 3: `grep -n "^version: 3" context/foundation/prd.md`
+- [x] 1.1 Prettier akceptuje plik: `npx prettier --check context/foundation/prd.md` — 2d3debd
+- [x] 1.2 Frontmatter ma wersję 3: `grep -n "^version: 3" context/foundation/prd.md` — 2d3debd
 
 #### Manual
 
@@ -348,9 +348,9 @@ README, test-plan, deploy-plan i infrastructure.md opisują dzisiejszy stan; `bo
 
 #### Automated
 
-- [ ] 2.1 Prettier akceptuje plik: `npx prettier --check context/foundation/roadmap.md`
-- [ ] 2.2 Sync rozpoznaje nowe pozycje bez błędu: `npm run roadmap:sync -- --dry-run`
-- [ ] 2.3 Frontmatter wskazuje PRD v3: `grep -n "prd_version: 3" context/foundation/roadmap.md`
+- [x] 2.1 Prettier akceptuje plik: `npx prettier --check context/foundation/roadmap.md`
+- [x] 2.2 Sync rozpoznaje nowe pozycje bez błędu: `npm run roadmap:sync -- --dry-run`
+- [x] 2.3 Frontmatter wskazuje PRD v3: `grep -n "prd_version: 3" context/foundation/roadmap.md`
 
 #### Manual
 
