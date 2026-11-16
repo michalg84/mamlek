@@ -1,7 +1,12 @@
 import { vi } from "vitest";
 import { matchRow } from "@/lib/kit-import";
 import { buildSearchIndex, MAX_RESULTS, searchVariants, type RegistrySearchIndex } from "@/lib/registry-search";
-import type { RegistrySearchListPayload, RegistrySearchWorkerRequest, RegistrySearchWorkerResponse } from "@/types";
+import type {
+  RegistrySearchListPayload,
+  RegistrySearchWorkerRequest,
+  RegistrySearchWorkerResponse,
+  RowMatchRequest,
+} from "@/types";
 
 type ResultsMessage = Extract<RegistrySearchWorkerResponse, { type: "results" }>;
 type MatchesMessage = Extract<RegistrySearchWorkerResponse, { type: "matches" }>;
@@ -9,7 +14,7 @@ type MatchesMessage = Extract<RegistrySearchWorkerResponse, { type: "matches" }>
 interface QueuedMatches {
   message: MatchesMessage;
   /** The rows of the request this answer is for. */
-  rows: string[][];
+  rows: RowMatchRequest[];
 }
 
 type Queued = ResultsMessage | QueuedMatches;
@@ -69,7 +74,7 @@ export class FakeSearchWorker {
     }
     const index = this.index;
     if (message.type === "match") {
-      const matches = message.rows.map((queries) => matchRow(index, queries));
+      const matches = message.rows.map((request) => matchRow(index, request));
       this.queue.push({ message: { type: "matches", id: message.id, matches }, rows: message.rows });
     } else {
       const { results, total } = searchVariants(index, message.query, MAX_RESULTS);
@@ -93,7 +98,7 @@ export class FakeSearchWorker {
   }
 
   /** Rows of the match requests whose answers are waiting, oldest first. */
-  pendingMatches(): string[][][] {
+  pendingMatches(): RowMatchRequest[][] {
     return this.queue.filter(isMatches).map((entry) => entry.rows);
   }
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegistryListWorker, type RegistryWorkerAnswer } from "@/components/hooks/useRegistryListWorker";
-import type { RegistrySearchWorkerRequest, RowMatch } from "@/types";
+import type { RegistrySearchWorkerRequest, RowMatch, RowMatchRequest } from "@/types";
 
 export type RegistryMatchStatus = "loading" | "ready" | "unauthorized" | "error";
 
@@ -14,13 +14,13 @@ interface Answer {
   /** Identifies the list load (version + attempt) whose worker produced this answer. */
   key: string;
   /** The rows this answer belongs to (by identity). */
-  rows: string[][];
+  rows: RowMatchRequest[];
   matches: RowMatch[];
 }
 
 /**
  * Matches kit-import rows against the registry list in the search Web Worker, in one request per set of rows. Each row
- * is its search queries (`rowQueries`); `matches` hold one `RowMatch` per row, in row order. The list is loaded the
+ * is its match request (`rowMatchRequest`: queries and, for a complete row, its name); `matches` hold one `RowMatch` per row, in row order. The list is loaded the
  * same way as for suggestions (`useRegistryListWorker`).
  *
  * `rows` is compared by identity: pass a memoized array, a new array is a new set of rows. Until the worker answers
@@ -28,10 +28,10 @@ interface Answer {
  * nothing is sent and `matches` stay null; `status` then only tells whether the list is ready. An expired session is
  * "unauthorized" (a retry cannot help); any other failure to load the list is "error"; `retry` loads it again and matches the current rows.
  */
-export function useRegistryMatch(version: number, rows: string[][] | null): RegistryMatch {
+export function useRegistryMatch(version: number, rows: RowMatchRequest[] | null): RegistryMatch {
   const [answer, setAnswer] = useState<Answer | null>(null);
   /** The last match request sent to the worker; answers with any other id are stale. */
-  const sentRef = useRef<{ id: number; rows: string[][] | null }>({ id: 0, rows: null });
+  const sentRef = useRef<{ id: number; rows: RowMatchRequest[] | null }>({ id: 0, rows: null });
   const onAnswer = useCallback((message: RegistryWorkerAnswer, requestKey: string) => {
     const sent = sentRef.current;
     if (message.type === "matches" && message.id === sent.id && sent.rows !== null) {

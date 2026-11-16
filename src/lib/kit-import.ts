@@ -1,8 +1,8 @@
 import { IMPORT_MAX_ROWS } from "@/lib/kit-import-csv";
 import type { ParsedExpiry, ParsedQuantity, ParsedRow } from "@/lib/kit-import-csv";
-import { isQueryLongEnough, searchVariants } from "@/lib/registry-search";
+import { hasEveryWord, isQueryLongEnough, sameName, searchVariants } from "@/lib/registry-search";
 import type { RegistrySearchIndex } from "@/lib/registry-search";
-import type { KitItem, RegistryVariant, RowMatch } from "@/types";
+import type { KitItem, RegistryVariant, RowMatch, RowMatchRequest } from "@/types";
 
 // Rules of the kit-import screen (FR-009): when a row is assigned on its own, what counts as "already have" or a
 // repeat, what blocks saving a page and how rows are split into pages. Pure: no React, no network.
@@ -17,10 +17,14 @@ export const IMPORT_SUGGESTIONS = 5;
 const LIST_STRENGTH_MAX = 80;
 
 /** Result of matching one row against the registry list; lives in `src/types.ts` because the worker protocol uses it. */
-export type { RowMatch };
+export type { RowMatch, RowMatchRequest };
 
-/** Why a row blocks saving its page. */
+/**
+ * Why a row blocks saving its page. "choosing-variant" (the row has a medicine and its search is open) is screen
+ * state, added by the screen; `rowIssues` never returns it.
+ */
 export type RowIssue =
+  | "choosing-variant"
   | "no-variant"
   | "no-package"
   | "invalid-expiry"
@@ -89,10 +93,25 @@ export function rowQueries(row: ParsedRow): string[] {
 }
 
 /**
- * Assigns on its own only when the first (most specific) query has exactly one hit. Any other hit, including a
- * single one from a fallback query, gives suggestions (at most IMPORT_SUGGESTIONS); no hit at all gives none.
+ * The match request of a row: its queries, and its name and strength when the row is complete (name, strength AND form), so that
+ * `matchRow` knows whether an automatic assignment is allowed at all.
  */
-export function matchRow(index: RegistrySearchIndex, queries: string[]): RowMatch {
+export function rowMatchRequest(row: ParsedRow): RowMatchRequest {
+  const queries = rowQueries(row);
+  const strength = row.strength ?? "";
+  const complete = queries.length > 0 && strength !== "" && (row.form ?? "") !== "";
+  return { queries, exactName: complete ? row.name : null, exactStrength: complete ? strength : null };
+}
+
+/**
+ * Assigns on its own only when the row is complete (`exactName` set), the first (most specific) query has exactly
+ * one hit, that hit has the row's name (`sameName`) and every word of the row's strength is a whole word of the hit's
+ * strength (`hasEveryWord`: "4 mg" is not "40 mg"). Any other hit, including a single one from a fallback query, of
+ * another name or of another strength, gives suggestions (at most IMPORT_SUGGESTIONS); no hit at all gives none. The
+ * form is still matched by word prefix ("tabletki" finds "tabletki powlekane").
+ */
+export function matchRow(index: RegistrySearchIndex, request: RowMatchRequest): RowMatch {
+  const { queries, exactName, exactStrength } = request;
   for (let i = 0; i < queries.length; i++) {
     if (!isQueryLongEnough(queries[i])) {
       continue;
@@ -101,8 +120,16 @@ export function matchRow(index: RegistrySearchIndex, queries: string[]): RowMatc
     if (total === 0) {
       continue;
     }
-    if (i === 0 && total === 1) {
-      return { kind: "auto", variant: results[0] };
+    const hit = results[0];
+    if (
+      i === 0 &&
+      total === 1 &&
+      exactName !== null &&
+      exactStrength !== null &&
+      sameName(hit.name, exactName) &&
+      hasEveryWord(exactStrength, hit.strength)
+    ) {
+      return { kind: "auto", variant: hit };
     }
     return { kind: "choices", variants: results, total };
   }

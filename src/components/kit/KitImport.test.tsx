@@ -13,11 +13,11 @@ const READY = "Gotowy do zapisu";
 const SAVE_FAILED =
   "Nie udało się zapisać strony. Jeśli połączenie zerwało się w trakcie, sprawdź apteczkę, zanim spróbujesz ponownie.";
 
-// The only "No-Spa" with "tabletki" in strength or form: the first query hits once, so it is assigned on its own.
+// The only "No-Spa" with "tabletki" in strength or form, and the row has name, strength and form: assigned on its own.
 const NO_SPA = "No-Spa;40 mg;tabletki;03.2027;20";
-// The only "Rutinoscorbin" (no strength, no form): one query, one hit.
+// The only "Rutinoscorbin" (no strength, no form): one hit, but an incomplete row only gets a suggestion.
 const RUTINOSCORBIN = "Rutinoscorbin;;;;";
-// The only "Altacet", a gel ("żel" matches the form).
+// The only "Altacet", a gel ("żel" matches the form); no strength, so only a suggestion.
 const ALTACET = "Altacet;;żel;;";
 // Nothing in the list starts with "xyzabc".
 const UNKNOWN = "Xyzabc;;;;";
@@ -75,6 +75,11 @@ function text(line: number) {
   return row(line).textContent;
 }
 
+/** Clicks the suggestion of a row that has a single hit but is not complete enough to be assigned on its own. */
+function pickSuggestion(line: number, name: RegExp) {
+  fireEvent.click(within(row(line)).getByRole("button", { name }));
+}
+
 /** Waits until the row's pack is loaded (and, being the only one, chosen). */
 async function packChosen(line: number) {
   await within(row(line)).findByText("Opakowanie: 30 tabletki");
@@ -124,14 +129,52 @@ describe("KitImport", () => {
     expect(routed.importRequests()).toEqual([]);
   });
 
-  it("assigns a row with one hit of the first query on its own and says so", async () => {
+  it("assigns a complete row with one hit of the same name on its own and says so", async () => {
     await review(csv(NO_SPA));
 
     expect(text(2)).toContain("Lek: No-Spa · 40 mg · tabletki");
-    expect(text(2)).toContain("Przypisano automatycznie");
+    expect(text(2)).toContain("Przypisano automatycznie — jedyny lek w rejestrze o tej nazwie, mocy i postaci");
     await packChosen(2);
     expect(text(2)).toContain(READY);
     expect(saveBlocked()).toBe(false);
+  });
+
+  it("blocks saving while a row with a medicine has the search open, and Anuluj restores it (audit F3)", async () => {
+    const routed = await review(csv(NO_SPA), { importKit: () => reply({ ids: [1] }, 201) });
+    await packChosen(2);
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Zmień" }));
+
+    expect(text(2)).toContain("Obecnie: No-Spa · 40 mg · tabletki");
+    expect(text(2)).toContain("dokończ wybór leku albo anuluj");
+    expect(saveBlocked()).toBe(true);
+    expect(document.getElementById(saveButton().getAttribute("aria-describedby") ?? "")?.textContent).toBe(
+      "1 wiersz wymaga decyzji",
+    );
+    fireEvent.click(saveButton());
+    expect(routed.importRequests()).toEqual([]);
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Anuluj" }));
+    await packChosen(2);
+    expect(saveBlocked()).toBe(false);
+    fireEvent.click(saveButton());
+    await waitFor(() => {
+      expect(routed.importRequests()).toEqual([
+        { items: [{ packageId: 801, quantity: 20, expiry: { month: 3, year: 2027 } }] },
+      ]);
+    });
+  });
+
+  it("offers a row without strength or form as a suggestion instead of assigning it (audit F1)", async () => {
+    await review(csv(RUTINOSCORBIN, ALTACET));
+
+    for (const line of [2, 3]) {
+      expect(text(line)).toContain("Wybierz lek z rejestru:");
+      expect(text(line)).not.toContain("Przypisano automatycznie");
+    }
+    expect(within(row(2)).getByRole("button", { name: /^Rutinoscorbin/ })).not.toBeNull();
+    expect(within(row(3)).getByRole("button", { name: /^Altacet/ })).not.toBeNull();
+    expect(saveBlocked()).toBe(true);
   });
 
   it("blocks a medicine already in the kit until the user decides", async () => {
@@ -302,6 +345,7 @@ describe("KitImport", () => {
       importKit: () => reply({ ids: [11, 12] }, 201),
     });
     expect(screen.getByRole("heading", { name: "Strona 1 z 2" })).not.toBeNull();
+    pickSuggestion(3, /^Rutinoscorbin/);
     await packChosen(2);
     await packChosen(3);
     for (let line = 4; line <= 31; line++) {
@@ -328,6 +372,7 @@ describe("KitImport", () => {
     ]);
     expect(screen.getByText("Zapisano 1 z 2 stron, 2 leki")).not.toBeNull();
     expect(screen.queryByRole("listitem", { name: "Wiersz 2" })).toBeNull();
+    pickSuggestion(32, /^Altacet/);
     await packChosen(32);
     expect(screen.getByText("Strona 2 nie zostanie zapisana")).not.toBeNull();
     expect(finishLink().getAttribute("href")).toBe("/apteczka?zaimportowano=2");
@@ -338,6 +383,7 @@ describe("KitImport", () => {
     await review(csv(NO_SPA, UNKNOWN, RUTINOSCORBIN), {
       importKit: () => reply({ error: "Package not found or withdrawn from the registry", index: 1 }, 400),
     });
+    pickSuggestion(4, /^Rutinoscorbin/);
     await packChosen(2);
     await packChosen(4);
     removeRow(3);

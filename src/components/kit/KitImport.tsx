@@ -18,7 +18,7 @@ import {
   pageCount,
   pageOf,
   rowIssues,
-  rowQueries,
+  rowMatchRequest,
   toImportItem,
   type ImportRow,
 } from "@/lib/kit-import";
@@ -282,9 +282,11 @@ function ImportReview({
     // A pack kept from an earlier variant of the row does not count.
     return pack?.packageId === rows[index].packageId ? packQuantity(pack.units).max : null;
   };
-  const issues = rows.map((row, index) =>
-    rowIssues(row, { kitKeys, earlierKeys: earlier[index], packMax: packMaxOf(index) }),
-  );
+  const issues = rows.map((row, index) => {
+    const found = rowIssues(row, { kitKeys, earlierKeys: earlier[index], packMax: packMaxOf(index) });
+    // An open medicine change hides the medicine that would be saved: finish it or cancel it first (audit F3).
+    return editing === index && row.variant && !row.removed ? ["choosing-variant" as const, ...found] : found;
+  });
   const pageIndices = pageOf(
     rows.map((_, index) => index),
     page,
@@ -519,8 +521,8 @@ function ImportReview({
  */
 export default function KitImport({ version, kitVariantKeys }: KitImportProps) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
-  const queries = useMemo(() => (parsed ? parsed.map(rowQueries) : null), [parsed]);
-  const { status, matches, retry } = useRegistryMatch(version, queries);
+  const requests = useMemo(() => (parsed ? parsed.map(rowMatchRequest) : null), [parsed]);
+  const { status, matches, retry } = useRegistryMatch(version, requests);
   const matchedRows = useMemo(
     () => (parsed && matches ? parsed.map((row, index) => createImportRow(row, matches[index])) : null),
     [parsed, matches],

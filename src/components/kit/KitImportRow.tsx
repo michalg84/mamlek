@@ -32,6 +32,7 @@ const ISSUE_TEXT: Record<RowIssue, string> = {
   "quantity-over-pack": "ilość większa niż w opakowaniu",
   "already-have": "już masz ten lek",
   "repeated-in-import": "powtórzony w imporcie",
+  "choosing-variant": "dokończ wybór leku albo anuluj",
 };
 
 export interface KitImportRowProps {
@@ -345,6 +346,17 @@ function RowQuantity({
   );
 }
 
+/** The medicine still assigned while the search is open: it is what the row keeps on "Anuluj". */
+function CurrentVariant({ variant }: { variant: RegistryVariant }) {
+  const details = variantDetails(variant);
+  return (
+    <p className="text-muted-foreground min-w-0 text-sm break-words">
+      Obecnie: <span className="text-foreground font-bold">{variant.name}</span>
+      {details && <span> · {details}</span>}
+    </p>
+  );
+}
+
 /** Which medicine the row is: the assignment, the suggestions to pick from, or the search field. */
 function RowVariant({
   version,
@@ -357,6 +369,7 @@ function RowVariant({
   if (editing) {
     return (
       <div className="min-w-0 space-y-1">
+        {row.variant && <CurrentVariant variant={row.variant} />}
         <MedicineSuggest version={version} onSelect={onAssign} onEdit={ignoreEdit} label="Szukaj leku w rejestrze" />
         <Button type="button" variant="ghost" size="sm" onClick={onCancelEdit}>
           Anuluj
@@ -376,7 +389,9 @@ function RowVariant({
           {details && <span className="text-muted-foreground"> · {details}</span>}
         </p>
         {automatic && (
-          <p className="text-muted-foreground text-sm">Przypisano automatycznie — jedyny pasujący lek w rejestrze</p>
+          <p className="text-muted-foreground text-sm">
+            Przypisano automatycznie — jedyny lek w rejestrze o tej nazwie, mocy i postaci
+          </p>
         )}
         <Button type="button" variant="link" className="h-auto px-0 py-1" onClick={onStartEdit}>
           Zmień
