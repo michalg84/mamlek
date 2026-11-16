@@ -11,7 +11,7 @@ Planned MVP:
 
 The full requirements are in [`context/foundation/prd.md`](context/foundation/prd.md) (in Polish), and the stack decision is in [`context/foundation/tech-stack.md`](context/foundation/tech-stack.md).
 
-**Status:** early development. Working so far: registry search (`/szukaj`, the entry page after sign-in), the household cabinet (`/apteczka`, adding a package from the registry) and the medicine check against the cabinet on `/szukaj`. The CSV import is not built yet.
+**Status:** MVP in progress. Working so far: registry search (`/szukaj`, the entry page after sign-in) with the registry state date, the medicine check against the cabinet on `/szukaj`, the household cabinet (`/apteczka`: adding a package from the registry, editing and deleting items, adjusting the remaining quantity) and the CSV import with a review screen (`/apteczka/import`). What comes next is in [`context/foundation/roadmap.md`](context/foundation/roadmap.md).
 
 ## Tech stack
 
@@ -71,21 +71,26 @@ Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Sett
 | `npm run test:api`        | Black-box tests of `/api/kit*` on a running server (`BASE_URL` + local `DATABASE_URL`, needs the registry fixtures imported)                                                          |
 | `npm run roadmap:sync`    | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope)                                                                   |
 | `npm run registry:import` | Imports the Polish medicines registry (RPL XML export) into `DATABASE_URL` (`-- --file <path>` for a local file, `-- --dry-run` to parse only)                                        |
+| `npm run search:check`    | Compares search results for a fixed list of queries with a golden file (`-- --save` to record it; needs the full registry imported locally)                                           |
+| `npm run perf`            | Repeatable `/szukaj` timing on throttled profiles against a running server (Playwright)                                                                                               |
+| `npm run ui:scan`         | Scans the cleaned views for hardcoded colours, palette classes and arbitrary sizes                                                                                                    |
+| `npm run ui:shots`        | Screenshots of the `/szukaj` states at desktop and phone width (Playwright, local server)                                                                                             |
+| `npx playwright test`     | Browser (E2E) tests in `tests/e2e/`, local only, not in CI (setup in [`context/foundation/test-stack.md`](context/foundation/test-stack.md))                                          |
 
-The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off.
+The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off. `perf`, `ui:shots` and the E2E tests need a one-time `npx playwright install chromium`; the details of every script are in [`AGENTS.md`](AGENTS.md).
 
-A husky pre-commit hook runs lint-staged: `eslint --fix` on staged `ts`/`tsx`/`astro` files, `vitest related` (the unit and component tests related to those files), `eslint --fix` plus the related registry parser tests on staged `mjs` files, the registry parser tests on staged XML fixtures, and `prettier --write` on `json`/`css`/`md` files.
+A husky pre-commit hook runs lint-staged: `eslint --fix`, `ui:scan` (guarded views only) and `vitest related` (the unit, component and registry tests related to those files) on staged `ts`/`tsx`/`astro` files, `eslint --fix` plus the related registry parser tests on staged `mjs` files, the registry parser tests on staged XML fixtures, and `prettier --write` on `json`/`css`/`md` files.
 
 ## CI
 
 `.github/workflows/ci.yml` runs on every push and pull request to `main`:
 
-- **ci**: `astro sync`, lint, `astro check`, unit, component and registry parser tests (Vitest), build. The build uses the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
+- **ci**: `astro sync`, lint, `ui:scan`, `astro check`, unit, component and registry parser tests (Vitest), build. The build uses the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
 - **smoke**: starts a local Supabase (which applies the migrations), imports the registry fixtures (`scripts/fixtures/rpl-sample-v1.xml` twice, then `rpl-sample-v2.xml`) and verifies the result with `node scripts/registry-import-check.mjs` and the `medicine_check` rule, kit isolation and registry importer tests (`npm run test:db`), then builds the app and runs `npm run smoke` and the kit API tests (`npm run test:api`) against `npm run preview`.
 
 Both jobs are required checks: the ruleset in `.github/rulesets/main.json` protects `main` (PR required, merge commits only, `ci` and `smoke` green, no bypass, no force-push or deletion). Renaming either job requires updating the ruleset.
 
-`.github/workflows/registry-import.yml` imports the registry into the production database. It runs every day at 04:17 UTC from `main` and can also be started by hand (**Actions → Registry import → Run workflow**); each run downloads the current export from the RPL. A failed run sends the author GitHub's failed-workflow email; a skipped or disabled schedule sends nothing and shows only as an aging `Stan rejestru na …` date on `/szukaj`. In a public repository GitHub disables the schedule after 60 days without commits; re-enable it with **Actions → Registry import → Enable workflow**. It reads the `REGISTRY_DATABASE_URL` repository secret and fails without it. The secret must be the Supavisor pooler connection string in **session mode** (port 5432, from **Connect** in the Supabase dashboard): GitHub runners have no IPv6, and the direct database host is IPv6-only. Leave out `sslmode`: for any non-local host the import always uses TLS and verifies the server against the Supabase root certificate in `supabase/prod-ca-2021.crt` (**Project Settings → Database → SSL Configuration**; replace the file when Supabase rotates it). The project has **Enforce SSL** turned on, so unencrypted connections are refused.
+`.github/workflows/registry-import.yml` imports the registry into the production database. It runs every day at 04:17 UTC from `main` and can also be started by hand (**Actions → Registry import → Run workflow**); each run downloads the current export from the RPL. A failed run sends the author GitHub's failed-workflow email; a skipped or disabled schedule sends nothing and shows only as an aging `Stan rejestru na …` date on `/szukaj`. In a public repository GitHub disables the schedule after 60 days without commits; re-enable it with **Actions → Registry import → Enable workflow** (a keepalive is planned as roadmap slice S-16). It reads the `REGISTRY_DATABASE_URL` repository secret and fails without it. The secret must be the Supavisor pooler connection string in **session mode** (port 5432, from **Connect** in the Supabase dashboard): GitHub runners have no IPv6, and the direct database host is IPv6-only. Leave out `sslmode`: for any non-local host the import always uses TLS and verifies the server against the Supabase root certificate in `supabase/prod-ca-2021.crt` (**Project Settings → Database → SSL Configuration**; replace the file when Supabase rotates it). The project has **Enforce SSL** turned on, so unencrypted connections are refused.
 
 ## Registry import
 

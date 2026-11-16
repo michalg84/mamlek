@@ -348,9 +348,9 @@ README, test-plan, deploy-plan i infrastructure.md opisują dzisiejszy stan; `bo
 
 #### Automated
 
-- [x] 2.1 Prettier akceptuje plik: `npx prettier --check context/foundation/roadmap.md`
-- [x] 2.2 Sync rozpoznaje nowe pozycje bez błędu: `npm run roadmap:sync -- --dry-run`
-- [x] 2.3 Frontmatter wskazuje PRD v3: `grep -n "prd_version: 3" context/foundation/roadmap.md`
+- [x] 2.1 Prettier akceptuje plik: `npx prettier --check context/foundation/roadmap.md` — 5adb8cf
+- [x] 2.2 Sync rozpoznaje nowe pozycje bez błędu: `npm run roadmap:sync -- --dry-run` — 5adb8cf
+- [x] 2.3 Frontmatter wskazuje PRD v3: `grep -n "prd_version: 3" context/foundation/roadmap.md` — 5adb8cf
 
 #### Manual
 
@@ -360,9 +360,9 @@ README, test-plan, deploy-plan i infrastructure.md opisują dzisiejszy stan; `bo
 
 #### Automated
 
-- [ ] 3.1 Prettier akceptuje pliki: `npx prettier --check README.md context/foundation/test-plan.md context/deployment/deploy-plan.md context/foundation/infrastructure.md`
-- [ ] 3.2 Nieaktualne frazy zniknęły (grep nic nie zwraca)
-- [ ] 3.3 `context/changes/` zawiera tylko foldery z `change.md`
+- [x] 3.1 Prettier akceptuje pliki: `npx prettier --check README.md context/foundation/test-plan.md context/deployment/deploy-plan.md context/foundation/infrastructure.md`
+- [x] 3.2 Nieaktualne frazy zniknęły (grep nic nie zwraca)
+- [x] 3.3 `context/changes/` zawiera tylko foldery z `change.md`
 
 #### Manual
 
