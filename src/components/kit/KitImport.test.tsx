@@ -4,7 +4,7 @@ import KitImport from "@/components/kit/KitImport";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { FakeSearchWorker, stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { reply, stubFetch, stubRoutedFetch, type RoutedFetchOptions } from "../../../tests/helpers/fetch";
-import type { RegistryVariantPackage } from "@/types";
+import type { RegistrySearchListPayload, RegistryVariantPackage } from "@/types";
 
 // The texts below are pinned on purpose, like in RegistrySearch.test.tsx. Expected values are written by hand from
 // tests/fixtures/registry-search-list.ts and the rules in context/changes/csv-kit-import/plan.md.
@@ -25,14 +25,19 @@ const UNKNOWN = "Xyzabc;;;;";
 const NO_SPA_KEY = "no-spa|40 mg|tabletki";
 
 // One pack per medicine, 30 tablets: the screen picks a single pack itself.
-function pack(packageId: number, productId: number): RegistryVariantPackage {
+function pack(
+  packageId: number,
+  productId: number,
+  { count = "30", withdrawn = false }: { count?: string; withdrawn?: boolean } = {},
+): RegistryVariantPackage {
   return {
     packageId,
     productId,
     gtin: null,
     availabilityCategory: null,
-    units: [{ count: "30", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count, kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
     holder: null,
+    withdrawn,
   };
 }
 
@@ -42,16 +47,39 @@ const PACKAGES = {
   [ID.altacetGel]: [pack(5001, ID.altacetGel)],
 };
 
+// "Zodac 10 mg": the tablets are withdrawn from the registry, the film-coated tablets are active. The query
+// "Zodac 10 mg tabletki" hits both ("tabletki" is a prefix of both forms).
+const ZODAC = "Zodac;10 mg;tabletki;;";
+const ZODAC_WITHDRAWN_ID = 70;
+const ZODAC_ACTIVE_ID = 71;
+const ZODAC_LIST: RegistrySearchListPayload = {
+  ...registrySearchList,
+  variants: [
+    ...registrySearchList.variants,
+    [ZODAC_WITHDRAWN_ID, "Zodac", "10 mg", "tabletki", null, [], true],
+    [ZODAC_ACTIVE_ID, "Zodac", "10 mg", "tabletki powlekane", null, []],
+  ],
+};
+const WITHDRAWN_NOTE = "wycofany z rejestru";
+
 function csv(...lines: string[]) {
   return [HEADER, ...lines].join("\n");
+}
+
+interface ReviewOptions extends RoutedFetchOptions {
+  kitVariantKeys?: string[];
+  /** The search list the screen loads (default: the shared fixture). */
+  list?: RegistrySearchListPayload;
+  /** The packs answered per product id (default: one active pack of the shared fixture's medicines). */
+  packages?: Partial<Record<number, RegistryVariantPackage[]>>;
 }
 
 /** Renders the screen, pastes `text` and presses "Dalej". */
 function paste(
   text: string,
-  { kitVariantKeys = [] as string[], importKit }: RoutedFetchOptions & { kitVariantKeys?: string[] } = {},
+  { kitVariantKeys = [] as string[], importKit, list = registrySearchList, packages = PACKAGES }: ReviewOptions = {},
 ) {
-  const routed = stubRoutedFetch(registrySearchList, PACKAGES, { importKit });
+  const routed = stubRoutedFetch(list, packages, { importKit });
   stubSearchWorker({ autoDeliver: true });
   render(<KitImport version={registrySearchList.version} kitVariantKeys={kitVariantKeys} />);
   fireEvent.change(screen.getByLabelText("Wklej CSV"), { target: { value: text } });
@@ -60,7 +88,7 @@ function paste(
 }
 
 /** Pastes `text` and waits until the rows are matched and the first page is shown. */
-async function review(text: string, options: RoutedFetchOptions & { kitVariantKeys?: string[] } = {}) {
+async function review(text: string, options: ReviewOptions = {}) {
   const routed = paste(text, options);
   await screen.findByRole("heading", { name: /^Strona 1 z \d+$/ });
   return routed;
@@ -174,6 +202,92 @@ describe("KitImport", () => {
     }
     expect(within(row(2)).getByRole("button", { name: /^Rutinoscorbin/ })).not.toBeNull();
     expect(within(row(3)).getByRole("button", { name: /^Altacet/ })).not.toBeNull();
+    expect(saveBlocked()).toBe(true);
+  });
+
+  it("waits for a choice when the first query hits an active and a withdrawn variant, and marks the withdrawn one", async () => {
+    await review(csv(ZODAC), { list: ZODAC_LIST });
+
+    expect(text(2)).toContain("Wybierz lek z rejestru:");
+    expect(text(2)).not.toContain("Przypisano automatycznie");
+    expect(saveBlocked()).toBe(true);
+    // Active first; only the withdrawn variant carries the note.
+    const choices = within(row(2))
+      .getAllByRole("button")
+      .filter((button) => button.textContent.startsWith("Zodac"));
+    expect(choices.map((choice) => choice.textContent)).toEqual([
+      "Zodac10 mg · tabletki powlekane",
+      `Zodac10 mg · tabletki${WITHDRAWN_NOTE}`,
+    ]);
+  });
+
+  it("marks a withdrawn pack of the row, leaves the pack unchosen and saves the one picked", async () => {
+    const importKit = () => reply({ ids: [9] }, 201);
+    const routed = await review(csv(ZODAC), {
+      list: ZODAC_LIST,
+      importKit,
+      packages: {
+        [ZODAC_WITHDRAWN_ID]: [
+          pack(7001, ZODAC_WITHDRAWN_ID),
+          pack(7002, ZODAC_WITHDRAWN_ID, { count: "20", withdrawn: true }),
+        ],
+      },
+    });
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: new RegExp(WITHDRAWN_NOTE) }));
+
+    const radios = await within(row(2)).findAllByRole("radio");
+    expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
+    expect(within(row(2)).getByRole("radio", { name: "30 tabletki" })).toBe(radios[0]);
+    expect(within(row(2)).getByRole("radio", { name: /^20 tabletki\s*· wycofane$/ })).toBe(radios[1]);
+    expect(text(2)).toContain(`Lek: Zodac · 10 mg · tabletki${WITHDRAWN_NOTE}`);
+    expect(text(2)).toContain("wybierz opakowanie");
+    expect(saveBlocked()).toBe(true);
+
+    fireEvent.click(radios[1]);
+    expect(text(2)).toContain(READY);
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(routed.importRequests()).toEqual([{ items: [{ packageId: 7002, quantity: null, expiry: null }] }]);
+    });
+  });
+
+  it("chooses a single withdrawn pack of the row itself and marks it", async () => {
+    await review(csv(ZODAC), {
+      list: ZODAC_LIST,
+      packages: { [ZODAC_WITHDRAWN_ID]: [pack(7002, ZODAC_WITHDRAWN_ID, { withdrawn: true })] },
+    });
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: new RegExp(WITHDRAWN_NOTE) }));
+
+    await packChosen(2);
+    expect(text(2)).toContain("Opakowanie: 30 tabletki · wycofane");
+    expect(text(2)).toContain(READY);
+  });
+
+  it("marks the withdrawn medicine that stays assigned while the search is open", async () => {
+    await review(csv(ZODAC), {
+      list: ZODAC_LIST,
+      packages: { [ZODAC_WITHDRAWN_ID]: [pack(7002, ZODAC_WITHDRAWN_ID)] },
+    });
+    fireEvent.click(within(row(2)).getByRole("button", { name: new RegExp(WITHDRAWN_NOTE) }));
+    await packChosen(2);
+
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Zmień" }));
+
+    expect(text(2)).toContain(`Obecnie: Zodac · 10 mg · tabletki${WITHDRAWN_NOTE}`);
+
+    // Leaves the search the way the neighbouring test does, so its list loading settles inside the test.
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Anuluj" }));
+    await packChosen(2);
+  });
+
+  it("says there are no packs of the medicine in the registry when the list is empty", async () => {
+    await review(csv(NO_SPA), { packages: { [ID.noSpaTablet]: [] } });
+
+    await within(row(2)).findByText(/^Brak opakowań tego leku w rejestrze/);
+    expect(text(2)).toContain("Brak opakowań tego leku w rejestrze — wybierz inny lek albo usuń wiersz");
     expect(saveBlocked()).toBe(true);
   });
 
@@ -381,7 +495,7 @@ describe("KitImport", () => {
 
   it("marks the row the server rejected by its index among the sent rows", async () => {
     await review(csv(NO_SPA, UNKNOWN, RUTINOSCORBIN), {
-      importKit: () => reply({ error: "Package not found or withdrawn from the registry", index: 1 }, 400),
+      importKit: () => reply({ error: "Package not found", index: 1 }, 400),
     });
     pickSuggestion(4, /^Rutinoscorbin/);
     await packChosen(2);

@@ -4,7 +4,11 @@ export interface RegistrySearchListVersion {
   snapshotDate: string;
 }
 
-/** One variant as stored in the list payload: [id, name, strength, form, commonName, substances]. */
+/**
+ * One variant as stored in the list payload: [id, name, strength, form, commonName, substances, withdrawn?]. The 7th
+ * element is present (`true`) only for a variant withdrawn from the registry; its absence means active, so a list built
+ * before the withdrawn-medicine-in-kit migration reads as all active.
+ */
 export type RegistryVariantTuple = [
   id: number,
   name: string,
@@ -12,6 +16,7 @@ export type RegistryVariantTuple = [
   form: string | null,
   commonName: string | null,
   substances: string[],
+  withdrawn?: true,
 ];
 
 /** Parsed shape of `registry_search_list.payload`. */
@@ -29,6 +34,8 @@ export interface RegistryVariant {
   form: string | null;
   commonName: string | null;
   substances: string[];
+  /** Every product of the variant is withdrawn from the registry. */
+  withdrawn: boolean;
 }
 
 /** One entry of `registry_packages.units`: raw registry strings (count is a number as text, e.g. "30"). */
@@ -40,7 +47,7 @@ export interface RegistryPackageUnit {
   info: string | null;
 }
 
-/** An active pack of a variant, as returned by `GET /api/registry/packages`. */
+/** A pack of a variant, active or withdrawn, as returned by `GET /api/registry/packages`. */
 export interface RegistryVariantPackage {
   packageId: number;
   productId: number;
@@ -48,6 +55,8 @@ export interface RegistryVariantPackage {
   availabilityCategory: string | null;
   units: RegistryPackageUnit[];
   holder: string | null;
+  /** The pack or its product has disappeared from the registry. */
+  withdrawn: boolean;
 }
 
 /** One physical pack in the signed-in account's kit, joined with its registry product. */
@@ -135,8 +144,11 @@ export interface MedicineCheckItem {
 
 /** Body of a successful `GET /api/kit/check` (200). Items: variant matches first, then nearest expiry, newest first. */
 export interface MedicineCheckResponse {
-  /** The checked medicine with its full (untruncated) strength. */
-  searched: RegistryVariant;
+  /**
+   * The checked medicine with its full (untruncated) strength. The RPC does not say whether it is withdrawn: the
+   * screen takes that from the picked suggestion.
+   */
+  searched: Omit<RegistryVariant, "withdrawn">;
   /** The searched medicine has a usable common name or substance set, so "substance" matches were possible. */
   comparable: boolean;
   items: MedicineCheckItem[];

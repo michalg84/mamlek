@@ -169,6 +169,12 @@ export interface BoundaryData {
   };
   /** An active pack with a size of an active product of another variant than `siblings`. */
   otherVariant: { packageId: number };
+  /** A withdrawn pack (the pack or its product withdrawn) of another variant than `siblings`. */
+  otherVariantWithdrawn: { packageId: number };
+  /** A withdrawn pack of an active product in the variant of `siblings` (a pack change may move an item onto it). */
+  siblingWithdrawn: { packageId: number };
+  /** Two packs of one withdrawn product (so of one variant), `from` with the lower id. */
+  withdrawnProductPair: { from: { packageId: number }; to: { packageId: number } };
   /** A withdrawn pack with a numeric size of an active product, and its size. */
   withdrawnSized: { packageId: number; size: number };
 }
@@ -235,6 +241,45 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
   if (otherVariants.length === 0) {
     throw new Error("The local registry has no active pack of another variant: import the fixtures");
   }
+  // Same variant-key rule as registry_variant_packages (lower name, strength, pharmaceutical form).
+  const sameVariantAsSiblings = `lower(p.name) = lower(base.name)
+             and lower(coalesce(p.strength, '')) = lower(coalesce(base.strength, ''))
+             and lower(coalesce(p.pharmaceutical_form, '')) = lower(coalesce(base.pharmaceutical_form, ''))`;
+  const otherVariantsWithdrawn = await query<{ package_id: number }>(
+    `select pk.id::float8 as package_id
+       from registry_packages pk
+       join registry_products p on p.id = pk.product_id
+       join registry_products base on base.id = $1
+      where (pk.removed_at is not null or p.removed_at is not null) and not (${sameVariantAsSiblings})
+      order by pk.id limit 1`,
+    [siblings.product_id],
+  );
+  if (otherVariantsWithdrawn.length === 0) {
+    throw new Error("The local registry has no withdrawn pack of another variant: import the fixtures");
+  }
+  const siblingsWithdrawn = await query<{ package_id: number }>(
+    `select pk.id::float8 as package_id
+       from registry_packages pk
+       join registry_products p on p.id = pk.product_id
+       join registry_products base on base.id = $1
+      where pk.removed_at is not null and p.removed_at is null and ${sameVariantAsSiblings}
+      order by pk.id limit 1`,
+    [siblings.product_id],
+  );
+  if (siblingsWithdrawn.length === 0) {
+    throw new Error(
+      "The local registry has no withdrawn pack in the variant of the sibling packs: import the fixtures",
+    );
+  }
+  const withdrawnProductPair = await one<{ from_id: number; to_id: number }>(
+    "withdrawn product with two packs",
+    `select a.id::float8 as from_id, b.id::float8 as to_id
+       from registry_packages a
+       join registry_products p on p.id = a.product_id
+       join registry_packages b on b.product_id = a.product_id and b.id > a.id
+      where p.removed_at is not null
+      order by a.id, b.id limit 1`,
+  );
   const withdrawnSized = await one<{ package_id: number; size: number }>(
     "withdrawn pack with a numeric size of an active product",
     `select pk.id::float8 as package_id, btrim(pk.units->0->>'count')::int as size
@@ -249,6 +294,12 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
       large: { packageId: siblings.large_id, size: siblings.large_size },
     },
     otherVariant: { packageId: otherVariants[0].package_id },
+    otherVariantWithdrawn: { packageId: otherVariantsWithdrawn[0].package_id },
+    siblingWithdrawn: { packageId: siblingsWithdrawn[0].package_id },
+    withdrawnProductPair: {
+      from: { packageId: withdrawnProductPair.from_id },
+      to: { packageId: withdrawnProductPair.to_id },
+    },
     withdrawnSized: { packageId: withdrawnSized.package_id, size: withdrawnSized.size },
     sized: { packageId: sized.package_id, size: sized.size, productId: sized.product_id, productName: sized.name },
     unsized: { packageId: unsized.package_id },
@@ -307,27 +358,6 @@ export async function kitRowsById(ids: number[]): Promise<KitRow[]> {
         ]
       : [];
   });
-}
-
-/**
- * Inserts a kit row for the account with this e-mail, straight into the local database. The only write of the API
- * tests: the app refuses to add a withdrawn pack, so an item on one can only be made this way.
- */
-export async function insertKitRow(
-  email: string,
-  packageId: number,
-  fields: { quantity?: number | null; expiresOn?: string | null; expiryPrecision?: "month" | "day" | null } = {},
-): Promise<number> {
-  const rows = await query<{ id: number }>(
-    `insert into kit_items (user_id, package_id, quantity, expires_on, expiry_precision)
-     select u.id, $2::bigint, $3::int, $4::date, $5::text from auth.users u where u.email = $1
-     returning id::float8 as id`,
-    [email, packageId, fields.quantity ?? null, fields.expiresOn ?? null, fields.expiryPrecision ?? null],
-  );
-  if (rows.length !== 1) {
-    throw new Error(`No account ${email} to insert a kit row for`);
-  }
-  return rows[0].id;
 }
 
 /** The id (uuid) of the account with this e-mail, as the database stores it in `kit_items.user_id`. */

@@ -44,9 +44,10 @@ export const POST: APIRoute = async (context) => {
   const { packageId, quantity = null, expiry = null } = parsed.data;
 
   try {
+    // A withdrawn pack is accepted: a medicine withdrawn from the registry can still be kept in the kit.
     const pack = await getPackage(supabase, packageId);
     if (!pack) {
-      return json({ error: "Package not found or withdrawn from the registry" }, 400);
+      return json({ error: "Package not found" }, 400);
     }
     const { max } = packQuantity(pack.units);
     if (quantity !== null && max !== null && quantity > max) {

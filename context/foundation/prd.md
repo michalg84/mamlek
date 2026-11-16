@@ -141,9 +141,11 @@ odnosiły się do tych samych identyfikatorów.
 - FR-001: System korzysta z pełnego Rejestru Produktów Leczniczych i odświeża go okresowo. Priority: must-have
   > Socrates: Rozważone kontrargumenty — rejestr zawiera produkty wycofane, odświeżanie to zadanie w tle bez nadzoru, pełny rejestr to nadmiar wobec kilkuset leków realnie przewijających się przez dom. Rozstrzygnięcie: zostaje bez zmian — bez własnej kopii rejestru nie ma substancji czynnych, a bez nich nie ma zamienników.
   > Doprecyzowanie (v3): „pełny rejestr” to produkty lecznicze stosowane u ludzi, bez opakowań usuniętych z rejestru. Produkt lub opakowanie, które zniknie z eksportu RPL, zostaje w bazie jako wycofane (nie jest kasowane); leków wycofanych przed pierwszym importem (październik 2026) nie ma w bazie wcale. Odświeżanie: codzienny import (patrz Non-Functional Requirements).
+  > Doprecyzowanie (withdrawn-medicine-in-kit, 2026-11-16): każdy lek wycofany, który jest w bazie, da się znaleźć w podpowiedziach, dodać do apteczki, zaimportować z CSV i sprawdzić — bez limitu wieku wycofania. Lek wycofany przed pierwszym importem nadal nie istnieje w bazie, więc nie da się go wskazać.
 - FR-002: Użytkownik może znaleźć lek w rejestrze, wpisując pierwsze litery; wyszukiwanie obejmuje nazwę produktu, nazwę powszechnie stosowaną i substancje czynne, z pierwszeństwem nazwy produktu. Podpowiedzi pokazują nazwę wraz z mocą i postacią. Priority: must-have
   > Socrates: Kontrargument „recepta często ma nazwę międzynarodową, nie handlową" — unieważniony przez dane: rekord rejestru niesie nazwę powszechnie stosowaną (np. „Paracetamolum") obok nazwy produktu. Rozstrzygnięcie: wymaganie rozszerzone o wyszukiwanie po kilku polach nazwy z ustaloną kolejnością.
-  > Doprecyzowanie (v3): podpowiedzi pojawiają się od 3 wpisanych znaków, lista ma najwyżej 20 pozycji. Pozycją podpowiedzi jest wariant leku — nazwa + moc + postać — a nie pojedynczy produkt z rejestru: produkty o tym samym wariancie (np. ten sam lek od kilku importerów równoległych) są jedną pozycją. Leki wycofane z rejestru nie są dziś podpowiadane (zmiana: wycinek S-13 w roadmapie).
+  > Doprecyzowanie (v3): podpowiedzi pojawiają się od 3 wpisanych znaków, lista ma najwyżej 20 pozycji. Pozycją podpowiedzi jest wariant leku — nazwa + moc + postać — a nie pojedynczy produkt z rejestru: produkty o tym samym wariancie (np. ten sam lek od kilku importerów równoległych) są jedną pozycją.
+  > Doprecyzowanie (withdrawn-medicine-in-kit, 2026-11-16): podpowiedzi obejmują też leki wycofane z rejestru. Wariant jest wycofany, gdy wycofane są wszystkie produkty o tej samej nazwie, mocy i postaci; jeśli choć jeden jest aktywny, wariant jest aktywny. Wycofany wariant ma pod nazwą oznaczenie „wycofany z rejestru” i w obrębie tego samego poziomu dopasowania stoi za aktywnymi, ale przed słabszymi poziomami. Przy wyborze opakowania (dodanie, import, edycja) wycofane opakowania są na liście z oznaczeniem „wycofane”, za aktywnymi; opakowanie wybiera się samo tylko wtedy, gdy lek ma jedno opakowanie w ogóle, licząc wycofane.
 
 ### Apteczka
 
@@ -236,7 +238,9 @@ Reguła działa na wariantach leku, nie na pojedynczych rekordach rejestru:
 - **Ten sam lek** — posiadana pozycja ma ten sam wariant co lek szukany: tę samą
   nazwę, moc i postać. Wariant łączy produkty z importu równoległego (ten sam lek
   sprowadzany przez kilku importerów) i obejmuje opakowania już wycofane z rejestru,
-  które leżą w apteczce (pokazane z oznaczeniem „wycofany z rejestru”).
+  które leżą w apteczce (pokazane z oznaczeniem „wycofany z rejestru”). Lekiem
+  szukanym też może być lek wycofany: karta wybranego leku pokazuje wtedy to samo
+  oznaczenie, a reguła porównania się nie zmienia.
 - **Ta sama substancja** — posiadana pozycja nie jest tym samym lekiem, ale ma ten
   sam zbiór substancji czynnych co lek szukany **albo** tę samą nazwę powszechnie
   stosowaną (porównywaną jako zbiór jej części, np. „Paracetamolum + Coffeinum”).

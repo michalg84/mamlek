@@ -14,7 +14,8 @@ interface Loaded {
 const NO_PACKAGES: RegistryVariantPackage[] = [];
 
 /**
- * Loads the active packs of the variant behind a picked suggestion (`GET /api/registry/packages`).
+ * Loads the packs of the variant behind a picked suggestion, active and withdrawn (flagged, active first)
+ * (`GET /api/registry/packages`).
  * Changing `productId` starts a new load; until it answers the status is "loading". 401 means the session is gone;
  * anything else that goes wrong is a generic error with retry.
  */

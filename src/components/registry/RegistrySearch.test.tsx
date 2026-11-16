@@ -4,7 +4,7 @@ import RegistrySearch from "@/components/registry/RegistrySearch";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { stubRoutedFetch } from "../../../tests/helpers/fetch";
-import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
+import type { MedicineCheckItem, MedicineCheckResponse, RegistrySearchListPayload } from "@/types";
 
 // The texts below are pinned on purpose, like in MedicineCheckResult.test.tsx.
 const A_VERDICT = "Masz ten lek · 1 opakowanie";
@@ -46,6 +46,37 @@ const B_ANSWER: MedicineCheckResponse = {
   items: [],
 };
 
+// A withdrawn variant (7th tuple element `true`) next to an active one of the same name. The medicine check does not
+// return the flag (its `searched` has no `withdrawn`), like the real `medicine_check` RPC.
+const WITHDRAWN = "wycofany z rejestru";
+const CRESTOR_WITHDRAWN_ID = 900;
+const CRESTOR_ACTIVE_ID = 901;
+const CRESTOR_WITHDRAWN_OPTION = "Crestor10 mgtabletki powlekanewycofany z rejestru";
+const CRESTOR_ACTIVE_OPTION = "Crestor20 mgtabletki powlekane";
+const withdrawnList: RegistrySearchListPayload = {
+  ...registrySearchList,
+  variants: [
+    ...registrySearchList.variants,
+    [CRESTOR_WITHDRAWN_ID, "Crestor", "10 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"], true],
+    [CRESTOR_ACTIVE_ID, "Crestor", "20 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"]],
+  ],
+};
+
+function crestorAnswer(id: number, strength: string): MedicineCheckResponse {
+  return {
+    searched: {
+      id,
+      name: "Crestor",
+      strength,
+      form: "tabletki powlekane",
+      commonName: "Rosuvastatinum",
+      substances: ["Rosuvastatinum"],
+    },
+    comparable: true,
+    items: [],
+  };
+}
+
 function checkItem(): MedicineCheckItem {
   return {
     id: 1,
@@ -68,10 +99,10 @@ function checkItem(): MedicineCheckItem {
 }
 
 /** Renders the screen and waits until the search list is loaded and the (fake) worker has built its index. */
-async function openSearch() {
-  const checks = stubRoutedFetch(registrySearchList);
+async function openSearch(list: RegistrySearchListPayload = registrySearchList) {
+  const checks = stubRoutedFetch(list);
   const Worker = stubSearchWorker();
-  render(<RegistrySearch version={registrySearchList.version} />);
+  render(<RegistrySearch version={list.version} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
   const created = Worker.last;
   if (!created) {
@@ -355,6 +386,56 @@ describe("RegistrySearch", () => {
         "No-Spa40 mgroztwór do wstrzykiwań",
         "No-Spa40 mgtabletki",
       ]);
+    });
+  });
+
+  describe("a variant withdrawn from the registry", () => {
+    it("says „wycofany z rejestru” in the suggestion of a withdrawn variant only, as part of the option's name", async () => {
+      const screenUnderTest = await openSearch(withdrawnList);
+
+      await screenUnderTest.search("crestor");
+
+      // The active variant leads although its strength sorts after the withdrawn one.
+      expect(optionTexts()).toEqual([CRESTOR_ACTIVE_OPTION, CRESTOR_WITHDRAWN_OPTION]);
+      const [active, withdrawn] = screen.getAllByRole("option");
+      expect(within(withdrawn).getByText(WITHDRAWN)).toBeTruthy();
+      expect(within(active).queryByText(WITHDRAWN)).toBeNull();
+      // Screen readers read the label with the option.
+      expect(screen.getByRole("option", { name: new RegExp(WITHDRAWN) })).toBe(withdrawn);
+    });
+
+    it("keeps „wycofany z rejestru” on the card after the medicine check answers without the flag", async () => {
+      const screenUnderTest = await openSearch(withdrawnList);
+      await screenUnderTest.search("crestor");
+      screenUnderTest.pick(CRESTOR_WITHDRAWN_OPTION);
+
+      const region = card();
+      if (!region) {
+        throw new Error("No „Wybrany lek” card on the screen");
+      }
+      expect(within(region).getByText(WITHDRAWN)).toBeTruthy();
+
+      await screenUnderTest.answerCheck(CRESTOR_WITHDRAWN_ID, crestorAnswer(CRESTOR_WITHDRAWN_ID, "10 mg"));
+
+      expect(screen.getByText(B_VERDICT, VISIBLE)).toBeTruthy();
+      const answered = card();
+      if (!answered) {
+        throw new Error("No „Wybrany lek” card on the screen");
+      }
+      expect(cardName()).toBe("Crestor");
+      expect(within(answered).getByText(WITHDRAWN)).toBeTruthy();
+    });
+
+    it("shows no „wycofany z rejestru” on the card of an active variant", async () => {
+      const screenUnderTest = await openSearch(withdrawnList);
+      await screenUnderTest.search("crestor");
+      screenUnderTest.pick(CRESTOR_ACTIVE_OPTION);
+
+      await screenUnderTest.answerCheck(CRESTOR_ACTIVE_ID, crestorAnswer(CRESTOR_ACTIVE_ID, "20 mg"));
+
+      expect(screen.getByText(B_VERDICT, VISIBLE)).toBeTruthy();
+      expect(cardName()).toBe("Crestor");
+      expect(screen.queryByText(WITHDRAWN)).toBeNull();
     });
   });
 });

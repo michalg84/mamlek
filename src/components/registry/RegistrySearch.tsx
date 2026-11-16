@@ -2,11 +2,14 @@ import { useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
-import type { RegistryVariant } from "@/types";
+import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
+import type { MedicineCheckResponse, RegistryVariant } from "@/types";
 
 interface Props {
   version: number;
 }
+
+type SearchedMedicine = MedicineCheckResponse["searched"];
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -17,10 +20,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function VariantCard({ variant }: { variant: RegistryVariant }) {
+function VariantCard({ variant, withdrawn }: { variant: SearchedMedicine; withdrawn: boolean }) {
   return (
     <Card role="region" aria-label="Wybrany lek" className="min-w-0 gap-0 p-4">
       <h2 className="text-foreground text-lg font-semibold break-words">{variant.name}</h2>
+      {withdrawn && <WithdrawnVariantNote as="p" />}
       <dl className="mt-3 space-y-3">
         {variant.strength && <Field label="Moc">{variant.strength}</Field>}
         {variant.form && <Field label="Postać">{variant.form}</Field>}
@@ -40,9 +44,10 @@ function VariantCard({ variant }: { variant: RegistryVariant }) {
 }
 
 export default function RegistrySearch({ version }: Props) {
+  // The picked suggestion; its `withdrawn` flag stays the card's source, because the check does not return it.
   const [selected, setSelected] = useState<RegistryVariant | null>(null);
   // Full data of the checked medicine (e.g. the full strength); until the check answers the card shows the suggestion.
-  const [searched, setSearched] = useState<RegistryVariant | null>(null);
+  const [searched, setSearched] = useState<SearchedMedicine | null>(null);
   const shown = selected && searched?.id === selected.id ? searched : selected;
 
   return (
@@ -62,7 +67,7 @@ export default function RegistrySearch({ version }: Props) {
       </p>
       {selected && shown && (
         <div className="min-w-0 space-y-4">
-          <VariantCard variant={shown} />
+          <VariantCard variant={shown} withdrawn={selected.withdrawn} />
           <MedicineCheckResult key={selected.id} productId={selected.id} onSearched={setSearched} />
         </div>
       )}

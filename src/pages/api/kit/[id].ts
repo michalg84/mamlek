@@ -60,7 +60,8 @@ export const PATCH: APIRoute = async (context) => {
     let units = item.units;
     const changesPack = packageId !== undefined && packageId !== item.packageId;
     if (changesPack) {
-      // The variant's packs are active ones only, so membership also proves the new pack is not withdrawn.
+      // The new pack must be a pack of the same medicine (variant). The variant's packs include withdrawn ones, so
+      // membership does not prove the pack is active: a withdrawn medicine can still be kept, its pack included.
       const siblings = await getVariantPackages(supabase, item.productId);
       const target = siblings.find((pack) => pack.packageId === packageId);
       if (!target) {

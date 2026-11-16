@@ -348,6 +348,7 @@ describe("KitList", () => {
         availabilityCategory: null,
         units: item.units,
         holder: null,
+        withdrawn: false,
       };
       const bigger = {
         ...own,

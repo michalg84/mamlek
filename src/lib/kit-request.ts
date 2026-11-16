@@ -5,7 +5,7 @@ import { IMPORT_PAGE_SIZE } from "@/lib/kit-import";
 // Request schemas of the kit write routes. `POST /api/kit` and `POST /api/kit/import` check an item with the same
 // schema, so their boundaries cannot drift apart.
 
-/** One kit item: an active pack, an optional quantity and an optional month of expiry. */
+/** One kit item: a pack (active or withdrawn), an optional quantity and an optional month of expiry. */
 export const kitItemRequest = z
   .object({
     packageId: z.number().int().positive(),

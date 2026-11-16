@@ -258,6 +258,21 @@ describe("kit_items column constraints", () => {
   });
 });
 
+// A medicine withdrawn from the registry can still be in the cabinet, so a withdrawn package is accepted on purpose
+// (withdrawn-medicine-in-kit): the policies check only the owner, and nothing else refuses the package.
+describe("kit_items: a withdrawn package", () => {
+  it("a withdrawn package is accepted: withdrawn medicines can be kept", async () => {
+    await actAs(client, userA);
+
+    const result = await client.query(
+      "insert into kit_items (package_id, quantity, expires_on, expiry_precision) values ($1, $2, $3, $4)",
+      [withdrawnPackage, null, null, null],
+    );
+
+    expect(result.rowCount).toBe(1);
+  });
+});
+
 // The database does not enforce these limits: they live only in the API (F2 of add-medicine-to-kit, accepted and
 // parked in the roadmap). The owner can bypass them through the data API on their own rows. These cases pin the gap:
 // if one starts to fail, the gap was closed, and the case should move up to the constraints above.
@@ -269,14 +284,6 @@ describe("kit_items accepted gaps", () => {
     await actAs(client, userA);
 
     const result = await client.query(insertOwn, [sized.packageId, 999, null, null]);
-
-    expect(result.rowCount).toBe(1);
-  });
-
-  it("known gap (Parked, F2): a withdrawn package is accepted by the database", async () => {
-    await actAs(client, userA);
-
-    const result = await client.query(insertOwn, [withdrawnPackage, null, null, null]);
 
     expect(result.rowCount).toBe(1);
   });

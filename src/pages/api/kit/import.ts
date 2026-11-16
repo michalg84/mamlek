@@ -49,6 +49,7 @@ export const POST: APIRoute = async (context) => {
   }));
 
   try {
+    // Withdrawn packs are found too (a withdrawn medicine can still be kept); only a pack that does not exist is missing.
     const packs = await getPackages(
       supabase,
       items.map((item) => item.packageId),
@@ -56,7 +57,7 @@ export const POST: APIRoute = async (context) => {
     for (const [index, item] of items.entries()) {
       const pack = packs.get(item.packageId);
       if (!pack) {
-        const rejected: ImportKitItemsItemError = { error: "Package not found or withdrawn from the registry", index };
+        const rejected: ImportKitItemsItemError = { error: "Package not found", index };
         return json(rejected, 400);
       }
       const { max } = packQuantity(pack.units);

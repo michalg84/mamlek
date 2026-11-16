@@ -197,6 +197,8 @@ describe("searchVariants", () => {
       form: null,
       commonName: null,
       substances: [],
+      // A six-element tuple (no 7th element) is an active variant.
+      withdrawn: false,
     });
   });
 
@@ -204,6 +206,79 @@ describe("searchVariants", () => {
     const empty: RegistrySearchListPayload = { version: 1, snapshotDate: "2026-10-01", variants: [] };
 
     expect(searchVariants(buildSearchIndex(empty), "ibuprom")).toEqual({ results: [], total: 0 });
+  });
+});
+
+// A variant withdrawn from the registry as a whole carries a 7th tuple element `true` (phase 1 migration). Agreed
+// rule (context/changes/withdrawn-medicine-in-kit/plan.md): inside one level every active variant comes before every
+// withdrawn one; the level still comes first, and R5 orders each group. Expected values are derived by hand from the
+// rows below.
+describe("searchVariants with withdrawn variants", () => {
+  const WITHDRAWN_ID = {
+    // Level A for "crestor", the shortest name and the exact query, but withdrawn.
+    crestor: 100,
+    // Level A for "crestor", active, longer names (12 and 13 characters).
+    crestorMite: 101,
+    crestorForte: 102,
+    // Level B for "crestor" (second name word), active.
+    rosuCrestor: 103,
+  } as const;
+
+  const withdrawnList: RegistrySearchListPayload = {
+    version: 1,
+    snapshotDate: "2026-11-16",
+    variants: [
+      [WITHDRAWN_ID.crestor, "Crestor", "10 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"], true],
+      [WITHDRAWN_ID.crestorMite, "Crestor Mite", "5 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"]],
+      [WITHDRAWN_ID.crestorForte, "Crestor Forte", "40 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"]],
+      [WITHDRAWN_ID.rosuCrestor, "Rosu Crestor", "20 mg", "tabletki powlekane", "Rosuvastatinum", ["Rosuvastatinum"]],
+    ],
+  };
+  const withdrawnIndex = buildSearchIndex(withdrawnList);
+
+  function searchWithdrawn(query: string, limit?: number) {
+    const { results, total } = searchVariants(withdrawnIndex, query, limit);
+    return { ids: results.map((variant) => variant.id), total };
+  }
+
+  // "Crestor" (7 characters) would lead level A by R5, but it is withdrawn, so both active level-A rows go first.
+  it("puts a withdrawn variant with a shorter, exactly matching name after the active variants of its level", () => {
+    expect(searchWithdrawn("crestor").ids.slice(0, 3)).toEqual([
+      WITHDRAWN_ID.crestorMite,
+      WITHDRAWN_ID.crestorForte,
+      WITHDRAWN_ID.crestor,
+    ]);
+  });
+
+  // Withdrawal only reorders inside a level: the withdrawn level-A row still beats the active level-B row.
+  it("keeps a withdrawn variant of level A before an active variant of level B", () => {
+    expect(searchWithdrawn("crestor")).toEqual({
+      ids: [WITHDRAWN_ID.crestorMite, WITHDRAWN_ID.crestorForte, WITHDRAWN_ID.crestor, WITHDRAWN_ID.rosuCrestor],
+      total: 4,
+    });
+  });
+
+  // R6 with the rule: the limit drops the withdrawn row of a level before any active row of that level.
+  it.each([
+    [1, [WITHDRAWN_ID.crestorMite]],
+    [2, [WITHDRAWN_ID.crestorMite, WITHDRAWN_ID.crestorForte]],
+    [3, [WITHDRAWN_ID.crestorMite, WITHDRAWN_ID.crestorForte, WITHDRAWN_ID.crestor]],
+  ])("cuts withdrawn variants first at limit %i and still reports the total", (limit, expected) => {
+    expect(searchWithdrawn("crestor", limit)).toEqual({ ids: expected, total: 4 });
+  });
+
+  it("decodes a 7th tuple element `true` as a withdrawn variant", () => {
+    const [variant] = searchVariants(withdrawnIndex, "crestor 10").results;
+
+    expect(variant).toEqual({
+      id: WITHDRAWN_ID.crestor,
+      name: "Crestor",
+      strength: "10 mg",
+      form: "tabletki powlekane",
+      commonName: "Rosuvastatinum",
+      substances: ["Rosuvastatinum"],
+      withdrawn: true,
+    });
   });
 });
 

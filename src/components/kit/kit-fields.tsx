@@ -14,6 +14,11 @@ export const SELECT_CLASS =
 
 export const FIELD_LABEL_CLASS = "text-muted-foreground mb-1 block text-sm leading-normal";
 
+/** Marks a pack withdrawn from the registry, inside the pack's label (so it is part of the accessible name). */
+export function WithdrawnPackMark() {
+  return <span className="text-muted-foreground font-normal"> · wycofane</span>;
+}
+
 interface InlineErrorProps {
   id?: string;
   /** Announces the message as it appears (for an answer of the server, not for a field hint). */
