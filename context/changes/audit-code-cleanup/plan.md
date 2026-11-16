@@ -285,6 +285,11 @@ Strength and form are no longer cut together, so the form is always visible.
 - Pattern for `badInput`: `src/components/kit/KitList.tsx:60-72`, `src/components/kit/KitItemEdit.tsx:82,111,253`
 - Pattern for logging in a component: `src/components/kit/KitImport.tsx:334-351`
 
+## Deviations (added after the implementation review)
+
+- **Middleware (Phase 1, §4)**: only an outage of the auth server (network error, 5xx, no status) leads to `?error=session_check_failed`. A session the server refused (4xx: expired, signed out elsewhere) is logged as `Session check failed (rejected)` and leads to the plain sign-in page, because "serwis chwilowo niedostępny" would be false there. `sessionCheckFailure()` in `src/lib/auth-errors.ts` makes the split.
+- **`badInput` (Phase 2)**: manual check 2.6 showed that typing "-" into an empty number field fires no change event, so a `badInput` state set in `onChange` never sees it. All three quantity fields (`KitAddForm.tsx`, `KitItemEdit.tsx`, `KitList.tsx`) read `validity.badInput` from the input through a ref when the value is used. `KitItemEdit.test.tsx` covers the case without a change event.
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.
