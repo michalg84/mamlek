@@ -1,10 +1,10 @@
 ---
 change_id: audit-docs-sync
 title: Sync PRD, roadmap and docs with the 2026-11-16 conformance audit decisions
-status: implemented
+status: archived
 created: 2026-11-16
 updated: 2026-11-16
-archived_at: null
+archived_at: 2026-11-16T11:04:12Z
 ---
 
 ## Notes
