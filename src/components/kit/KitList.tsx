@@ -57,8 +57,9 @@ interface QuantityFieldProps {
 function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldProps) {
   const { save } = useKitItemActions();
   const [draft, setDraft] = useState(() => quantityText(item.quantity));
-  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `badInput` set.
-  const [badInput, setBadInput] = useState(false);
+  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `validity.badInput` set. It
+  // is read from the field when the value is used: typing "-" into an empty field changes no value, so React fires no
+  // change event that could carry it.
   const [error, setError] = useState<FieldMessage | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const errorId = useId();
@@ -69,7 +70,7 @@ function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldP
     if (!changed || saving) {
       return;
     }
-    const parsed = parseQuantityInput(draft, max, badInput);
+    const parsed = parseQuantityInput(draft, max, inputRef.current?.validity.badInput);
     if ("error" in parsed) {
       setError({ text: parsed.error, signIn: false, fromServer: false });
       return;
@@ -84,7 +85,6 @@ function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldP
       return;
     }
     setDraft(quantityText(result.item.quantity));
-    setBadInput(false);
     onSaved(result.item);
     // "Zapisz" disappears with the change, so the field takes the focus back.
     inputRef.current?.focus();
@@ -109,7 +109,6 @@ function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldP
           readOnly={saving}
           onChange={(event) => {
             setDraft(event.target.value);
-            setBadInput(event.target.validity.badInput);
             setError(null);
           }}
           onKeyDown={(event) => {

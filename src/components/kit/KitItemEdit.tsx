@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode, type SubmitEvent } from "react";
+import { useId, useRef, useState, type ReactNode, type SubmitEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useKitItemActions } from "@/components/hooks/useKitItemActions";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
@@ -79,8 +79,10 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
   const [year, setYear] = useState(stored.year);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<{ text: string; signIn: boolean } | null>(null);
-  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `badInput` set.
-  const [quantityBadInput, setQuantityBadInput] = useState(false);
+  // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `validity.badInput` set. It
+  // is read from the field when the value is used: typing "-" into an empty field changes no value, so React fires no
+  // change event that could carry it.
+  const quantityRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
 
   const packGroupId = useId();
@@ -108,7 +110,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
       request.packageId = chosenId;
     }
 
-    const quantityResult = parseQuantityInput(quantity, max, quantityBadInput);
+    const quantityResult = parseQuantityInput(quantity, max, quantityRef.current?.validity.badInput);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else if (quantityResult.value !== item.quantity) {
@@ -243,6 +245,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
           Ilość w opakowaniu (opcjonalnie)
         </Label>
         <QuantityInput
+          ref={quantityRef}
           id={quantityId}
           max={max}
           unit={unit}
@@ -250,7 +253,6 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
           placeholder="nieznane"
           onChange={(event) => {
             setQuantity(event.target.value);
-            setQuantityBadInput(event.target.validity.badInput);
             setFieldErrors((errors) => ({ ...errors, quantity: undefined }));
           }}
           aria-invalid={fieldErrors.quantity ? true : undefined}

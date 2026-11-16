@@ -293,31 +293,31 @@ Strength and form are no longer cut together, so the form is always visible.
 
 #### Automated
 
-- [x] 1.1 New unit tests of `auth-errors.ts` pass, and fail when the generic fallback is broken on purpose
-- [x] 1.2 Unit + component + registry tests pass
-- [x] 1.3 Lint passes
-- [x] 1.4 Types pass (`npx astro check`)
-- [x] 1.5 `npm run smoke` passes against a local server
+- [x] 1.1 New unit tests of `auth-errors.ts` pass, and fail when the generic fallback is broken on purpose — f66605f
+- [x] 1.2 Unit + component + registry tests pass — f66605f
+- [x] 1.3 Lint passes — f66605f
+- [x] 1.4 Types pass (`npx astro check`) — f66605f
+- [x] 1.5 `npm run smoke` passes against a local server — f66605f
 
 #### Manual
 
-- [x] 1.6 Wrong password shows the Polish message and the server log shows the Supabase error
-- [x] 1.7 Hand-written `?error=` text shows the generic message
-- [x] 1.8 Supabase stopped with a stale session lands on sign-in with the session-check message and a logged cause
+- [x] 1.6 Wrong password shows the Polish message and the server log shows the Supabase error — f66605f
+- [x] 1.7 Hand-written `?error=` text shows the generic message — f66605f
+- [x] 1.8 Supabase stopped with a stale session lands on sign-in with the session-check message and a logged cause — f66605f
 
 ### Phase 2: Kit add form errors
 
 #### Automated
 
-- [ ] 2.1 New `KitAddForm` tests fail before the change and pass after it
-- [ ] 2.2 Unit + component + registry tests pass
-- [ ] 2.3 Lint passes
-- [ ] 2.4 Types pass (`npx astro check`)
-- [ ] 2.5 `npm run ui:scan` passes
+- [x] 2.1 New `KitAddForm` tests fail before the change and pass after it
+- [x] 2.2 Unit + component + registry tests pass
+- [x] 2.3 Lint passes
+- [x] 2.4 Types pass (`npx astro check`)
+- [x] 2.5 `npm run ui:scan` passes
 
 #### Manual
 
-- [ ] 2.6 Typing "-" or "1e" in the quantity shows the quantity error and adds nothing
+- [x] 2.6 Typing "-" or "1e" in the quantity shows the quantity error and adds nothing
 
 ### Phase 3: Form of the medicine on its own line in suggestions
 

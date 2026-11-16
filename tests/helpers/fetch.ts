@@ -22,6 +22,7 @@ export function stubFetch(...replies: (() => Promise<Response>)[]) {
 const SEARCH_LIST_PATH = "/api/registry/search-list";
 const CHECK_PATH = "/api/kit/check";
 const PACKAGES_PATH = "/api/registry/packages";
+const KIT_PATH = "/api/kit";
 const IMPORT_PATH = "/api/kit/import";
 const KIT_ITEM_PATH = /^\/api\/kit\/(\d+)$/;
 
@@ -52,6 +53,8 @@ export interface KitItemRequest {
 }
 
 export interface RoutedFetchOptions {
+  /** Answers `POST /api/kit`; without it such a request is rejected as unexpected. */
+  addKit?: () => Promise<Response>;
   /** Answers `POST /api/kit/import`; without it such a request is rejected as unexpected. */
   importKit?: () => Promise<Response>;
   /** Answers `PATCH` / `DELETE /api/kit/<id>` (recorded first); without it such a request is rejected as unexpected. */
@@ -64,9 +67,9 @@ export interface RoutedFetchOptions {
  * A pending request is never rejected on abort: like a response already on its way, it can still arrive late,
  * which is the stronger case for the stale-answer guards.
  * Pack requests (`/api/registry/packages?product=<id>`) are answered at once with `packages[id]`; a product without
- * an entry there is a test error. `POST /api/kit/import` is answered by `options.importKit` (its body is recorded),
- * `PATCH` / `DELETE /api/kit/<id>` by `options.kitItem` (recorded too); any other address (`POST /api/kit` included)
- * is rejected as unexpected.
+ * an entry there is a test error. `POST /api/kit` is answered by `options.addKit`, `POST /api/kit/import` by
+ * `options.importKit` (its body is recorded), `PATCH` / `DELETE /api/kit/<id>` by `options.kitItem` (recorded too);
+ * any other address, or one of these without its option, is rejected as unexpected.
  */
 export function stubRoutedFetch(
   list: RegistrySearchListPayload,
@@ -102,6 +105,9 @@ export function stubRoutedFetch(
         return Promise.reject(new TypeError(`No packages stubbed for product ${productId}`));
       }
       return reply({ packages: stubbed });
+    }
+    if (url.pathname === KIT_PATH && init?.method === "POST" && options.addKit) {
+      return options.addKit();
     }
     if (url.pathname === IMPORT_PATH && init?.method === "POST" && options.importKit) {
       if (typeof init.body !== "string") {
