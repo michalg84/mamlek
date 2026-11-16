@@ -323,12 +323,12 @@ Strength and form are no longer cut together, so the form is always visible.
 
 #### Automated
 
-- [x] 3.1 Unit + component + registry tests pass
-- [x] 3.2 Lint passes
-- [x] 3.3 Types pass (`npx astro check`)
-- [x] 3.4 `npm run ui:scan` passes
+- [x] 3.1 Unit + component + registry tests pass — 18e0898
+- [x] 3.2 Lint passes — 18e0898
+- [x] 3.3 Types pass (`npx astro check`) — 18e0898
+- [x] 3.4 `npm run ui:scan` passes — 18e0898
 
 #### Manual
 
-- [x] 3.5 `ui:shots` suggestions state shows the form on its own line at 390 and 1280 px
-- [x] 3.6 On `/szukaj` at phone width a long-strength medicine shows its form
+- [x] 3.5 `ui:shots` suggestions state shows the form on its own line at 390 and 1280 px — 18e0898
+- [x] 3.6 On `/szukaj` at phone width a long-strength medicine shows its form — 18e0898
