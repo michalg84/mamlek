@@ -24,7 +24,7 @@ milestone_status: open
 
 - **Intent:** Domowa apteczka jest odwzorowana w aplikacji (ręcznie albo z CSV), a przy okienku w aptece lub w gabinecie użytkownik w kilka sekund dowiaduje się, czy ma dany lek albo lek z tą samą substancją czynną — na danych rejestru nie starszych niż 7 dni.
 - **Source materials:** `context/foundation/prd.md` (v3)
-- **Done when:** every F-NN and S-NN below is `done`, except S-16 (keepalive importu), which is planned after M-1.
+- **Done when:** every F-NN and S-NN below is `done`, except S-16 (keepalive importu) and S-17 (przejścia substancja ↔ lek), which are planned after M-1.
 - **Scope anchors:** US-01, US-02; FR-001, FR-002, FR-003, FR-005, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-016. FR-015 (nice-to-have) is Parked.
 
 ## Vision recap
@@ -58,6 +58,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | proposed |
 | S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | proposed |
 | S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed |
+| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed |
 
 ## Streams
 
@@ -73,6 +74,7 @@ Pomoc w nawigacji — grupuje pozycje, które dzielą łańcuch Prerequisites. W
 | F      | Poprawki            | `S-10`, `S-11`                                               | Małe, niezależne poprawki z testów: `S-10` dołącza przy `S-02`, `S-11` przy `S-01`.                                                                                                                           |
 | G      | Ilość w apteczce    | `S-12`                                                       | Dotyka formularza, importu, listy i panelu edycji apteczki; `S-08` też zmienia listę (`KitList.tsx`), więc nie równolegle z nim.                                                                              |
 | H      | Ekrany konta        | `S-15`                                                       | Przez `/10x-ui`; nie dotyka plików innych wycinków, więc może iść równolegle z czymkolwiek.                                                                                                                   |
+| I      | Substancja ↔ lek    | `S-17`                                                       | Dołącza do Stream A przy `S-06` (ekran wyszukiwania i wynik sprawdzenia) i do Stream C przy `S-05`; po M-1, jako pierwszy po zamknięciu kamienia milowego.                                                    |
 
 ## Baseline
 
@@ -318,27 +320,43 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Risk:** Zastępuje Open Roadmap Question 12 (decyzja autora z audytu 2026-11-16, F7). Przebiegi 13–15.11 zakończone sukcesem, więc dziś nic nie płonie; PRD v3 opisuje NFR świeżości jako cel operacyjny, a ten wycinek jest jego zabezpieczeniem. Poza M-1 — planowany po zamknięciu kamienia milowego. `npm run roadmap:sync` przypisuje wszystkie pozycje do jednego kamienia milowego na GitHubie, więc na tablicy S-16 będzie stał w M-1.
 - **Status:** proposed
 
+### S-17: Przejścia substancja ↔ lek i dodanie leku z wyszukiwania (po M-1)
+
+- **Outcome:** użytkownik klika substancję czynną leku — w karcie wybranego leku na `/szukaj`, na liście apteczki i przy wyniku sprawdzenia — i od razu widzi na `/szukaj` leki z tą substancją; z tej listy wybiera lek, widzi jego kartę i wynik sprawdzenia, a przyciskiem „Dodaj do apteczki” przechodzi do formularza dodawania z tym lekiem już wybranym.
+- **Change ID:** substance-medicine-links
+- **PRD refs:** FR-002, FR-003, FR-005, FR-011
+- **Prerequisites:** S-03, S-05, S-06
+- **Parallel with:** S-08, S-12, S-15, S-16 (nie z S-06 ani S-11 — te same pliki ekranu wyszukiwania)
+- **Blockers:** —
+- **Unknowns:**
+  - Jak pokazać popularną substancję, pod którą są setki wariantów (paracetamol, ibuprofen) — dziś lista podpowiedzi ma limit 20 i prosi o dopisanie słowa. Dłuższa lista, dopisanie mocy czy zostawić limit. — Owner: autor. Block: no.
+  - Czy wpisywać nazwę substancji tak, jak podaje ją rejestr (łacina, „Ibuprofenum”), i czy przy leku złożonym kliknięcie jednej substancji ma szukać tylko jej. — Owner: autor. Block: no.
+  - Czy kliknięcie substancji na `/szukaj` zostawia ślad w historii przeglądarki (przycisk „wstecz” wraca do poprzedniego leku), czy tylko podmienia zapytanie. — Owner: autor. Block: no.
+- **Risk:** Pomysł autora z 2026-11-16 (quality of life, poza MVP, ale pierwszy po zamknięciu M-1). PRD już obejmuje szukanie po substancji (FR-002), dodanie leku z rejestru (FR-003), listę apteczki (FR-005) i substancje przy wyniku (FR-011); wycinek łączy te ekrany przejściami, bez nowej reguły dopasowania. Decyzja autora: „Dodaj do apteczki” przenosi na ekran apteczki z wybranym lekiem zamiast formularza na `/szukaj`, a substancje są klikalne domyślnie na obu ekranach. Stoi po S-06, bo S-06 zmienia ten sam ekran wyszukiwania i wynik sprawdzenia; po S-13, bo wycofane leki zmieniają, co da się dodać z podpowiedzi.
+- **Status:** proposed
+
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                     | Suggested issue title                                       | Ready for `/10x-plan` | Notes                                                     |
-| ---------- | ----------------------------- | ----------------------------------------------------------- | --------------------- | --------------------------------------------------------- |
-| F-01       | registry-copy-load            | Wczytanie kopii Rejestru Produktów Leczniczych do bazy      | —                     | FR-001, NFR (świeżość danych)                             |
-| S-01       | registry-search-suggestions   | Podpowiedzi leków z rejestru (nazwa + moc + postać)         | —                     | FR-002, US-01, NFR (czas odpowiedzi)                      |
-| S-02       | add-medicine-to-kit           | Dodanie leku z rejestru do apteczki domu                    | —                     | FR-003, FR-013, US-01, NFR (dostęp)                       |
-| S-03       | medicine-check                | Sprawdzenie leku przeciwko apteczce (gwiazda przewodnia)    | —                     | FR-010, FR-011, FR-012, US-01                             |
-| S-04       | csv-kit-import                | Import apteczki z CSV z ekranem zatwierdzenia               | —                     | FR-007, FR-008, FR-009, US-02                             |
-| S-05       | kit-browse-edit               | Przegląd i edycja apteczki                                  | —                     | FR-005                                                    |
-| S-06       | substance-match-level         | Wybór poziomu dopasowania substancji czynnych               | no                    | FR-016, US-01; po S-13 i S-14                             |
-| S-07       | daily-registry-refresh        | Codzienne odświeżanie rejestru i widoczna data aktualizacji | —                     | FR-001, NFR (świeżość danych)                             |
-| S-08       | expiry-warning                | Ostrzeżenie o kończącej się dacie ważności                  | no                    | FR-014                                                    |
-| S-09       | registry-search-performance   | Wydajność wyszukiwania leków na słabym telefonie            | —                     | FR-002, NFR (czas odpowiedzi)                             |
-| S-10       | kit-add-form-reset-on-edit    | Formularz dodawania zapomina wybór po zmianie nazwy         | —                     | FR-003; defekt z test-plan §6.6                           |
-| S-11       | search-numeric-strength-order | Liczbowa kolejność mocy w podpowiedziach                    | yes                   | FR-002; Open Roadmap Question 9                           |
-| S-12       | kit-quantity-semantics        | Jednoznaczna ilość w apteczce (opakowania czy tabletki)     | no                    | FR-003, FR-005, FR-007                                    |
-| S-13       | withdrawn-medicine-in-kit     | Lek wycofany z rejestru w podpowiedziach i w apteczce       | yes                   | FR-001, FR-002, FR-003, FR-009; audyt F15, pytanie 5      |
-| S-14       | variant-key-btrim             | Obcinanie spacji w kluczu wariantu leku                     | yes                   | FR-010, FR-011; audyt F4, pytanie 7                       |
-| S-15       | auth-screens-ui               | Ekrany logowania i rejestracji po polsku, na tokenach       | yes                   | Access Control; audyt F9; przez /10x-ui                   |
-| S-16       | registry-import-keepalive     | Keepalive dziennego importu rejestru (po M-1)               | no                    | FR-001, NFR (świeżość danych); audyt F7, dawne pytanie 12 |
+| Roadmap ID | Change ID                     | Suggested issue title                                        | Ready for `/10x-plan` | Notes                                                     |
+| ---------- | ----------------------------- | ------------------------------------------------------------ | --------------------- | --------------------------------------------------------- |
+| F-01       | registry-copy-load            | Wczytanie kopii Rejestru Produktów Leczniczych do bazy       | —                     | FR-001, NFR (świeżość danych)                             |
+| S-01       | registry-search-suggestions   | Podpowiedzi leków z rejestru (nazwa + moc + postać)          | —                     | FR-002, US-01, NFR (czas odpowiedzi)                      |
+| S-02       | add-medicine-to-kit           | Dodanie leku z rejestru do apteczki domu                     | —                     | FR-003, FR-013, US-01, NFR (dostęp)                       |
+| S-03       | medicine-check                | Sprawdzenie leku przeciwko apteczce (gwiazda przewodnia)     | —                     | FR-010, FR-011, FR-012, US-01                             |
+| S-04       | csv-kit-import                | Import apteczki z CSV z ekranem zatwierdzenia                | —                     | FR-007, FR-008, FR-009, US-02                             |
+| S-05       | kit-browse-edit               | Przegląd i edycja apteczki                                   | —                     | FR-005                                                    |
+| S-06       | substance-match-level         | Wybór poziomu dopasowania substancji czynnych                | no                    | FR-016, US-01; po S-13 i S-14                             |
+| S-07       | daily-registry-refresh        | Codzienne odświeżanie rejestru i widoczna data aktualizacji  | —                     | FR-001, NFR (świeżość danych)                             |
+| S-08       | expiry-warning                | Ostrzeżenie o kończącej się dacie ważności                   | no                    | FR-014                                                    |
+| S-09       | registry-search-performance   | Wydajność wyszukiwania leków na słabym telefonie             | —                     | FR-002, NFR (czas odpowiedzi)                             |
+| S-10       | kit-add-form-reset-on-edit    | Formularz dodawania zapomina wybór po zmianie nazwy          | —                     | FR-003; defekt z test-plan §6.6                           |
+| S-11       | search-numeric-strength-order | Liczbowa kolejność mocy w podpowiedziach                     | yes                   | FR-002; Open Roadmap Question 9                           |
+| S-12       | kit-quantity-semantics        | Jednoznaczna ilość w apteczce (opakowania czy tabletki)      | no                    | FR-003, FR-005, FR-007                                    |
+| S-13       | withdrawn-medicine-in-kit     | Lek wycofany z rejestru w podpowiedziach i w apteczce        | yes                   | FR-001, FR-002, FR-003, FR-009; audyt F15, pytanie 5      |
+| S-14       | variant-key-btrim             | Obcinanie spacji w kluczu wariantu leku                      | yes                   | FR-010, FR-011; audyt F4, pytanie 7                       |
+| S-15       | auth-screens-ui               | Ekrany logowania i rejestracji po polsku, na tokenach        | yes                   | Access Control; audyt F9; przez /10x-ui                   |
+| S-16       | registry-import-keepalive     | Keepalive dziennego importu rejestru (po M-1)                | no                    | FR-001, NFR (świeżość danych); audyt F7, dawne pytanie 12 |
+| S-17       | substance-medicine-links      | Przejścia substancja ↔ lek i dodanie z wyszukiwania (po M-1) | no                    | FR-002, FR-003, FR-005, FR-011; pomysł autora 2026-11-16  |
 
 ## Open Roadmap Questions
 
