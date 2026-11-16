@@ -602,4 +602,4 @@ ADAPT (5.5): `ui:shots` szuka „ibu”, a w fixture'ach nie ma ibuprofenu, wię
 #### Manual
 
 - [x] 5.5 Zrzuty `ui:shots` z wycofanym lekiem obejrzane na 1280 i 390 px — 49f1065
-- [ ] 5.6 Po merge'u `db push` i sprawdzenie wycofanego leku na produkcji
+- [x] 5.6 Po merge'u `db push` i sprawdzenie wycofanego leku na produkcji
