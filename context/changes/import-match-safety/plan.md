@@ -250,13 +250,13 @@ Test nie wpisuje tekstu w pole szukania; sam tryb edycji wystarcza do odtworzeni
 
 #### Automated
 
-- [x] 2.1 Nowy test komponentu jest czerwony przed zmianą i zielony po niej
-- [x] 2.2 Celowe zepsucie powodu trybu edycji czerwieni test
-- [x] 2.3 Testy unit + component + registry przechodzą
-- [x] 2.4 Lint przechodzi
-- [x] 2.5 Typy przechodzą (`npx astro check`)
-- [x] 2.6 Skan widoków przechodzi (`npm run ui:scan`)
+- [x] 2.1 Nowy test komponentu jest czerwony przed zmianą i zielony po niej — 38783ce
+- [x] 2.2 Celowe zepsucie powodu trybu edycji czerwieni test — 38783ce
+- [x] 2.3 Testy unit + component + registry przechodzą — 38783ce
+- [x] 2.4 Lint przechodzi — 38783ce
+- [x] 2.5 Typy przechodzą (`npx astro check`) — 38783ce
+- [x] 2.6 Skan widoków przechodzi (`npm run ui:scan`) — 38783ce
 
 #### Manual
 
-- [x] 2.7 Tryb edycji na lokalnym serwerze: „Obecnie: …”, zapis zablokowany, „Anuluj” odblokowuje, nowy wybór działa
+- [x] 2.7 Tryb edycji na lokalnym serwerze: „Obecnie: …”, zapis zablokowany, „Anuluj” odblokowuje, nowy wybór działa — 38783ce
