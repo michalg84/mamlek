@@ -217,9 +217,9 @@ Brak migracji. Wdrożenie przez zwykły merge (Cloudflare deploy); wycofanie prz
 
 #### Automated
 
-- [x] 2.1 search:check pokazuje tylko różnice kolejności mocy, nowy wzorzec zapisany
-- [x] 2.2 perf w zapasie względem main
+- [x] 2.1 search:check pokazuje tylko różnice kolejności mocy, nowy wzorzec zapisany — 67b61da
+- [x] 2.2 perf w zapasie względem main — 67b61da
 
 #### Manual
 
-- [x] 2.3 Kolejność mocy na /szukaj dla duomox, abilify, acebis
+- [x] 2.3 Kolejność mocy na /szukaj dla duomox, abilify, acebis — 67b61da
