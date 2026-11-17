@@ -247,11 +247,11 @@ Dwie migracje, obie tylko redefiniują funkcje (bez zmian danych i schematu). Pr
 #### Automated
 
 - [x] 2.1 `npm run search:check -- --save`, a potem `npm run search:check` kończy się kodem 0
-- [x] 2.2 `npm run lint` bez błędów po zmianach dokumentacji
+- [x] 2.2 `npm run lint` bez błędów po zmianach dokumentacji — 18dcf7d
 - [x] 2.3 `npm run roadmap:sync -- --dry-run` pokazuje tylko zmianę S-14
 
 #### Manual
 
-- [ ] 2.4 W aplikacji (lokalnie, `http://localhost:4321/szukaj`) z pozycją Dermovate ze spacją w mocy w apteczce: sprawdzenie Dermovate z podpowiedzi daje „Masz ten lek” (wcześniej „ta sama substancja”)
-- [ ] 2.5 To samo dla Citrafleet `(0,01 g + 3,50 g + 10,97 g)/saszetkę` (wcześniej „Nie masz”)
+- [x] 2.4 W aplikacji (lokalnie, `http://localhost:4321/szukaj`) z pozycją Dermovate ze spacją w mocy w apteczce: sprawdzenie Dermovate z podpowiedzi daje „Masz ten lek” (wcześniej „ta sama substancja”) (sprawdzone przez API na działającym serwerze: `match: variant`)
+- [x] 2.5 To samo dla Citrafleet `(0,01 g + 3,50 g + 10,97 g)/saszetkę` (wcześniej „Nie masz”) (sprawdzone przez API na działającym serwerze: `match: variant`)
 - [ ] 2.6 Po merge i `npx supabase db push` na produkcji: `select variant_count from registry_search_list` mniejsze o 5 względem stanu sprzed push, a sprawdzenie Dermovate jak wyżej
