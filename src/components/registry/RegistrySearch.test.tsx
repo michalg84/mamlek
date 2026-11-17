@@ -30,6 +30,7 @@ const A_ANSWER: MedicineCheckResponse = {
     commonName: "Ibuprofenum",
     substances: ["Ibuprofenum"],
   },
+  level: "exact",
   comparable: true,
   items: [checkItem()],
 };
@@ -42,6 +43,7 @@ const B_ANSWER: MedicineCheckResponse = {
     commonName: "Ibuprofenum",
     substances: ["Ibuprofenum"],
   },
+  level: "exact",
   comparable: true,
   items: [],
 };
@@ -72,6 +74,7 @@ function crestorAnswer(id: number, strength: string): MedicineCheckResponse {
       commonName: "Rosuvastatinum",
       substances: ["Rosuvastatinum"],
     },
+    level: "exact",
     comparable: true,
     items: [],
   };

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { reply, stubFetch } from "../../../tests/helpers/fetch";
-import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
+import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 // The texts below are pinned on purpose: the legal wording of the caution is still an open question (PRD Open
 // Question 5), and a change to it should be a conscious edit of this one constant.
@@ -40,7 +40,7 @@ function item(match: MedicineCheckItem["match"], overrides: Partial<MedicineChec
   };
 }
 
-function response(items: MedicineCheckItem[], comparable = true): MedicineCheckResponse {
+function response(items: MedicineCheckItem[], comparable = true, level: MatchLevel = "exact"): MedicineCheckResponse {
   return {
     searched: {
       id: 1,
@@ -50,6 +50,7 @@ function response(items: MedicineCheckItem[], comparable = true): MedicineCheckR
       commonName: "Atorvastatinum",
       substances: ["Atorvastatinum calcicum"],
     },
+    level,
     comparable,
     items,
   };

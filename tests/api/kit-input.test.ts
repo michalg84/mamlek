@@ -10,6 +10,7 @@
 //   - expiry: month 1-12 and a year range of 2000-2100 (same contract); the precision is always month;
 //   - ids: positive integers that exist in the registry as packs, active or withdrawn (the pack or its product): a
 //     medicine withdrawn from the registry can still be kept in the kit (withdrawn-medicine-in-kit plan, phase 2);
+//   - check level: exact, all or any, exact when left out (substance-match-level plan, phase 2);
 //   - import page: 1 to 30 items, all stored or none (csv-kit-import plan, phase 2: one page of the approval screen);
 //   - edit (kit-browse-edit plan, phase 1): a key that is absent leaves the stored value, null clears it; the pack the
 //     item will be on does not cap the quantity (kit-quantity-semantics plan, phase 2); the new pack must be a pack of
@@ -360,6 +361,40 @@ describe("GET /api/kit/check: product", () => {
   it("a known product gets 200", async () => {
     const reply = await send(`${CHECK}?product=${data.sized.productId}`, { jar });
     expect(reply.status).toBe(200);
+  });
+});
+
+// Match levels, typed by hand from the substance-match-level plan (phase 2): exact | all | any, exact when left out.
+// Only the RPC writes `level` into the answer when the call names one, so the echo shows that the level reached the
+// database; what each level matches is pinned in tests/db/medicine-check.test.ts (the fixtures hold no superset pair).
+describe("GET /api/kit/check: level", () => {
+  it.each([
+    ["empty", ""],
+    ["upper case", "ALL"],
+    ["a list", "exact,all"],
+    ["unknown", "none"],
+    ["padded", " any"],
+  ])("%s gets 400 naming the accepted levels", async (_name, level) => {
+    const reply = await expectRejected(400, () =>
+      send(`${CHECK}?product=${data.sized.productId}&level=${encodeURIComponent(level)}`, { jar }),
+    );
+    expect(JSON.parse(reply.body)).toEqual({ error: "Invalid parameter level: expected one of exact, all, any" });
+  });
+
+  it.each(["exact", "all", "any"])("%s gets 200 with the level echoed", async (level) => {
+    const reply = await send(`${CHECK}?product=${data.sized.productId}&level=${level}`, { jar });
+    expect(reply.status).toBe(200);
+    expect((JSON.parse(reply.body) as { level: unknown }).level).toBe(level);
+  });
+
+  it("no level gets 200 with level exact", async () => {
+    const reply = await send(`${CHECK}?product=${data.sized.productId}`, { jar });
+    expect(reply.status).toBe(200);
+    expect((JSON.parse(reply.body) as { level: unknown }).level).toBe("exact");
+  });
+
+  it("a wrong level is reported before an unknown product", async () => {
+    await expectRejected(400, () => send(`${CHECK}?product=${UNKNOWN_ID}&level=ALL`, { jar }));
   });
 });
 
