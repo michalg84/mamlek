@@ -3,14 +3,14 @@
 import { packQuantity } from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 import { connectLocal, LOCAL_HOSTS } from "../db/medicine-check-fixtures";
+import { resolveBaseUrl } from "./base-url";
 
-// Vitest itself sets BASE_URL to "/" (Vite's base path), so only an absolute URL counts as the caller's choice.
-const fromEnv = process.env.BASE_URL;
-export const BASE_URL = fromEnv?.startsWith("http") ? fromEnv.replace(/\/$/, "") : "http://localhost:4321";
+// The caller's server comes from API_BASE_URL (Vitest overwrites BASE_URL with "/", see ./base-url).
+export const BASE_URL = resolveBaseUrl(process.env);
 
 // Local servers only: the suite signs up accounts and writes kit rows, and checks them in the local database.
 if (!LOCAL_HOSTS.has(new URL(BASE_URL).hostname)) {
-  throw new Error(`BASE_URL must point to a local server (got ${BASE_URL})`);
+  throw new Error(`API_BASE_URL must point to a local server (got ${BASE_URL})`);
 }
 
 export type Jar = Map<string, string>;
