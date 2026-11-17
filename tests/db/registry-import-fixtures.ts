@@ -16,11 +16,14 @@ export const SCRATCH_DATABASE = "registry_import_test";
 // withdrawn_medicine_in_kit redefines registry_refresh_search_list (withdrawn variants in the list), which the importer
 // calls, so it belongs here. It also redefines registry_variant_packages, which the kit_items migration creates and the
 // scratch database does not have: the migration drops that function with `if exists`, so it runs here all the same.
+// variant_key_btrim redefines registry_refresh_search_list again (key with btrim) and does not touch kit_items; its
+// sibling variant_key_btrim_medicine_check reads kit_items, so it stays out.
 export const REGISTRY_MIGRATIONS = [
   "20261001120000_registry_tables.sql",
   "20261002120000_registry_search_list.sql",
   "20261002130000_registry_search_list_version.sql",
   "20261116120000_withdrawn_medicine_in_kit.sql",
+  "20261117120000_variant_key_btrim.sql",
 ];
 
 export const REPO_ROOT = fileURLToPath(new URL("../../", import.meta.url));

@@ -176,7 +176,7 @@ const checks = [
         `select jsonb_build_object(
           'count', l.variant_count,
           'distinct', (select count(*) from (
-            select distinct lower(name), lower(coalesce(strength, '')), lower(coalesce(pharmaceutical_form, ''))
+            select distinct lower(btrim(name)), lower(btrim(coalesce(strength, ''))), lower(btrim(coalesce(pharmaceutical_form, '')))
             from registry_products
           ) keys),
           'listed', jsonb_array_length(l.payload::jsonb -> 'variants')
