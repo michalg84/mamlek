@@ -70,7 +70,7 @@ function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldP
     if (!changed || saving) {
       return;
     }
-    const parsed = parseQuantityInput(draft, max, inputRef.current?.validity.badInput);
+    const parsed = parseQuantityInput(draft, inputRef.current?.validity.badInput);
     if ("error" in parsed) {
       setError({ text: parsed.error, signIn: false, fromServer: false });
       return;

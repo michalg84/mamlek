@@ -305,7 +305,7 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 - [x] 1.1 Testy jednostkowe i komponentów przechodzą: `npm test`
 - [x] 1.2 Typy przechodzą: `npx astro check`
 - [x] 1.3 Lint przechodzi: `npm run lint`
-- [ ] 1.4 Testy API przechodzą na serwerze z portu 4331 (za zgodą koordynatora)
+- [x] 1.4 Testy API przechodzą na serwerze z portu 4331 (za zgodą koordynatora)
 
 #### Manual
 
@@ -317,18 +317,18 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 
 #### Automated
 
-- [ ] 2.1 Testy jednostkowe i komponentów przechodzą: `npm test`
-- [ ] 2.2 Typy przechodzą: `npx astro check`
-- [ ] 2.3 Lint i skan UI przechodzą
-- [ ] 2.4 Migracja wchodzi na lokalną bazę (za zgodą koordynatora)
-- [ ] 2.5 Testy bazy przechodzą (za zgodą koordynatora)
-- [ ] 2.6 Testy API przechodzą (za zgodą koordynatora)
+- [x] 2.1 Testy jednostkowe i komponentów przechodzą: `npm test`
+- [x] 2.2 Typy przechodzą: `npx astro check`
+- [x] 2.3 Lint i skan UI przechodzą
+- [x] 2.4 Migracja wchodzi na lokalną bazę (za zgodą koordynatora)
+- [x] 2.5 Testy bazy przechodzą (za zgodą koordynatora)
+- [x] 2.6 Testy API przechodzą (za zgodą koordynatora)
 
 #### Manual
 
-- [ ] 2.7 Ilość ponad opakowanie zapisuje się z ostrzeżeniem w formularzu i na liście
-- [ ] 2.8 Import CSV z ilością ponad opakowanie ostrzega i pozwala zapisać stronę
-- [ ] 2.9 Panel edycji przyjmuje ilość ponad limit z ostrzeżeniem
+- [x] 2.7 Ilość ponad opakowanie zapisuje się z ostrzeżeniem w formularzu i na liście
+- [x] 2.8 Import CSV z ilością ponad opakowanie ostrzega i pozwala zapisać stronę
+- [x] 2.9 Panel edycji przyjmuje ilość ponad limit z ostrzeżeniem
 
 ### Phase 3: Puste opakowanie i dokumentacja
 

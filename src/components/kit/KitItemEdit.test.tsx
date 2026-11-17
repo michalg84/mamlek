@@ -87,7 +87,7 @@ describe("KitItemEdit", () => {
     vi.useRealTimers();
   });
 
-  it("moves the item to another pack of the medicine, and the quantity cap follows the chosen pack", async () => {
+  it("moves the item to another pack of the medicine, and the over-pack warning follows the chosen pack", async () => {
     const item = kitItem();
     const stored: KitItem = { ...item, packageId: 1002, units: sachets("30"), quantity: 25 };
     const { routed, onSaved } = renderEdit(item, SMECTA_PACKS, () => reply({ item: stored }));
@@ -97,13 +97,11 @@ describe("KitItemEdit", () => {
     expect(screen.getByText("z 10 saszetki")).toBeTruthy();
 
     fireEvent.change(quantityField(), { target: { value: "25" } });
-    fireEvent.click(saveButton());
-    expect(screen.getByText("Ilość nie może być większa niż 10")).toBeTruthy();
-    expect(routed.kitItemRequests()).toEqual([]);
+    expect(screen.getByText("Więcej niż w opakowaniu (10 saszetki)")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("radio", { name: "30 saszetki" }));
     expect(screen.getByText("z 30 saszetki")).toBeTruthy();
-    expect(screen.queryByText("Ilość nie może być większa niż 10")).toBeNull();
+    expect(screen.queryByText(/Więcej niż w opakowaniu/)).toBeNull();
     fireEvent.click(saveButton());
 
     await waitFor(() => {
@@ -112,6 +110,25 @@ describe("KitItemEdit", () => {
     expect(routed.kitItemRequests()).toEqual([
       { method: "PATCH", id: item.id, body: { packageId: 1002, quantity: 25 } },
     ]);
+  });
+
+  it("saves a quantity above the pack size with a warning joined to the field", async () => {
+    const item = kitItem();
+    const stored: KitItem = { ...item, quantity: 11 };
+    const { routed, onSaved } = renderEdit(item, SMECTA_PACKS, () => reply({ item: stored }));
+    await screen.findByRole("radio", { name: "10 saszetki" });
+
+    fireEvent.change(quantityField(), { target: { value: "10" } });
+    expect(screen.queryByText(/Więcej niż w opakowaniu/)).toBeNull();
+    fireEvent.change(quantityField(), { target: { value: "11" } });
+    const warning = screen.getByText("Więcej niż w opakowaniu (10 saszetki)");
+    expect(quantityField().getAttribute("aria-describedby")).toBe(warning.closest("p")?.id);
+    fireEvent.click(saveButton());
+
+    await waitFor(() => {
+      expect(onSaved).toHaveBeenCalledWith(stored);
+    });
+    expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 11 } }]);
   });
 
   it("pins a withdrawn pack first as „obecne”, checked, and its quantity can still be saved", async () => {

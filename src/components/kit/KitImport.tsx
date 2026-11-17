@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { packQuantity } from "@/lib/kit-format";
+import { packQuantity, type PackQuantity } from "@/lib/kit-format";
 import { parseKitCsv, type CsvError, type ParsedRow } from "@/lib/kit-import-csv";
 import {
   acceptDuplicates,
@@ -279,13 +279,13 @@ function ImportReview({
   const pages = pageCount(rows);
   const finished = page >= pages;
   const earlier = earlierVariantKeys(rows);
-  const packMaxOf = (index: number): number | null => {
+  const packSizeOf = (index: number): PackQuantity => {
     const pack = packs[index];
     // A pack kept from an earlier variant of the row does not count.
-    return pack?.packageId === rows[index].packageId ? packQuantity(pack.units).max : null;
+    return pack?.packageId === rows[index].packageId ? packQuantity(pack.units) : { unit: null, max: null };
   };
   const issues = rows.map((row, index) => {
-    const found = rowIssues(row, { kitKeys, earlierKeys: earlier[index], packMax: packMaxOf(index) });
+    const found = rowIssues(row, { kitKeys, earlierKeys: earlier[index] });
     // An open medicine change hides the medicine that would be saved: finish it or cancel it first (audit F3).
     return editing === index && row.variant && !row.removed ? ["choosing-variant" as const, ...found] : found;
   });
@@ -393,7 +393,7 @@ function ImportReview({
                   version={version}
                   row={rows[index]}
                   issues={issues[index]}
-                  packMax={packMaxOf(index)}
+                  packSize={packSizeOf(index)}
                   editing={editing === index}
                   rejected={rejected === index}
                   onStartEdit={() => {

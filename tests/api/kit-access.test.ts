@@ -143,7 +143,7 @@ describe("account B against the kit of account A", () => {
 
     const reply = await sendJson(
       IMPORT,
-      { items: [{ packageId: data.sized.packageId }, { packageId: data.unsized.packageId }] },
+      { items: [{ packageId: data.sized.packageId }, { packageId: data.siblings.large.packageId }] },
       b.jar,
     );
 

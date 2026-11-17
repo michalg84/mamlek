@@ -377,6 +377,27 @@ describe("KitImport", () => {
     expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 12, expiry: null }] }]);
   });
 
+  it("saves a quantity above the pack size, with a warning instead of a blocking reason", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;31"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
+    const warning = within(row(2)).getByText("Więcej niż w opakowaniu (30 tabl.)");
+    expect(quantity.getAttribute("aria-describedby")).toBe(warning.closest("p")?.id);
+    expect(within(row(2)).getByText("Gotowy do zapisu")).toBeTruthy();
+    expect(saveBlocked()).toBe(false);
+
+    // At the pack size the warning goes and the size is shown as a hint.
+    fireEvent.change(quantity, { target: { value: "30" } });
+    expect(within(row(2)).queryByText(/Więcej niż w opakowaniu/)).toBeNull();
+    expect(within(row(2)).getByText("W opakowaniu: 30 tabl.")).toBeTruthy();
+    fireEvent.change(quantity, { target: { value: "31" } });
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 31, expiry: null }] }]);
+  });
+
   it("keeps the edited quantity when a removed row is restored", async () => {
     const routed = await review(csv("No-Spa;40 mg;tabletki;;20"), { importKit: () => reply({ ids: [7] }, 201) });
     await packChosen(2);

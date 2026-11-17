@@ -1,14 +1,14 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
-import { WithdrawnPackMark } from "@/components/kit/kit-fields";
+import { OverPackWarning, WithdrawnPackMark } from "@/components/kit/kit-fields";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MAX_QUANTITY, packLabel } from "@/lib/kit-format";
+import { MAX_QUANTITY, packLabel, type PackQuantity } from "@/lib/kit-format";
 import { parseQuantity, type ParsedExpiry, type ParsedQuantity } from "@/lib/kit-import-csv";
 import type { ImportRow, RowIssue } from "@/lib/kit-import";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,6 @@ const ISSUE_TEXT: Record<RowIssue, string> = {
   "no-package": "wybierz opakowanie",
   "invalid-expiry": "popraw datę ważności",
   "invalid-quantity": "popraw ilość",
-  "quantity-over-pack": "ilość większa niż w opakowaniu",
   "already-have": "już masz ten lek",
   "repeated-in-import": "powtórzony w imporcie",
   "choosing-variant": "dokończ wybór leku albo anuluj",
@@ -41,8 +40,8 @@ export interface KitImportRowProps {
   version: number;
   row: ImportRow;
   issues: RowIssue[];
-  /** The chosen pack's quantity cap, when known. */
-  packMax: number | null;
+  /** The chosen pack's size (`max` null when unknown): a quantity above it is saved with a warning. */
+  packSize: PackQuantity;
   /** This row has the medicine search open (only one row at a time). */
   editing: boolean;
   /** The server rejected this row in the last save of the page. */
@@ -290,13 +289,11 @@ function RowExpiry({ row, onChange }: { row: ImportRow; onChange: (expiry: Parse
 /** Quantity of the row: always a field (prefilled from the CSV) and a clear button. */
 function RowQuantity({
   row,
-  packMax,
-  overPack,
+  packSize,
   onChange,
 }: {
   row: ImportRow;
-  packMax: number | null;
-  overPack: boolean;
+  packSize: PackQuantity;
   onChange: (quantity: ParsedQuantity) => void;
 }) {
   // Start from the current value (what will be saved), not the CSV original: a restored row remounts this field.
@@ -306,6 +303,7 @@ function RowQuantity({
   );
   const inputId = useId();
   const errorId = useId();
+  const warningId = useId();
 
   function change(value: string) {
     setText(value);
@@ -315,9 +313,9 @@ function RowQuantity({
   let error: string | null = null;
   if (row.quantity.kind === "invalid") {
     error = `Nie da się odczytać ilości „${row.quantity.text}”. Wpisz liczbę od 0 do ${MAX_QUANTITY} albo wyczyść pole.`;
-  } else if (overPack && packMax !== null) {
-    error = `Ilość większa niż w opakowaniu (najwyżej ${packMax}). Popraw ją albo wyczyść pole.`;
   }
+  const size = [packSize.max, packSize.unit].filter((part) => part !== null).join(" ");
+  const over = !error && row.quantity.kind === "ok" && packSize.max !== null && row.quantity.value > packSize.max;
 
   return (
     <div className="min-w-0">
@@ -333,12 +331,13 @@ function RowQuantity({
           change(event.target.value);
         }}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={error ? errorId : over ? warningId : undefined}
         className="min-h-11 w-32 text-base md:text-base"
       />
       {error && <InlineError id={errorId}>{error}</InlineError>}
-      {!error && packMax !== null && (
-        <p className="text-muted-foreground mt-1 text-sm">Najwyżej {packMax} w opakowaniu</p>
+      {over && <OverPackWarning id={warningId} size={size} />}
+      {!error && !over && packSize.max !== null && (
+        <p className="text-muted-foreground mt-1 text-sm">W opakowaniu: {size}</p>
       )}
       {row.quantity.kind === "empty" && <p className="text-muted-foreground mt-1 text-sm">Ilość: nieznana</p>}
       <Button
@@ -464,7 +463,7 @@ function RowVariant({
 
 /** One CSV row on the approval screen: the text from the file, its state and what can be done about it. */
 export function KitImportRow(props: KitImportRowProps) {
-  const { row, issues, packMax, editing, rejected } = props;
+  const { row, issues, packSize, editing, rejected } = props;
   const label = `Wiersz ${row.parsed.line}`;
   const alreadyHave = issues.includes("already-have");
   const repeated = issues.includes("repeated-in-import");
@@ -519,12 +518,7 @@ export function KitImportRow(props: KitImportRowProps) {
             <RowPack key={row.variant.id} variant={row.variant} packageId={row.packageId} onPick={props.onPickPack} />
           )}
           <RowExpiry row={row} onChange={props.onExpiry} />
-          <RowQuantity
-            row={row}
-            packMax={packMax}
-            overPack={issues.includes("quantity-over-pack")}
-            onChange={props.onQuantity}
-          />
+          <RowQuantity row={row} packSize={packSize} onChange={props.onQuantity} />
 
           {(alreadyHave || repeated) && (
             <div className="min-w-0 space-y-2">

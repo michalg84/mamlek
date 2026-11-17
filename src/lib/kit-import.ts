@@ -29,7 +29,6 @@ export type RowIssue =
   | "no-package"
   | "invalid-expiry"
   | "invalid-quantity"
-  | "quantity-over-pack"
   | "already-have"
   | "repeated-in-import";
 
@@ -61,8 +60,6 @@ export interface RowIssueContext {
   kitKeys: ReadonlySet<string>;
   /** Variant keys of the not-removed rows before this one in the file (`earlierVariantKeys`). */
   earlierKeys: ReadonlySet<string>;
-  /** Upper bound of the quantity for the chosen pack; null when there is no pack or it has no cap. */
-  packMax: number | null;
 }
 
 /** One item of the `POST /api/kit/import` body. */
@@ -227,15 +224,9 @@ export function rowIssues(row: ImportRow, context: RowIssueContext): RowIssue[] 
   if (row.expiry.kind === "invalid") {
     issues.push("invalid-expiry");
   }
+  // A quantity above the pack size is not a reason: the row only warns about it (KitImportRow).
   if (row.quantity.kind === "invalid") {
     issues.push("invalid-quantity");
-  } else if (
-    row.quantity.kind === "ok" &&
-    row.packageId !== null &&
-    context.packMax !== null &&
-    row.quantity.value > context.packMax
-  ) {
-    issues.push("quantity-over-pack");
   }
   if (key !== null) {
     const accepted = row.duplicateDecision ?? [];

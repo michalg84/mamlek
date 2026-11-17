@@ -134,9 +134,9 @@ async function one<T extends object>(what: string, sql: string): Promise<T> {
   return rows[0];
 }
 
-// Active = the pack and its product are not withdrawn. A pack "with a size" is one `packQuantity` gives a cap: the
-// rule of the API (the quantity may not exceed it). The cap is computed by that same function, never re-encoded in SQL,
-// so the boundaries follow the rule (e.g. "1 butelka 90 tabl." has a size of 90, "12 tabl." of 12, "4 fiol. 5 ml" of 4).
+// Active = the pack and its product are not withdrawn. A pack "with a size" is one `packQuantity` gives a size: the
+// rule of the screen (a quantity above it is saved with a warning; the API caps only at MAX_QUANTITY). The size is
+// computed by that same function, never re-encoded in SQL, so the boundaries follow the rule (e.g. "1 butelka 90 tabl." has a size of 90, "12 tabl." of 12, "4 fiol. 5 ml" of 4).
 
 interface PackRow {
   package_id: number;
@@ -167,8 +167,6 @@ function first<T extends PackRow>(what: string, rows: T[], test: (pack: T) => bo
 export interface BoundaryData {
   /** An active pack with a size of at least 3 (the PATCH tests store a quantity of 3), its size and its product. */
   sized: { packageId: number; size: number; productId: number; productName: string };
-  /** An active pack of an active product without a size. */
-  unsized: { packageId: number };
   /** A withdrawn pack of an active product. */
   withdrawnPackage: { packageId: number };
   /** A pack of a withdrawn product. */
@@ -202,7 +200,6 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
       order by pk.id`,
   );
   const sized = first("active pack with a size from 3 to 99999", activePacks, (pack) => sizeIn(pack, 3, 99999));
-  const unsized = first("active pack without a size", activePacks, (pack) => sizeOf(pack) === null);
   const withdrawnPackage = await one<{ package_id: number }>(
     "withdrawn pack of an active product",
     `select pk.id::float8 as package_id
@@ -330,7 +327,6 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
       productId: sized.product_id,
       productName: sized.name,
     },
-    unsized: { packageId: unsized.package_id },
     withdrawnPackage: { packageId: withdrawnPackage.package_id },
     withdrawnProductPackage: { packageId: withdrawnProductPackage.package_id },
   };

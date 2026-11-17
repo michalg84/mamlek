@@ -70,7 +70,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
     const errors: FieldErrors = {};
 
     let parsedQuantity: number | null = null;
-    const quantityResult = parseQuantityInput(quantity, max, quantityRef.current?.validity.badInput);
+    const quantityResult = parseQuantityInput(quantity, quantityRef.current?.validity.badInput);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else {

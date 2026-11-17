@@ -313,7 +313,7 @@ describe("KitAddForm", () => {
   });
 
   describe("quantity", () => {
-    it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” takes 90 and refuses 91", async () => {
+    it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” takes 90, and 91 only with a warning", async () => {
       const bottle: RegistryVariantPackage = {
         ...pack(1001, ID.ibuprom400),
         units: [{ count: "1", kind: "butelka", capacity: "90", capacity_unit: "tabl.", info: null }],
@@ -323,15 +323,17 @@ describe("KitAddForm", () => {
 
       expect(screen.getByText("z 90 tabl.")).toBeTruthy();
 
-      fireEvent.change(quantityField(), { target: { value: "91" } });
-      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
-      expect(screen.getByText("Ilość nie może być większa niż 90")).toBeTruthy();
-      expect(addPosts(form.routed)).toEqual([]);
-
       fireEvent.change(quantityField(), { target: { value: "90" } });
+      expect(screen.queryByText("Więcej niż w opakowaniu (90 tabl.)")).toBeNull();
+
+      // Above the pack size the field warns, joined to it, and the quantity is still sent.
+      fireEvent.change(quantityField(), { target: { value: "91" } });
+      const warning = screen.getByText("Więcej niż w opakowaniu (90 tabl.)");
+      expect(quantityField().getAttribute("aria-describedby")).toBe(warning.closest("p")?.id);
+      expect(quantityField().getAttribute("aria-invalid")).toBeNull();
       fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
       await waitFor(() => {
-        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ packageId: 1001, quantity: 90 })]);
+        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ packageId: 1001, quantity: 91 })]);
       });
     });
   });

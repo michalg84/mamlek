@@ -5,6 +5,7 @@ import {
   formatQuantity,
   packQuantity,
   parseExpiryInput,
+  overPackSize,
   parseQuantityInput,
   todayIso,
   uniquePacks,
@@ -164,33 +165,43 @@ describe("todayIso", () => {
 
 describe("parseQuantityInput", () => {
   it("reads empty or blank text as an unknown quantity", () => {
-    expect(parseQuantityInput("", 30)).toEqual({ value: null });
-    expect(parseQuantityInput("   ", 30)).toEqual({ value: null });
+    expect(parseQuantityInput("")).toEqual({ value: null });
+    expect(parseQuantityInput("   ")).toEqual({ value: null });
   });
 
-  it("accepts 0 and the pack size, and refuses one more than the pack size", () => {
-    expect(parseQuantityInput("0", 30)).toEqual({ value: 0 });
-    expect(parseQuantityInput(" 30 ", 30)).toEqual({ value: 30 });
-    expect(parseQuantityInput("31", 30)).toEqual({ error: "Ilość nie może być większa niż 30" });
-  });
-
-  it("caps a pack without a size at MAX_QUANTITY", () => {
-    expect(parseQuantityInput(String(MAX_QUANTITY), null)).toEqual({ value: MAX_QUANTITY });
-    expect(parseQuantityInput(String(MAX_QUANTITY + 1), null)).toEqual({
+  it("accepts 0 and any quantity up to MAX_QUANTITY, and refuses one more", () => {
+    expect(parseQuantityInput("0")).toEqual({ value: 0 });
+    expect(parseQuantityInput(" 30 ")).toEqual({ value: 30 });
+    expect(parseQuantityInput(String(MAX_QUANTITY))).toEqual({ value: MAX_QUANTITY });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1))).toEqual({
       error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
     });
   });
 
   it("refuses a negative number, a fraction and text that is no number", () => {
     const error = { error: "Podaj liczbę całkowitą, 0 lub większą" };
-    expect(parseQuantityInput("-1", 30)).toEqual(error);
-    expect(parseQuantityInput("1.5", 30)).toEqual(error);
-    expect(parseQuantityInput("abc", 30)).toEqual(error);
+    expect(parseQuantityInput("-1")).toEqual(error);
+    expect(parseQuantityInput("1.5")).toEqual(error);
+    expect(parseQuantityInput("abc")).toEqual(error);
   });
 
   it("refuses an empty value the number field reported as unreadable, instead of reading it as unknown", () => {
-    expect(parseQuantityInput("", 30, true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
-    expect(parseQuantityInput("", 30, false)).toEqual({ value: null });
+    expect(parseQuantityInput("", true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
+    expect(parseQuantityInput("", false)).toEqual({ value: null });
+  });
+});
+
+describe("overPackSize", () => {
+  it("is true only for a whole number above the pack size", () => {
+    expect(overPackSize("12", 12)).toBe(false);
+    expect(overPackSize(" 13 ", 12)).toBe(true);
+    expect(overPackSize("", 12)).toBe(false);
+    expect(overPackSize("abc", 12)).toBe(false);
+    expect(overPackSize("12.5", 12)).toBe(false);
+  });
+
+  it("never warns for a pack without a size", () => {
+    expect(overPackSize(String(MAX_QUANTITY), null)).toBe(false);
   });
 });
 

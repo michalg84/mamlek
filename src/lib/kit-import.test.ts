@@ -462,7 +462,7 @@ function readyRow(overrides: Partial<ImportRow> = {}): ImportRow {
 }
 
 function context(overrides: Partial<RowIssueContext> = {}): RowIssueContext {
-  return { kitKeys: new Set(), earlierKeys: new Set(), packMax: null, ...overrides };
+  return { kitKeys: new Set(), earlierKeys: new Set(), ...overrides };
 }
 
 const ibupromKey = "ibuprom|400 mg|tabletki powlekane";
@@ -525,17 +525,10 @@ describe("rowIssues", () => {
     expect(rowIssues({ ...invalid, quantity: { kind: "ok", value: 3 } }, context())).toEqual([]);
   });
 
-  it("blocks a quantity above the pack size, on both sides of the bound", () => {
-    const at = readyRow({ quantity: { kind: "ok", value: 20 } });
-    const above = readyRow({ quantity: { kind: "ok", value: 21 } });
-
-    expect(rowIssues(at, context({ packMax: 20 }))).toEqual([]);
-    expect(rowIssues(above, context({ packMax: 20 }))).toEqual(["quantity-over-pack"]);
-  });
-
-  it("does not bound the quantity of a pack without a cap, nor an empty quantity", () => {
-    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 99999 } }), context({ packMax: null }))).toEqual([]);
-    expect(rowIssues(readyRow({ quantity: { kind: "empty" } }), context({ packMax: 20 }))).toEqual([]);
+  it("does not block a quantity above the pack size (the row only warns)", () => {
+    // The pack is not known to rowIssues at all: any valid quantity up to MAX_QUANTITY is ready.
+    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 21 } }), context())).toEqual([]);
+    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 99999 } }), context())).toEqual([]);
   });
 
   it("blocks a variant that is already in the kit, whatever the pack size", () => {

@@ -210,13 +210,32 @@ describe("KitList", () => {
       expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 3 } }]);
     });
 
-    it("checks the value before sending: over the pack size and a fraction", () => {
+    it("saves a quantity above the pack size with a warning", async () => {
+      const item = kitItem();
+      const stored: KitItem = { ...item, quantity: 31 };
+      const routed = stubKitItem(() => reply({ item: stored }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "30" } });
+      expect(screen.queryByText("Więcej niż w opakowaniu (30 tabl.)")).toBeNull();
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "31" } });
+      expect(screen.getByText("Więcej niż w opakowaniu (30 tabl.)")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 31 } }]);
+      });
+      // The stored quantity is still above the pack size: the warning stays.
+      expect(await screen.findByText("Więcej niż w opakowaniu (30 tabl.)")).toBeTruthy();
+    });
+
+    it("checks the value before sending: a fraction and more than MAX_QUANTITY", () => {
       const routed = stubKitItem(() => Promise.reject(new Error("no request expected")));
       render(<KitList items={[kitItem()]} today="2026-11-04" />);
 
-      fireEvent.change(quantityField("Lek 1"), { target: { value: "31" } });
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "100001" } });
       fireEvent.click(screen.getByRole("button", { name: SAVE }));
-      expect(screen.getByText("Ilość nie może być większa niż 30")).toBeTruthy();
+      expect(screen.getByText("Ilość nie może być większa niż 100000")).toBeTruthy();
       expect(quantityField("Lek 1").getAttribute("aria-invalid")).toBe("true");
 
       fireEvent.change(quantityField("Lek 1"), { target: { value: "1.5" } });

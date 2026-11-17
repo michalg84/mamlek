@@ -37,3 +37,14 @@ Po teście usunięto 3 testowe pozycje `kit_items` i 3 konta; `kit_items` = 194 
 
 - Zapytanie 1 (pozycje na opakowaniach liczonych teraz w sztukach): brak wierszy. Poprawka danych niepotrzebna.
 - Zapytanie 2 (ilość 0): 0 wierszy, 0 użytkowników. Minimum 1 przy dodawaniu i nowy werdykt (faza 3) nie zmieniają istniejących danych.
+
+## Faza 2 — bramki (2026-11-17, lokalnie, za zgodą koordynatora)
+
+- `npx supabase db reset` (migracja `20261117120200_kit_quantity_comment.sql` weszła, komentarz kolumny sprawdzony), import fixtur v1, v1, v2, `registry-import-check.mjs` zielony.
+- `npm test` 740/740, `astro check` 0 błędów, lint i `ui:scan` czyste.
+- `test:db` 105/105, `test:api` 174/174 na serwerze z portu 4331 (bramka 1.4 razem z 2.6). `BASE_URL` z env nie działa, bo Vitest nadpisuje go na `/`; uruchomione przez tymczasowy config z `test.env.BASE_URL`, usunięty po teście.
+- Testy ręczne 2.7–2.9 (Playwright, Panadol Femina, opakowanie 10 tabl.):
+  - 2.7: formularz z ilością 12 pokazuje „Więcej niż w opakowaniu (10 tabl.)”, pole bez `aria-invalid`, z `aria-describedby`; zapis 12, na liście ostrzeżenie; zmiana na liście na 15 zapisuje się (po odświeżeniu 15).
+  - 2.9: panel edycji z ilością 20 ostrzega, zapis 20 (po odświeżeniu 20).
+  - 2.8: import wiersza z ilością 14 ostrzega zamiast blokować, wiersz „Gotowy do zapisu” (po decyzji o duplikacie), strona zapisana, w apteczce 14 i 20, oba z ostrzeżeniem.
+- Sprzątanie: konta testowe usunięte (`kit_items` = 0), serwer zatrzymany, pełny rejestr przywrócony z RPL: 71 643 opakowania, 20 354 produkty (przed resetem 71 629 / 20 351; różnica z nowszego pliku RPL).

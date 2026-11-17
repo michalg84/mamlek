@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
-import { expiryToDate, packQuantity } from "@/lib/kit-format";
+import { expiryToDate } from "@/lib/kit-format";
 import { kitImportRequest } from "@/lib/kit-request";
 import { addKitItems, getPackages } from "@/lib/services/kit";
 import type { ImportKitItemsItemError, ImportKitItemsResponse } from "@/types";
@@ -50,6 +50,7 @@ export const POST: APIRoute = async (context) => {
 
   try {
     // Withdrawn packs are found too (a withdrawn medicine can still be kept); only a pack that does not exist is missing.
+    // A quantity above the pack size is accepted (the screen only warns).
     const packs = await getPackages(
       supabase,
       items.map((item) => item.packageId),
@@ -58,11 +59,6 @@ export const POST: APIRoute = async (context) => {
       const pack = packs.get(item.packageId);
       if (!pack) {
         const rejected: ImportKitItemsItemError = { error: "Package not found", index };
-        return json(rejected, 400);
-      }
-      const { max } = packQuantity(pack.units);
-      if (item.quantity !== null && max !== null && item.quantity > max) {
-        const rejected: ImportKitItemsItemError = { error: `Quantity exceeds the pack size (${max})`, index };
         return json(rejected, 400);
       }
     }

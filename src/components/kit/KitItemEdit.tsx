@@ -131,7 +131,7 @@ export function KitItemEdit({ item, onSaved, onCancel }: KitItemEditProps) {
       request.packageId = chosenId;
     }
 
-    const quantityResult = parseQuantityInput(quantity, max, quantityRef.current?.validity.badInput);
+    const quantityResult = parseQuantityInput(quantity, quantityRef.current?.validity.badInput);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else if (quantityResult.value !== item.quantity) {

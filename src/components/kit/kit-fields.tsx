@@ -1,9 +1,9 @@
 import { useId, type ComponentProps } from "react";
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, TriangleAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { MAX_QUANTITY } from "@/lib/kit-format";
+import { MAX_QUANTITY, overPackSize } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 
 // Form pieces shared by the add form and the kit list, so both validate and look the same.
@@ -68,30 +68,61 @@ export function ActionError({ id, message, signIn = false }: ActionErrorProps) {
   );
 }
 
-type QuantityInputProps = Omit<ComponentProps<"input">, "type" | "min" | "max"> & {
-  /** Pack size (the upper bound), or null when the pack gives none. */
+type QuantityInputProps = Omit<ComponentProps<"input">, "type" | "min" | "max" | "value"> & {
+  /** Pack size, or null when the pack gives none. A quantity above it is allowed, with a warning. */
   max: number | null;
-  /** Unit word of the pack size ("tabletki"), shown after it. */
+  /** Unit word of the pack size ("tabl."), shown after it. */
   unit: string | null;
+  /** The typed text (a controlled field). */
+  value: string;
 };
 
-/** Number field for a quantity, with the pack size after it ("z 30 tabletki") when the pack has one. */
-export function QuantityInput({ max, unit, className, ...props }: QuantityInputProps) {
+/** Warning under a quantity above the pack size (`size`: "12 tabl."). The quantity is still saved. */
+export function OverPackWarning({ id, size }: { id: string; size: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      <Input
-        type="number"
-        inputMode="numeric"
-        min={0}
-        max={max ?? MAX_QUANTITY}
-        className={cn("min-h-11 w-32 flex-none text-base md:text-base", className)}
-        {...props}
-      />
-      {max !== null && (
-        <span className="text-muted-foreground min-w-0 text-sm break-words">
-          z {[max, unit].filter((part) => part !== null).join(" ")}
-        </span>
-      )}
+    <p
+      id={id}
+      className="bg-warning text-warning-foreground mt-1 flex items-start gap-1.5 rounded-md px-2 py-1 text-sm break-words"
+    >
+      <TriangleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+      <span className="min-w-0">Więcej niż w opakowaniu ({size})</span>
+    </p>
+  );
+}
+
+/**
+ * Number field for a quantity, with the pack size after it ("z 30 tabl.") when the pack has one, and a warning under it
+ * when the typed quantity is above the pack size. The warning is joined to the field by `aria-describedby`, after the
+ * caller's own description (an error message).
+ */
+export function QuantityInput({
+  max,
+  unit,
+  value,
+  className,
+  "aria-describedby": describedBy,
+  ...props
+}: QuantityInputProps) {
+  const warningId = useId();
+  const size = [max, unit].filter((part) => part !== null).join(" ");
+  const over = overPackSize(value, max);
+  return (
+    <div className="min-w-0">
+      <div className="flex min-w-0 items-center gap-2">
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          // The pack size is not the bound: a quantity above it is saved with a warning.
+          max={MAX_QUANTITY}
+          value={value}
+          className={cn("min-h-11 w-32 flex-none text-base md:text-base", className)}
+          aria-describedby={[describedBy, over ? warningId : undefined].filter(Boolean).join(" ") || undefined}
+          {...props}
+        />
+        {max !== null && <span className="text-muted-foreground min-w-0 text-sm break-words">z {size}</span>}
+      </div>
+      {over && <OverPackWarning id={warningId} size={size} />}
     </div>
   );
 }
