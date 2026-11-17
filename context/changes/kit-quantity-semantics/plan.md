@@ -337,12 +337,12 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 - [x] 3.1 Testy jednostkowe i komponentów przechodzą: `npm test`
 - [x] 3.2 Typy przechodzą: `npx astro check`
 - [x] 3.3 Lint i skan UI przechodzą
-- [ ] 3.4 Testy bazy przechodzą (za zgodą koordynatora)
-- [ ] 3.5 Testy API przechodzą (za zgodą koordynatora)
+- [x] 3.4 Testy bazy przechodzą (za zgodą koordynatora): `test:db` 105/105 po `db reset` i imporcie v1, v1, v2
+- [x] 3.5 Testy API przechodzą (za zgodą koordynatora): `test:api` 176/176 na porcie 4331
 
 #### Manual
 
-- [ ] 3.6 Zapis 0 otwiera dialog usuwania; „Anuluj” zostawia puste opakowanie, „Usuń” usuwa
-- [ ] 3.7 Dodawanie i import odrzucają ilość 0
-- [ ] 3.8 Na /szukaj puste opakowanie daje „Nie masz tego leku” i sekcję „Puste opakowania”
+- [x] 3.6 Zapis 0 otwiera dialog usuwania; „Anuluj” zostawia puste opakowanie, „Usuń” usuwa (Playwright na 4331, 2026-11-17: fokus po „Anuluj” wraca na pole, w bazie zostaje 0)
+- [x] 3.7 Dodawanie i import odrzucają ilość 0 (formularz: komunikat i nic nie zapisane, potem 1 zapisane; import: powód „puste opakowanie — pomiń wiersz” i zablokowany zapis strony)
+- [x] 3.8 Na /szukaj puste opakowanie daje „Nie masz tego leku” i sekcję „Puste opakowania” (ogłoszenie „Puste opakowania w apteczce: 1”)
 - [x] 3.9 PRD, roadmapa i AGENTS.md opisują nową regułę
