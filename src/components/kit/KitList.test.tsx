@@ -31,7 +31,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     strength: "20 mg",
     form: "tabletki powlekane",
     holder: null,
-    units: [{ count: "30", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity: "30", capacity_unit: "tabl.", info: null }],
     quantity: 10,
     expiresOn: "2027-12-31",
     expiryPrecision: "month",
@@ -96,9 +96,9 @@ describe("KitList", () => {
     const rows = screen.getAllByRole("listitem");
     expect(rows.map((item) => within(item).getAllByText(/./)[0].textContent)).toEqual(["Sortis", "Atoris", "Smecta"]);
     expect(within(rows[0]).getByText("20 mg · tabletki powlekane")).toBeTruthy();
-    expect(within(rows[0]).getByText("30 tabletki")).toBeTruthy();
+    expect(within(rows[0]).getByText("30 tabl.")).toBeTruthy();
     expect(quantityField("Sortis").value).toBe("12");
-    expect(within(rows[0]).getByText("z 30 tabletki")).toBeTruthy();
+    expect(within(rows[0]).getByText("z 30 tabl.")).toBeTruthy();
     expect(within(rows[0]).getByText("Ważny do: 12/2027")).toBeTruthy();
     expect(quantityField("Smecta").value).toBe("");
     expect(quantityField("Smecta").placeholder).toBe("nieznane");
@@ -210,13 +210,32 @@ describe("KitList", () => {
       expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 3 } }]);
     });
 
-    it("checks the value before sending: over the pack size and a fraction", () => {
+    it("saves a quantity above the pack size with a warning", async () => {
+      const item = kitItem();
+      const stored: KitItem = { ...item, quantity: 31 };
+      const routed = stubKitItem(() => reply({ item: stored }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "30" } });
+      expect(screen.queryByText("Więcej niż w opakowaniu (30 tabl.)")).toBeNull();
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "31" } });
+      expect(screen.getByText("Więcej niż w opakowaniu (30 tabl.)")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 31 } }]);
+      });
+      // The stored quantity is still above the pack size: the warning stays.
+      expect(await screen.findByText("Więcej niż w opakowaniu (30 tabl.)")).toBeTruthy();
+    });
+
+    it("checks the value before sending: a fraction and more than MAX_QUANTITY", () => {
       const routed = stubKitItem(() => Promise.reject(new Error("no request expected")));
       render(<KitList items={[kitItem()]} today="2026-11-04" />);
 
-      fireEvent.change(quantityField("Lek 1"), { target: { value: "31" } });
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "100001" } });
       fireEvent.click(screen.getByRole("button", { name: SAVE }));
-      expect(screen.getByText("Ilość nie może być większa niż 30")).toBeTruthy();
+      expect(screen.getByText("Ilość nie może być większa niż 100000")).toBeTruthy();
       expect(quantityField("Lek 1").getAttribute("aria-invalid")).toBe("true");
 
       fireEvent.change(quantityField("Lek 1"), { target: { value: "1.5" } });
@@ -321,16 +340,59 @@ describe("KitList", () => {
       expect((await screen.findByRole("alert")).textContent).toBe("Nie udało się zapisać tej wartości");
     });
 
-    it("shows „Opakowanie puste” once 0 is saved", async () => {
+    it("asks to delete the pack once 0 is saved; „Anuluj” keeps it as „Opakowanie puste”, with the focus on the field", async () => {
       const item = kitItem();
-      stubKitItem(() => reply({ item: { ...item, quantity: 0 } }));
+      const routed = stubKitItem(() => reply({ item: { ...item, quantity: 0 } }));
       render(<KitList items={[item]} today="2026-11-04" />);
       expect(screen.queryByText(EMPTY_PACK)).toBeNull();
 
       fireEvent.change(quantityField("Lek 1"), { target: { value: "0" } });
       fireEvent.click(screen.getByRole("button", { name: SAVE }));
 
-      expect(await screen.findByText(EMPTY_PACK)).toBeTruthy();
+      const dialog = await screen.findByRole("alertdialog");
+      expect(within(dialog).getByText(CONFIRM_TITLE)).toBeTruthy();
+      fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(screen.getByText(EMPTY_PACK)).toBeTruthy();
+      expect(quantityField("Lek 1").value).toBe("0");
+      expect(document.activeElement).toBe(quantityField("Lek 1"));
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 0 } }]);
+    });
+
+    it("deletes the pack when „Usuń” is chosen in the dialog that a saved 0 opened", async () => {
+      const items = [kitItem(), kitItem()];
+      const routed = stubKitItem((request) =>
+        request.method === "PATCH" ? reply({ item: { ...items[0], quantity: 0 } }) : deleted(),
+      );
+      render(<KitList items={items} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "0" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+      fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: DELETE }));
+
+      await waitFor(() => {
+        expect(screen.queryByText("Lek 1")).toBeNull();
+      });
+      expect(routed.kitItemRequests()).toEqual([
+        { method: "PATCH", id: items[0].id, body: { quantity: 0 } },
+        { method: "DELETE", id: items[0].id, body: undefined },
+      ]);
+    });
+
+    it("does not ask after a save that leaves something in the pack", async () => {
+      const item = kitItem();
+      stubKitItem(() => reply({ item: { ...item, quantity: 1 } }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "1" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("button", { name: SAVE })).toBeNull();
+      });
+      expect(screen.queryByRole("alertdialog")).toBeNull();
     });
   });
 
@@ -353,7 +415,7 @@ describe("KitList", () => {
       const bigger = {
         ...own,
         packageId: item.packageId + 500,
-        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+        units: [{ count: null, kind: null, capacity: "60", capacity_unit: "tabl.", info: null }],
       };
       return stubRoutedFetch(registrySearchList, { [item.productId]: [own, bigger] }, { kitItem: respond });
     }
@@ -368,9 +430,9 @@ describe("KitList", () => {
 
       expect(editButton("Lek 1").getAttribute("aria-expanded")).toBe("true");
       const panel = within(row("Lek 1")).getByRole("form", { name: "Edycja: Lek 1" });
-      expect(await within(panel).findByRole("radio", { name: "30 tabletki" })).toBeTruthy();
+      expect(await within(panel).findByRole("radio", { name: "30 tabl." })).toBeTruthy();
       expect(within(row("Lek 1")).queryByLabelText("Ilość: Lek 1")).toBeNull();
-      expect(within(row("Lek 1")).getByText("Ilość: 10 z 30 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("Ilość: 10 z 30 tabl.")).toBeTruthy();
       // The other row keeps its own field.
       expect(quantityField("Lek 2")).toBeTruthy();
 
@@ -388,7 +450,7 @@ describe("KitList", () => {
       const stored: KitItem = {
         ...item,
         packageId: item.packageId + 500,
-        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+        units: [{ count: null, kind: null, capacity: "60", capacity_unit: "tabl.", info: null }],
         quantity: 45,
       };
       const routed = stubPacks(item, () => reply({ item: stored }));
@@ -396,7 +458,7 @@ describe("KitList", () => {
 
       fireEvent.click(editButton("Lek 1"));
       const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
-      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabletki" }));
+      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabl." }));
       fireEvent.change(within(panel).getByLabelText("Ilość w opakowaniu (opcjonalnie)"), { target: { value: "45" } });
       fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
 
@@ -406,10 +468,71 @@ describe("KitList", () => {
       expect(routed.kitItemRequests()).toEqual([
         { method: "PATCH", id: item.id, body: { packageId: stored.packageId, quantity: 45 } },
       ]);
-      expect(within(row("Lek 1")).getByText("60 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("60 tabl.")).toBeTruthy();
       expect(quantityField("Lek 1").value).toBe("45");
-      expect(within(row("Lek 1")).getByText("z 60 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("z 60 tabl.")).toBeTruthy();
       expect(document.activeElement).toBe(editButton("Lek 1"));
+    });
+  });
+
+  describe("edit to an empty pack", () => {
+    function packsOf(item: KitItem) {
+      return {
+        [item.productId]: [
+          {
+            packageId: item.packageId,
+            productId: item.productId,
+            gtin: null,
+            availabilityCategory: null,
+            units: item.units,
+            holder: null,
+            withdrawn: false,
+          },
+        ],
+      };
+    }
+
+    it("asks to delete the pack when the panel saves 0; „Anuluj” gives the focus back to „Edytuj”", async () => {
+      const item = kitItem();
+      const routed = stubRoutedFetch(registrySearchList, packsOf(item), {
+        kitItem: () => reply({ item: { ...item, quantity: 0 } }),
+      });
+      render(<KitList items={[item]} today="2026-11-04" />);
+      const edit = within(row("Lek 1")).getByRole("button", { name: EDIT });
+
+      fireEvent.click(edit);
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      await within(panel).findByRole("radio", { name: "30 tabl." });
+      fireEvent.change(within(panel).getByLabelText("Ilość w opakowaniu (opcjonalnie)"), { target: { value: "0" } });
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      const dialog = await screen.findByRole("alertdialog");
+      fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(screen.getByText(EMPTY_PACK)).toBeTruthy();
+      expect(document.activeElement).toBe(edit);
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 0 } }]);
+    });
+
+    it("does not ask again when the panel saves another change of a pack that was already empty", async () => {
+      const item = kitItem({ quantity: 0 });
+      stubRoutedFetch(registrySearchList, packsOf(item), {
+        kitItem: () => reply({ item: { ...item, expiresOn: null, expiryPrecision: null } }),
+      });
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.click(within(row("Lek 1")).getByRole("button", { name: EDIT }));
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      await within(panel).findByRole("radio", { name: "30 tabl." });
+      fireEvent.click(within(panel).getByRole("button", { name: "Wyczyść" }));
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("form")).toBeNull();
+      });
+      expect(screen.queryByRole("alertdialog")).toBeNull();
     });
   });
 
@@ -422,7 +545,7 @@ describe("KitList", () => {
       const dialog = screen.getByRole("alertdialog");
       expect(within(dialog).getByText(CONFIRM_TITLE)).toBeTruthy();
       expect(within(dialog).getByText("Sortis 20 mg")).toBeTruthy();
-      expect(within(dialog).getByText("30 tabletki")).toBeTruthy();
+      expect(within(dialog).getByText("30 tabl.")).toBeTruthy();
       expect(within(dialog).getByText(IRREVERSIBLE)).toBeTruthy();
 
       fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));

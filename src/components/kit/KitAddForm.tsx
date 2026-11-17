@@ -70,7 +70,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
     const errors: FieldErrors = {};
 
     let parsedQuantity: number | null = null;
-    const quantityResult = parseQuantityInput(quantity, max, quantityRef.current?.validity.badInput);
+    const quantityResult = parseQuantityInput(quantity, quantityRef.current?.validity.badInput, 1);
     if ("error" in quantityResult) {
       errors.quantity = quantityResult.error;
     } else {
@@ -243,6 +243,7 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
             <QuantityInput
               ref={quantityRef}
               id={quantityId}
+              min={1}
               max={max}
               unit={unit}
               value={quantity}

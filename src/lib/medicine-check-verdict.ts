@@ -70,11 +70,25 @@ function packCount(count: number) {
   return `${count} opakowań`;
 }
 
-/** Turns the answer of the medicine check into the verdict the screen shows. */
+/** An empty pack (quantity 0) is in the kit but gives no medicine; an unknown quantity (null) counts as having it. */
+function isEmpty(item: MedicineCheckItem) {
+  return item.quantity === 0;
+}
+
+/**
+ * The empty packs among the matching kit items, in the order of the RPC. The verdict leaves them out, so the screen
+ * lists them apart, below the verdict.
+ */
+export function emptyPacks(result: MedicineCheckResponse): MedicineCheckItem[] {
+  return result.items.filter(isEmpty);
+}
+
+/** Turns the answer of the medicine check into the verdict the screen shows; empty packs do not count. */
 export function checkVerdict(result: MedicineCheckResponse): CheckVerdict {
   // The RPC already orders the items (variant first, nearest expiry, unknown last, newest first): only split them.
-  const variants = result.items.filter((item) => item.match === "variant");
-  const same = result.items.filter((item) => item.match === "substance");
+  const items = result.items.filter((item) => !isEmpty(item));
+  const variants = items.filter((item) => item.match === "variant");
+  const same = items.filter((item) => item.match === "substance");
   const shared = { variants, same, caution: same.length > 0, uncomparable: !result.comparable };
 
   if (variants.length > 0) {

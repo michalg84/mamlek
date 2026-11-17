@@ -3,16 +3,17 @@
 // (2) write nothing, (3) leak nothing from the inside of the server. Every boundary is tested from both sides: the
 // value just past it is rejected, the value on it is accepted. The boundaries come from the sources, not from the
 // validation schema in the code:
-//   - quantity: the database column is integer >= 0 (kit_items migration); the pack size is the cap when the pack has
-//     one (add-medicine-to-kit plan, contract of POST /api/kit); 100000 is the cap otherwise (F1 of that change's
-//     review: a bound far below the integer limit);
+//   - quantity: the database column is integer >= 0 (kit_items migration), but an item is added with at least 1: an
+//     empty pack is not added, only an item already in the kit may be edited to 0 (kit-quantity-semantics plan,
+//     phase 3); 100000 is the cap (F1 of the add-medicine-to-kit review: a bound far below the integer limit), also on
+//     a pack with a size: a quantity above the pack size is stored, the screen only warns about it (same plan, phase 2);
 //   - expiry: month 1-12 and a year range of 2000-2100 (same contract); the precision is always month;
 //   - ids: positive integers that exist in the registry as packs, active or withdrawn (the pack or its product): a
 //     medicine withdrawn from the registry can still be kept in the kit (withdrawn-medicine-in-kit plan, phase 2);
 //   - import page: 1 to 30 items, all stored or none (csv-kit-import plan, phase 2: one page of the approval screen);
-//   - edit (kit-browse-edit plan, phase 1): a key that is absent leaves the stored value, null clears it; the quantity
-//     cap follows the pack the item will be on (the stored pack when it does not change, even a withdrawn one); the
-//     new pack must be a pack of the same medicine, active or withdrawn (withdrawn-medicine-in-kit plan, phase 2); the
+//   - edit (kit-browse-edit plan, phase 1): a key that is absent leaves the stored value, null clears it; the pack the
+//     item will be on does not cap the quantity (kit-quantity-semantics plan, phase 2); the new pack must be a pack of
+//     the same medicine, active or withdrawn (withdrawn-medicine-in-kit plan, phase 2); the
 //     id in the path is digits only.
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
@@ -129,28 +130,32 @@ describe("POST /api/kit: packageId", () => {
 
 describe("POST /api/kit: quantity", () => {
   const rejected: Case[] = [
-    ["negative", (d) => ({ packageId: d.unsized.packageId, quantity: -1 })],
-    ["fractional", (d) => ({ packageId: d.unsized.packageId, quantity: 1.5 })],
-    ["a string", (d) => ({ packageId: d.unsized.packageId, quantity: "5" })],
-    ["a boolean", (d) => ({ packageId: d.unsized.packageId, quantity: true })],
-    ["above 100000 on a pack without a size", (d) => ({ packageId: d.unsized.packageId, quantity: 100_001 })],
-    ["above the pack size", (d) => ({ packageId: d.sized.packageId, quantity: d.sized.size + 1 })],
+    ["negative", (d) => ({ packageId: d.sized.packageId, quantity: -1 })],
+    ["zero (an empty pack is not added)", (d) => ({ packageId: d.sized.packageId, quantity: 0 })],
+    ["fractional", (d) => ({ packageId: d.sized.packageId, quantity: 1.5 })],
+    ["a string", (d) => ({ packageId: d.sized.packageId, quantity: "5" })],
+    ["a boolean", (d) => ({ packageId: d.sized.packageId, quantity: true })],
+    ["above 100000, also on a pack with a size", (d) => ({ packageId: d.sized.packageId, quantity: 100_001 })],
   ];
 
   it.each(rejected)("%s gets 400", async (_name, body) => {
     await expectRejected(400, () => sendJson(KIT, body(data), jar));
   });
 
-  it("zero is stored", async () => {
-    await expectStored({ packageId: data.sized.packageId, quantity: 0 });
+  it("one is stored", async () => {
+    await expectStored({ packageId: data.sized.packageId, quantity: 1 });
   });
 
   it("exactly the pack size is stored", async () => {
     await expectStored({ packageId: data.sized.packageId, quantity: data.sized.size });
   });
 
-  it("exactly 100000 is stored on a pack without a size", async () => {
-    await expectStored({ packageId: data.unsized.packageId, quantity: 100_000 });
+  it("one above the pack size is stored (the screen only warns)", async () => {
+    await expectStored({ packageId: data.sized.packageId, quantity: data.sized.size + 1 });
+  });
+
+  it("exactly 100000 is stored, also on a pack with a size", async () => {
+    await expectStored({ packageId: data.sized.packageId, quantity: 100_000 });
   });
 });
 
@@ -277,9 +282,10 @@ describe("POST /api/kit/import: items", () => {
   const rejected: Case[] = [
     ["packageId a string", (d) => ({ packageId: String(d.sized.packageId) })],
     ["packageId zero", () => ({ packageId: 0 })],
-    ["quantity negative", (d) => ({ packageId: d.unsized.packageId, quantity: -1 })],
-    ["quantity a string", (d) => ({ packageId: d.unsized.packageId, quantity: "5" })],
-    ["quantity above 100000 on a pack without a size", (d) => ({ packageId: d.unsized.packageId, quantity: 100_001 })],
+    ["quantity negative", (d) => ({ packageId: d.sized.packageId, quantity: -1 })],
+    ["quantity zero (an empty pack is not added)", (d) => ({ packageId: d.sized.packageId, quantity: 0 })],
+    ["quantity a string", (d) => ({ packageId: d.sized.packageId, quantity: "5" })],
+    ["quantity above 100000", (d) => ({ packageId: d.sized.packageId, quantity: 100_001 })],
     ["expiry month 13", (d) => ({ packageId: d.sized.packageId, expiry: { month: 13, year: 2030 } })],
     ["expiry year 1999", (d) => ({ packageId: d.sized.packageId, expiry: { month: 6, year: 1999 } })],
     [
@@ -294,13 +300,11 @@ describe("POST /api/kit/import: items", () => {
     );
   });
 
-  const rejectedAfterLookup: Case[] = [
-    ["a pack not in the registry", () => ({ packageId: UNKNOWN_ID })],
-    ["a quantity above the pack size", (d) => ({ packageId: d.sized.packageId, quantity: d.sized.size + 1 })],
-  ];
-
-  it.each(rejectedAfterLookup)("%s gets 400 naming the item", async (_name, item) => {
-    await expectItemRejected([{ packageId: data.sized.packageId }, item(data)], 1);
+  it("a quantity above the pack size is stored (the screen only warns)", async () => {
+    await expectImported([
+      { packageId: data.sized.packageId },
+      { packageId: data.sized.packageId, quantity: data.sized.size + 1 },
+    ]);
   });
 
   it("a pack not in the registry gets 400 Package not found with its index", async () => {
@@ -320,17 +324,14 @@ describe("POST /api/kit/import: items", () => {
 
   it(`${PAGE_SIZE - 1} good items and a bad last one store nothing (all or none)`, async () => {
     const good = itemsOf(PAGE_SIZE - 1, { packageId: data.sized.packageId, quantity: 1 });
-    await expectItemRejected(
-      [...good, { packageId: data.sized.packageId, quantity: data.sized.size + 1 }],
-      PAGE_SIZE - 1,
-    );
+    await expectItemRejected([...good, { packageId: UNKNOWN_ID }], PAGE_SIZE - 1);
   });
 
   it("items on every boundary are stored together", async () => {
     await expectImported([
-      { packageId: data.sized.packageId, quantity: 0 },
+      { packageId: data.sized.packageId, quantity: 1 },
       { packageId: data.sized.packageId, quantity: data.sized.size },
-      { packageId: data.unsized.packageId, quantity: 100_000 },
+      { packageId: data.sized.packageId, quantity: 100_000 },
       { packageId: data.sized.packageId, expiry: { month: 1, year: 2000 } },
       { packageId: data.sized.packageId, expiry: { month: 12, year: 2100 } },
       { packageId: data.sized.packageId, quantity: null, expiry: null },
@@ -465,13 +466,8 @@ describe("PATCH /api/kit/[id]: quantity", () => {
     await expectPatchRejected(400, id, { quantity });
   });
 
-  it("above the pack size gets 400", async () => {
+  it("above 100000 gets 400, also on a pack with a size", async () => {
     const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
-    await expectPatchRejected(400, id, { quantity: data.sized.size + 1 });
-  });
-
-  it("above 100000 on a pack without a size gets 400", async () => {
-    const id = await addRow({ packageId: data.unsized.packageId, quantity: 1 });
     await expectPatchRejected(400, id, { quantity: 100_001 });
   });
 
@@ -487,8 +483,14 @@ describe("PATCH /api/kit/[id]: quantity", () => {
     expect((await rowOf(id)).quantity).toBe(data.sized.size);
   });
 
-  it("exactly 100000 is stored on a pack without a size", async () => {
-    const id = await addRow({ packageId: data.unsized.packageId, quantity: 1 });
+  it("one above the pack size is stored (the screen only warns)", async () => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
+    expect((await expectPatched(id, { quantity: data.sized.size + 1 })).quantity).toBe(data.sized.size + 1);
+    expect((await rowOf(id)).quantity).toBe(data.sized.size + 1);
+  });
+
+  it("exactly 100000 is stored, also on a pack with a size", async () => {
+    const id = await addRow({ packageId: data.sized.packageId, quantity: 1 });
     expect((await expectPatched(id, { quantity: 100_000 })).quantity).toBe(100_000);
     expect((await rowOf(id)).quantity).toBe(100_000);
   });
@@ -599,25 +601,21 @@ describe("PATCH /api/kit/[id]: change of the pack", () => {
     expect((await rowOf(id)).packageId).toBe(to.packageId);
   });
 
-  it("with a quantity above the new pack's size gets 400, on the new size it gets 200", async () => {
+  it("with a quantity above the new pack's size gets 200 and stores it (the screen only warns)", async () => {
     const { small, large } = data.siblings;
     const id = await addRow({ packageId: large.packageId });
-    await expectPatchRejected(400, id, { packageId: small.packageId, quantity: small.size + 1 });
-    await expectPatched(id, { packageId: small.packageId, quantity: small.size });
-    expect(await rowOf(id)).toMatchObject({ packageId: small.packageId, quantity: small.size });
+    await expectPatched(id, { packageId: small.packageId, quantity: small.size + 1 });
+    expect(await rowOf(id)).toMatchObject({ packageId: small.packageId, quantity: small.size + 1 });
   });
 
-  it("without a quantity checks the stored one against the new pack (above gets 400, on the size gets 200)", async () => {
+  it("without a quantity keeps a stored one above the new pack's size", async () => {
     const { small, large } = data.siblings;
-    const above = await addRow({ packageId: large.packageId, quantity: small.size + 1 });
-    await expectPatchRejected(400, above, { packageId: small.packageId });
-
-    const on = await addRow({ packageId: large.packageId, quantity: small.size });
-    await expectPatched(on, { packageId: small.packageId });
-    expect((await rowOf(on)).packageId).toBe(small.packageId);
+    const id = await addRow({ packageId: large.packageId, quantity: small.size + 1 });
+    await expectPatched(id, { packageId: small.packageId });
+    expect(await rowOf(id)).toMatchObject({ packageId: small.packageId, quantity: small.size + 1 });
   });
 
-  it("with quantity null clears a stored quantity that would not fit the new pack", async () => {
+  it("with quantity null clears the stored quantity on a pack change", async () => {
     const { small, large } = data.siblings;
     const id = await addRow({ packageId: large.packageId, quantity: small.size + 1 });
     await expectPatched(id, { packageId: small.packageId, quantity: null });
@@ -633,8 +631,7 @@ describe("PATCH /api/kit/[id]: change of the pack", () => {
 });
 
 describe("PATCH /api/kit/[id]: an item on a withdrawn pack", () => {
-  // The item is added through the app (a withdrawn pack is accepted). The cap is the size of the pack the item is on,
-  // withdrawn or not: both sides of it are tested, so skipping the cap for a withdrawn pack is caught too.
+  // The item is added through the app (a withdrawn pack is accepted). Its pack size, withdrawn or not, is no cap.
   let id: number;
   beforeEach(async () => {
     id = await addRow({ packageId: data.withdrawnSized.packageId, quantity: 1 });
@@ -646,8 +643,10 @@ describe("PATCH /api/kit/[id]: an item on a withdrawn pack", () => {
     expect((await rowOf(id)).quantity).toBe(size);
   });
 
-  it("a quantity above the pack size gets 400", async () => {
-    await expectPatchRejected(400, id, { quantity: data.withdrawnSized.size + 1 });
+  it("a quantity above the pack size gets 200", async () => {
+    const above = data.withdrawnSized.size + 1;
+    expect((await expectPatched(id, { quantity: above })).quantity).toBe(above);
+    expect((await rowOf(id)).quantity).toBe(above);
   });
 
   it("the same packageId gets 200 (it is no change)", async () => {

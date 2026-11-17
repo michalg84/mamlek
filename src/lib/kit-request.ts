@@ -5,11 +5,17 @@ import { IMPORT_PAGE_SIZE } from "@/lib/kit-import";
 // Request schemas of the kit write routes. `POST /api/kit` and `POST /api/kit/import` check an item with the same
 // schema, so their boundaries cannot drift apart.
 
-/** One kit item: a pack (active or withdrawn), an optional quantity and an optional month of expiry. */
+/** A stored quantity: 0 is an empty pack, kept until the user removes it. */
+const storedQuantity = z.number().int().min(0).max(MAX_QUANTITY).nullable().optional();
+
+/**
+ * One kit item: a pack (active or withdrawn), an optional quantity and an optional month of expiry. An empty pack is
+ * not added, so a new item starts at 1 (0 only comes from using the medicine up, through PATCH).
+ */
 export const kitItemRequest = z
   .object({
     packageId: z.number().int().positive(),
-    quantity: z.number().int().min(0).max(MAX_QUANTITY).nullable().optional(),
+    quantity: z.number().int().min(1).max(MAX_QUANTITY).nullable().optional(),
     expiry: z
       .object({ month: z.number().int().min(1).max(12), year: z.number().int().min(2000).max(2100) })
       .strict()
@@ -19,13 +25,14 @@ export const kitItemRequest = z
   .strict();
 
 /**
- * Body of `PATCH /api/kit/[id]`: a partial change with the field rules of `kitItemRequest`. A key that is absent leaves
- * the stored value alone and `null` clears it (unlike POST, where absent means null). `packageId` cannot be cleared.
+ * Body of `PATCH /api/kit/[id]`: a partial change with the field rules of `kitItemRequest`, except that the quantity may
+ * be 0 (the pack was used up). A key that is absent leaves the stored value alone and `null` clears it (unlike POST,
+ * where absent means null). `packageId` cannot be cleared.
  */
 export const kitItemUpdateRequest = z
   .object({
     packageId: kitItemRequest.shape.packageId.optional(),
-    quantity: kitItemRequest.shape.quantity,
+    quantity: storedQuantity,
     expiry: kitItemRequest.shape.expiry,
   })
   .strict()

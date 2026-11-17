@@ -29,7 +29,7 @@ export type RowIssue =
   | "no-package"
   | "invalid-expiry"
   | "invalid-quantity"
-  | "quantity-over-pack"
+  | "empty-pack"
   | "already-have"
   | "repeated-in-import";
 
@@ -61,8 +61,6 @@ export interface RowIssueContext {
   kitKeys: ReadonlySet<string>;
   /** Variant keys of the not-removed rows before this one in the file (`earlierVariantKeys`). */
   earlierKeys: ReadonlySet<string>;
-  /** Upper bound of the quantity for the chosen pack; null when there is no pack or it has no cap. */
-  packMax: number | null;
 }
 
 /** One item of the `POST /api/kit/import` body. */
@@ -143,6 +141,14 @@ export function matchRow(index: RegistrySearchIndex, request: RowMatchRequest): 
  */
 export function variantKey(name: string, strength: string | null, form: string | null): string {
   return `${name.trim().toLowerCase()}|${(strength ?? "").trim().toLowerCase()}|${(form ?? "").trim().toLowerCase()}`;
+}
+
+/**
+ * Variant keys of the medicines the kit holds ("already have" in the import), each once. An empty pack (quantity 0)
+ * does not count as owned, as in the medicine check on the search screen; an unknown quantity does.
+ */
+export function ownedVariantKeys(items: KitItem[]): string[] {
+  return [...new Set(items.filter((item) => item.quantity !== 0).map(kitItemVariantKey))];
 }
 
 /**
@@ -227,15 +233,12 @@ export function rowIssues(row: ImportRow, context: RowIssueContext): RowIssue[] 
   if (row.expiry.kind === "invalid") {
     issues.push("invalid-expiry");
   }
+  // A quantity above the pack size is not a reason: the row only warns about it (KitImportRow).
   if (row.quantity.kind === "invalid") {
     issues.push("invalid-quantity");
-  } else if (
-    row.quantity.kind === "ok" &&
-    row.packageId !== null &&
-    context.packMax !== null &&
-    row.quantity.value > context.packMax
-  ) {
-    issues.push("quantity-over-pack");
+  } else if (row.quantity.kind === "ok" && row.quantity.value === 0) {
+    // An empty pack is not added to the kit: the row is skipped or its quantity corrected.
+    issues.push("empty-pack");
   }
   if (key !== null) {
     const accepted = row.duplicateDecision ?? [];

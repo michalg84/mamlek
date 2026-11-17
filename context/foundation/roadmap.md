@@ -39,26 +39,26 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status   |
-| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | -------- |
-| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done     |
-| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done     |
-| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
-| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done     |
-| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done     |
-| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done     |
-| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | proposed |
-| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done     |
-| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | proposed |
-| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done     |
-| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done     |
-| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done     |
-| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | proposed |
-| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done     |
-| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done     |
-| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | proposed |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed |
-| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed |
+| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status      |
+| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | ----------- |
+| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done        |
+| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done        |
+| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done        |
+| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done        |
+| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done        |
+| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done        |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | proposed    |
+| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done        |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | proposed    |
+| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done        |
+| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done        |
+| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done        |
+| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | in-progress |
+| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done        |
+| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done        |
+| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | proposed    |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed    |
+| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed    |
 
 ## Streams
 
@@ -211,7 +211,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Unknowns:**
   - Ile dni przed końcem ważności aplikacja ostrzega — patrz Open Roadmap Question 3. — Owner: autor. Block: no.
   - Co mówi werdykt „Masz ten lek”, gdy wszystkie pasujące opakowania są przeterminowane — dziś (S-03) jest zielony, a „przeterminowany” widać tylko w wierszu pozycji i nie słyszy go czytnik ekranu; przypadek mieszany (część opakowań po terminie) też do rozstrzygnięcia. Źródło: impl-review `medicine-check`, F4. — Owner: autor. Block: no.
-  - Co mówi werdykt „Masz ten lek”, gdy pasujące opakowanie jest puste (ilość 0) — dziś werdykt liczy pozycje, nie tabletki, więc zużyte opakowanie daje zielone „Masz ten lek · 1 opakowanie”; jedyny sygnał to „· puste” w wierszu, którego nie ogłasza czytnik ekranu. Rozstrzygnąć razem z przypadkiem „wszystkie przeterminowane” jedną regułą (ewentualnie w S-12, zob. `context/archive/2026-11-04-kit-browse-edit/plan.md`). Źródło: audyt 2026-11-16, F10. — Owner: autor. Block: no.
+  - Co mówi werdykt „Masz ten lek”, gdy pasujące opakowanie jest puste (ilość 0) — rozstrzygnięte w S-12: puste opakowanie nie liczy się do werdyktu (ilość nieznana się liczy), więc same puste pasujące opakowania dają „Nie masz tego leku”; pod wynikiem jest sekcja „Puste opakowania”, a czytnik ekranu ogłasza ich liczbę. Do S-08 zostaje przypadek „wszystkie pasujące opakowania przeterminowane” — reguła S-12 nie przesądza, czy przeterminowane traktować tak samo. Źródło: audyt 2026-11-16, F10. — Owner: autor. Block: no.
 - **Risk:** Wymaganie „miłe do posiadania” i drugorzędne kryterium sukcesu — stoi na końcu i przy braku czasu jako pierwsze przechodzi do kolejnego kamienia milowego; korzysta tylko z danych, które S-02–S-05 już zapisują.
 - **Status:** proposed
 
@@ -263,10 +263,10 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Parallel with:** S-06, S-08
 - **Blockers:** —
 - **Unknowns:**
-  - Co znaczy `quantity` w bazie: liczba jednostek opakowania (dziś) czy sztuki z `capacity_unit`; czy dodać kolumnę z jednostką ilości, czy przyjąć regułę „dla opakowania z `capacity` ilość to zawsze sztuki”. Wybór dotyka migracji, `POST /api/kit`, `POST /api/kit/import`, `packQuantity`, formularza ręcznego, importu i widoku apteczki. — Owner: autor. Block: yes.
-  - Czy ilość ponad pojemność opakowania jest dozwolona z ostrzeżeniem (pomysł autora: blister 12 → 14). — Owner: autor. Block: no.
+  - Co znaczy `quantity` w bazie — rozstrzygnięte w S-12 regułą bez nowej kolumny: gdy jedyny wpis opakowania ma `capacity_unit` liczoną w sztukach (tabl., kaps., plastry…), ilość to sztuki, a wielkość opakowania to `count × capacity` („1 butelka 90 tabl.” → 90); w pozostałych opakowaniach ilość to jednostki opakowania. Zmienił się tylko komentarz kolumny (`20261117120200_kit_quantity_comment.sql`); dane produkcyjne sprawdzone przed zmianą (bramka 1.7 w `context/changes/kit-quantity-semantics/`). — Owner: autor. Block: no.
+  - Czy ilość ponad pojemność opakowania jest dozwolona z ostrzeżeniem — rozstrzygnięte w S-12: tak, zapis przechodzi z ostrzeżeniem „Więcej niż w opakowaniu (…)”; API ogranicza ilość tylko do 100000. Przy dodawaniu (formularz, import) ilość to co najmniej 1; 0 daje tylko zmiana ilości pozycji w apteczce, po której aplikacja pyta o usunięcie. — Owner: autor. Block: no.
 - **Risk:** Zgłoszone w ręcznym teście S-04 (2026-11-03). `packQuantity` (`src/lib/kit-format.ts`) ustawia górną granicę jako `count` jedynego wpisu opakowania, a `capacity` ignoruje: Oxbryta („1 butelka po 90 tabl.”) przyjmuje najwyżej 1. Opakowania bez `count` (np. Apap „12 tabl.”) nie mają limitu, więc tam ilość jest w tabletkach — ta sama kolumna znaczy więc co innego zależnie od leku. Prompt dla czatu w imporcie świadomie zostaje przy „ile sztuk zostało”, więc czat poda 90 tabletek zamiast 1 butelki, a ekran importu zablokuje wiersz, dopóki użytkownik nie poprawi ilości. Na S-04 złagodzono to polem ilości zawsze edytowalnym.
-- **Status:** proposed
+- **Status:** in-progress
 
 ### S-13: Lek wycofany z rejestru w podpowiedziach i w apteczce
 

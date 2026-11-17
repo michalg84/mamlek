@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkVerdict, parseMedicineCheck } from "@/lib/medicine-check-verdict";
+import { checkVerdict, emptyPacks, parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 let nextId = 1;
@@ -136,6 +136,46 @@ describe("checkVerdict", () => {
       expect(verdict.caution).toBe(same > 0);
     },
   );
+});
+
+describe("empty packs", () => {
+  it("does not count a pack with quantity 0: only empty packs give „nie masz”", () => {
+    const empty = [item("variant", { quantity: 0 }), item("substance", { quantity: 0 })];
+    const result = response(empty);
+    const verdict = checkVerdict(result);
+
+    expect(verdict.kind).toBe("none");
+    expect(verdict.title).toBe("Nie masz tego leku");
+    expect(verdict.variants).toEqual([]);
+    expect(verdict.same).toEqual([]);
+    expect(emptyPacks(result)).toEqual(empty);
+  });
+
+  it("counts only the packs with something left, or an unknown quantity", () => {
+    const left = item("variant", { quantity: 3 });
+    const unknown = item("variant", { quantity: null });
+    const empty = item("variant", { quantity: 0 });
+    const emptySame = item("substance", { quantity: 0 });
+    const result = response([left, empty, unknown, emptySame]);
+    const verdict = checkVerdict(result);
+
+    expect(verdict.kind).toBe("variant");
+    expect(verdict.title).toBe("Masz ten lek · 2 opakowania");
+    expect(verdict.variants).toEqual([left, unknown]);
+    expect(verdict.caution).toBe(false);
+    expect(emptyPacks(result)).toEqual([empty, emptySame]);
+  });
+
+  it("keeps the caution for a same-substance pack with something left next to an empty one of the medicine", () => {
+    const verdict = checkVerdict(response([item("variant", { quantity: 0 }), item("substance", { quantity: 1 })]));
+
+    expect(verdict.kind).toBe("substance");
+    expect(verdict.caution).toBe(true);
+  });
+
+  it("lists no empty packs when every pack has something left or an unknown quantity", () => {
+    expect(emptyPacks(response([item("variant", { quantity: 1 }), item("substance")]))).toEqual([]);
+  });
 });
 
 describe("parseMedicineCheck", () => {

@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
-import { expiryToDate, packQuantity } from "@/lib/kit-format";
+import { expiryToDate } from "@/lib/kit-format";
 import { kitItemIdParam, kitItemUpdateRequest } from "@/lib/kit-request";
 import { deleteKitItem, getKitItem, getVariantPackages, updateKitItem, type KitItemChanges } from "@/lib/services/kit";
 import type { UpdateKitItemResponse } from "@/types";
@@ -55,26 +55,14 @@ export const PATCH: APIRoute = async (context) => {
       return json({ error: "Not found" }, 404);
     }
 
-    // `units` of the stored pack are read without a `removed_at` filter (getKitItem), so the quantity of an item on a
-    // withdrawn pack can still be corrected. A pack change is checked against the new pack instead.
-    let units = item.units;
-    const changesPack = packageId !== undefined && packageId !== item.packageId;
-    if (changesPack) {
+    // A quantity above the pack size is accepted (the screen only warns), so neither the stored nor a new pack caps it.
+    if (packageId !== undefined && packageId !== item.packageId) {
       // The new pack must be a pack of the same medicine (variant). The variant's packs include withdrawn ones, so
       // membership does not prove the pack is active: a withdrawn medicine can still be kept, its pack included.
       const siblings = await getVariantPackages(supabase, item.productId);
-      const target = siblings.find((pack) => pack.packageId === packageId);
-      if (!target) {
+      if (!siblings.some((pack) => pack.packageId === packageId)) {
         return json({ error: "Package is not a pack of this medicine" }, 400);
       }
-      units = target.units;
-    }
-
-    // Without a new quantity, a pack change must still fit the stored one.
-    const checked = quantity !== undefined ? quantity : changesPack ? item.quantity : null;
-    const { max } = packQuantity(units);
-    if (checked !== null && max !== null && checked > max) {
-      return json({ error: `Quantity exceeds the pack size (${max})` }, 400);
     }
 
     // An absent key is left out of the update (unchanged); null clears the column.

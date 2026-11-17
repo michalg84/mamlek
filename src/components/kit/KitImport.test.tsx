@@ -28,14 +28,14 @@ const NO_SPA_KEY = "no-spa|40 mg|tabletki";
 function pack(
   packageId: number,
   productId: number,
-  { count = "30", withdrawn = false }: { count?: string; withdrawn?: boolean } = {},
+  { capacity = "30", withdrawn = false }: { capacity?: string; withdrawn?: boolean } = {},
 ): RegistryVariantPackage {
   return {
     packageId,
     productId,
     gtin: null,
     availabilityCategory: null,
-    units: [{ count, kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity, capacity_unit: "tabl.", info: null }],
     holder: null,
     withdrawn,
   };
@@ -110,7 +110,7 @@ function pickSuggestion(line: number, name: RegExp) {
 
 /** Waits until the row's pack is loaded (and, being the only one, chosen). */
 async function packChosen(line: number) {
-  await within(row(line)).findByText("Opakowanie: 30 tabletki");
+  await within(row(line)).findByText("Opakowanie: 30 tabl.");
 }
 
 function saveButton() {
@@ -229,7 +229,7 @@ describe("KitImport", () => {
       packages: {
         [ZODAC_WITHDRAWN_ID]: [
           pack(7001, ZODAC_WITHDRAWN_ID),
-          pack(7002, ZODAC_WITHDRAWN_ID, { count: "20", withdrawn: true }),
+          pack(7002, ZODAC_WITHDRAWN_ID, { capacity: "20", withdrawn: true }),
         ],
       },
     });
@@ -238,8 +238,8 @@ describe("KitImport", () => {
 
     const radios = await within(row(2)).findAllByRole("radio");
     expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
-    expect(within(row(2)).getByRole("radio", { name: "30 tabletki" })).toBe(radios[0]);
-    expect(within(row(2)).getByRole("radio", { name: /^20 tabletki\s*· wycofane$/ })).toBe(radios[1]);
+    expect(within(row(2)).getByRole("radio", { name: "30 tabl." })).toBe(radios[0]);
+    expect(within(row(2)).getByRole("radio", { name: /^20 tabl\.\s*· wycofane$/ })).toBe(radios[1]);
     expect(text(2)).toContain(`Lek: Zodac · 10 mg · tabletki${WITHDRAWN_NOTE}`);
     expect(text(2)).toContain("wybierz opakowanie");
     expect(saveBlocked()).toBe(true);
@@ -262,7 +262,7 @@ describe("KitImport", () => {
     fireEvent.click(within(row(2)).getByRole("button", { name: new RegExp(WITHDRAWN_NOTE) }));
 
     await packChosen(2);
-    expect(text(2)).toContain("Opakowanie: 30 tabletki · wycofane");
+    expect(text(2)).toContain("Opakowanie: 30 tabl. · wycofane");
     expect(text(2)).toContain(READY);
   });
 
@@ -375,6 +375,49 @@ describe("KitImport", () => {
 
     await screen.findByText("Wszystkie strony importu są już obsłużone.");
     expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 12, expiry: null }] }]);
+  });
+
+  it("saves a quantity above the pack size, with a warning instead of a blocking reason", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;31"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
+    const warning = within(row(2)).getByText("Więcej niż w opakowaniu (30 tabl.)");
+    expect(quantity.getAttribute("aria-describedby")).toBe(warning.closest("p")?.id);
+    expect(within(row(2)).getByText("Gotowy do zapisu")).toBeTruthy();
+    expect(saveBlocked()).toBe(false);
+
+    // At the pack size the warning goes and the size is shown as a hint.
+    fireEvent.change(quantity, { target: { value: "30" } });
+    expect(within(row(2)).queryByText(/Więcej niż w opakowaniu/)).toBeNull();
+    expect(within(row(2)).getByText("W opakowaniu: 30 tabl.")).toBeTruthy();
+    fireEvent.change(quantity, { target: { value: "31" } });
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 31, expiry: null }] }]);
+  });
+
+  it("blocks an empty pack (quantity 0) until the quantity is corrected, and never sends it", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;0"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
+    expect(text(2)).toContain("Wymaga decyzji: puste opakowanie — pomiń wiersz");
+    const error = within(row(2)).getByText(
+      "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu, popraw ilość albo wyczyść pole.",
+    );
+    expect(quantity.getAttribute("aria-invalid")).toBe("true");
+    expect(quantity.getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+    expect(saveBlocked()).toBe(true);
+    expect(routed.importRequests()).toEqual([]);
+
+    fireEvent.change(quantity, { target: { value: "1" } });
+    expect(text(2)).toContain(READY);
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 1, expiry: null }] }]);
   });
 
   it("keeps the edited quantity when a removed row is restored", async () => {

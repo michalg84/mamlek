@@ -93,14 +93,36 @@ describe("MedicineCheckResult", () => {
     expect(screen.queryByText("Ani leku z tą samą substancją czynną", VISIBLE)).toBeNull();
   });
 
-  it("marks a pack with quantity 0 as „puste” and leaves a pack with some left unmarked", async () => {
+  it("does not count an empty pack, lists it under „Puste opakowania” and announces it", async () => {
     stubFetch(() => reply(response([item("variant", { quantity: 0 }), item("variant", { quantity: 3 })])));
     render(<MedicineCheckResult productId={1} />);
 
-    expect(await screen.findByText("Masz ten lek · 2 opakowania", VISIBLE)).toBeTruthy();
-    expect(screen.getByText("Ilość: 0", VISIBLE).textContent).toContain("puste");
+    expect(await screen.findByText("Masz ten lek · 1 opakowanie", VISIBLE)).toBeTruthy();
+    const empty = screen.getByRole("region", { name: "Puste opakowania" });
+    expect(within(empty).getByText("Ilość: 0").textContent).toContain("puste");
+    expect(within(empty).queryByText("Ilość: 3")).toBeNull();
     expect(screen.getByText("Ilość: 3", VISIBLE).textContent).not.toContain("puste");
-    expect(screen.getAllByText("· puste", VISIBLE)).toHaveLength(1);
+    expect(screen.getByRole("status").textContent).toContain("Puste opakowania w apteczce: 1");
+  });
+
+  it("says „Nie masz tego leku” when every matching pack is empty, and still lists them", async () => {
+    stubFetch(() => reply(response([item("variant", { quantity: 0 }), item("substance", { quantity: 0 })])));
+    render(<MedicineCheckResult productId={1} />);
+
+    expect(await screen.findByText(NOT_OWNED, VISIBLE)).toBeTruthy();
+    expect(screen.queryByText(CAUTION, VISIBLE)).toBeNull();
+    const empty = screen.getByRole("region", { name: "Puste opakowania" });
+    expect(within(empty).getAllByText(/Ilość: 0/)).toHaveLength(2);
+    expect(screen.getByRole("status").textContent).toContain("Puste opakowania w apteczce: 2");
+  });
+
+  it("shows no „Puste opakowania” section when no matching pack is empty", async () => {
+    stubFetch(() => reply(response([item("variant", { quantity: 3 }), item("variant")])));
+    render(<MedicineCheckResult productId={1} />);
+
+    expect(await screen.findByText("Masz ten lek · 2 opakowania", VISIBLE)).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Puste opakowania" })).toBeNull();
+    expect(screen.getByRole("status").textContent).not.toContain("Puste");
   });
 
   it.each([

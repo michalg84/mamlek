@@ -1,8 +1,8 @@
 // Tests of who can reach the household kit (public.kit_items) and what the database itself refuses, on a real local
 // database, on synthetic accounts and packages that are rolled back. The expected values come from the kit_items
 // migration (owner-only policies per operation, no grants for anon, column constraints), the test plan risks #4 and #6
-// and the accepted gap F2 of add-medicine-to-kit (the package-size and date limits live only in the API), not from
-// running the code.
+// the accepted gap F2 of add-medicine-to-kit (the date precision lives only in the API) and the rule of
+// kit-quantity-semantics (the package size is no limit, only a warning on the screen), not from running the code.
 import type pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { World, actAs, actAsAnon, actAsOwner, connectLocal, expectSqlError } from "./medicine-check-fixtures";
@@ -273,14 +273,15 @@ describe("kit_items: a withdrawn package", () => {
   });
 });
 
-// The database does not enforce these limits: they live only in the API (F2 of add-medicine-to-kit, accepted and
-// parked in the roadmap). The owner can bypass them through the data API on their own rows. These cases pin the gap:
-// if one starts to fail, the gap was closed, and the case should move up to the constraints above.
-describe("kit_items accepted gaps", () => {
+// What the database does not refuse. A quantity above the package size is the rule (kit-quantity-semantics: the
+// screen only warns, the API caps only at MAX_QUANTITY). Day precision is a gap: the API takes only month (F2 of
+// add-medicine-to-kit, accepted and parked in the roadmap) and the owner can bypass it through the data API on their own
+// rows; if that case starts to fail, the gap was closed, and it should move up to the constraints above.
+describe("kit_items accepted values and gaps", () => {
   const insertOwn =
     "insert into kit_items (package_id, quantity, expires_on, expiry_precision) values ($1, $2, $3, $4)";
 
-  it("known gap (Parked, F2): a quantity above the package size is accepted by the database", async () => {
+  it("rule (kit-quantity-semantics): a quantity above the package size is accepted by the database", async () => {
     await actAs(client, userA);
 
     const result = await client.query(insertOwn, [sized.packageId, 999, null, null]);

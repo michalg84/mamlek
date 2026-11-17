@@ -8,6 +8,7 @@ import {
   createImportRow,
   earlierVariantKeys,
   kitItemVariantKey,
+  ownedVariantKeys,
   matchRow,
   pageCount,
   pageOf,
@@ -34,8 +35,8 @@ import type { KitItem, RegistryVariant, RegistryVariantTuple } from "@/types";
 //   - variant key: lower(btrim(name)) | lower(btrim(strength)) | lower(btrim(form)), null as ""; spaces at the start
 //     and end of a part are trimmed (a double space inside is not); the strength of a kit item is trimmed first, then,
 //     when longer than 80 characters, cut to its first 79 plus "…", as the suggestion list does
-//   - blocking reasons (fixed order): no-variant, no-package, invalid-expiry, invalid-quantity, quantity-over-pack,
-//     already-have, repeated-in-import; a removed row has none; the first not-removed row of a variant is not a
+//   - blocking reasons (fixed order): no-variant, no-package, invalid-expiry, invalid-quantity or empty-pack
+//     (quantity 0: an empty pack is not added, kit-quantity-semantics plan, phase 3), already-have, repeated-in-import; a removed row has none; the first not-removed row of a variant is not a
 //     repeat, the second and later ones are; "add" lifts already-have and repeated-in-import
 //   - pages of 30 in file order; a removed row keeps its place
 
@@ -385,6 +386,18 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
   };
 }
 
+describe("ownedVariantKeys", () => {
+  it("gives each owned variant once", () => {
+    expect(ownedVariantKeys([kitItem(), kitItem({ quantity: 3 }), kitItem({ quantity: null })])).toEqual([
+      "ibuprom|400 mg|tabletki powlekane",
+    ]);
+  });
+
+  it("leaves out an empty pack: it does not count as owned, as on the search screen", () => {
+    expect(ownedVariantKeys([kitItem({ quantity: 0 })])).toEqual([]);
+  });
+});
+
 describe("kitItemVariantKey", () => {
   it("is the key of the variant", () => {
     expect(kitItemVariantKey(kitItem())).toBe("ibuprom|400 mg|tabletki powlekane");
@@ -462,7 +475,7 @@ function readyRow(overrides: Partial<ImportRow> = {}): ImportRow {
 }
 
 function context(overrides: Partial<RowIssueContext> = {}): RowIssueContext {
-  return { kitKeys: new Set(), earlierKeys: new Set(), packMax: null, ...overrides };
+  return { kitKeys: new Set(), earlierKeys: new Set(), ...overrides };
 }
 
 const ibupromKey = "ibuprom|400 mg|tabletki powlekane";
@@ -525,17 +538,19 @@ describe("rowIssues", () => {
     expect(rowIssues({ ...invalid, quantity: { kind: "ok", value: 3 } }, context())).toEqual([]);
   });
 
-  it("blocks a quantity above the pack size, on both sides of the bound", () => {
-    const at = readyRow({ quantity: { kind: "ok", value: 20 } });
-    const above = readyRow({ quantity: { kind: "ok", value: 21 } });
+  it("blocks an empty pack (quantity 0) until it is corrected, cleared or the row removed", () => {
+    const empty = readyRow({ quantity: { kind: "ok", value: 0 } });
 
-    expect(rowIssues(at, context({ packMax: 20 }))).toEqual([]);
-    expect(rowIssues(above, context({ packMax: 20 }))).toEqual(["quantity-over-pack"]);
+    expect(rowIssues(empty, context())).toEqual(["empty-pack"]);
+    expect(rowIssues({ ...empty, quantity: { kind: "ok", value: 1 } }, context())).toEqual([]);
+    expect(rowIssues({ ...empty, quantity: { kind: "empty" } }, context())).toEqual([]);
+    expect(rowIssues({ ...empty, removed: true }, context())).toEqual([]);
   });
 
-  it("does not bound the quantity of a pack without a cap, nor an empty quantity", () => {
-    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 99999 } }), context({ packMax: null }))).toEqual([]);
-    expect(rowIssues(readyRow({ quantity: { kind: "empty" } }), context({ packMax: 20 }))).toEqual([]);
+  it("does not block a quantity above the pack size (the row only warns)", () => {
+    // The pack is not known to rowIssues at all: any valid quantity up to MAX_QUANTITY is ready.
+    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 21 } }), context())).toEqual([]);
+    expect(rowIssues(readyRow({ quantity: { kind: "ok", value: 99999 } }), context())).toEqual([]);
   });
 
   it("blocks a variant that is already in the kit, whatever the pack size", () => {

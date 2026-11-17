@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MAX_QUANTITY,
   expiryInput,
+  formatQuantity,
+  packQuantity,
   parseExpiryInput,
+  overPackSize,
+  EMPTY_PACK_ON_ADD,
   parseQuantityInput,
   todayIso,
   uniquePacks,
@@ -48,6 +52,87 @@ describe("uniquePacks", () => {
   });
 });
 
+function entry(count: string | null, kind: string | null, capacity: string | null, capacityUnit: string | null) {
+  return { count, kind, capacity, capacity_unit: capacityUnit, info: null };
+}
+
+describe("packQuantity", () => {
+  // Shapes as the registry writes them (count, kind, capacity, capacity_unit); expected values typed from the shape.
+  it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” → 90 tabl.", () => {
+    expect(packQuantity([entry("1", "butelka", "90", "tabl.")])).toEqual({ unit: "tabl.", max: 90 });
+  });
+
+  it("multiplies the count by the capacity: „2 blistry 10 tabl.” → 20 tabl.", () => {
+    expect(packQuantity([entry("2", "blistry", "10", "tabl.")])).toEqual({ unit: "tabl.", max: 20 });
+  });
+
+  it("takes the capacity alone without a count: „12 tabl.” → 12 tabl.", () => {
+    expect(packQuantity([entry(null, null, "12", "tabl.")])).toEqual({ unit: "tabl.", max: 12 });
+  });
+
+  it("counts capsules, pieces and patches the same way", () => {
+    expect(packQuantity([entry(null, null, "28", "kaps.")])).toEqual({ unit: "kaps.", max: 28 });
+    expect(packQuantity([entry("3", "sasz.", "5", "szt.")])).toEqual({ unit: "szt.", max: 15 });
+    expect(packQuantity([entry(null, null, "8", "plastrów")])).toEqual({ unit: "plastrów", max: 8 });
+    expect(packQuantity([entry("1", "tuba", "30", "Systemów")])).toEqual({ unit: "Systemów", max: 30 });
+  });
+
+  it("matches the unit whatever its case and surrounding spaces, and shows it trimmed as the registry writes it", () => {
+    expect(packQuantity([entry("1", "butelka", "90", " TABL. ")])).toEqual({ unit: "TABL.", max: 90 });
+    expect(packQuantity([entry(null, null, " 12 ", "Tabletek")])).toEqual({ unit: "Tabletek", max: 12 });
+  });
+
+  it("keeps the old rule for doses: „1 inhalator 200 dawek” → 1 inhalator", () => {
+    expect(packQuantity([entry("1", "inhalator", "200", "dawek")])).toEqual({ unit: "inhalator", max: 1 });
+  });
+
+  it("keeps the old rule for a measure: „1 butelka 100 ml” → 1 butelka, „4 fiol. 5 ml” → 4 fiol.", () => {
+    expect(packQuantity([entry("1", "butelka", "100", "ml")])).toEqual({ unit: "butelka", max: 1 });
+    expect(packQuantity([entry("4", "fiol.", "5", "ml")])).toEqual({ unit: "fiol.", max: 4 });
+  });
+
+  it("keeps the old rule for a count without a capacity: „10 sasz.” → 10 sasz.", () => {
+    expect(packQuantity([entry("10", "sasz.", null, null)])).toEqual({ unit: "sasz.", max: 10 });
+  });
+
+  it("keeps the old rule for a fractional capacity: „2 blistry 0,5 tabl.” → 2 blistry, „0,5 tabl.” → none", () => {
+    expect(packQuantity([entry("2", "blistry", "0,5", "tabl.")])).toEqual({ unit: "blistry", max: 2 });
+    expect(packQuantity([entry(null, null, "0,5", "tabl.")])).toEqual({ unit: null, max: null });
+  });
+
+  it("keeps the old rule when the count is there but no positive integer", () => {
+    expect(packQuantity([entry("0", "butelka", "90", "tabl.")])).toEqual({ unit: null, max: null });
+    expect(packQuantity([entry("1,5", "butelka", "90", "tabl.")])).toEqual({ unit: null, max: null });
+  });
+
+  it("caps the product at MAX_QUANTITY: „1000 blistrów 1000 tabl.” → 100000 tabl.", () => {
+    expect(packQuantity([entry("1000", "blistrów", "1000", "tabl.")])).toEqual({ unit: "tabl.", max: 100000 });
+  });
+
+  it("gives no unit and no cap to a pack of several entries or of none", () => {
+    const syringeAndNeedle = [entry("1", "amp.-strzyk.", "1", "ml"), entry("1", "igła", null, null)];
+    expect(packQuantity(syringeAndNeedle)).toEqual({ unit: null, max: null });
+    expect(packQuantity([entry("1", "butelka", "90", "tabl."), entry("1", "miarka", null, null)])).toEqual({
+      unit: null,
+      max: null,
+    });
+    expect(packQuantity([])).toEqual({ unit: null, max: null });
+  });
+});
+
+describe("formatQuantity", () => {
+  it("shows the quantity with the cap and the unit of the pack", () => {
+    expect(formatQuantity(8, [entry(null, null, "12", "tabl.")])).toBe("8 z 12 tabl.");
+    expect(formatQuantity(60, [entry("1", "butelka", "90", "tabl.")])).toBe("60 z 90 tabl.");
+    expect(formatQuantity(3, [entry("4", "fiol.", "5", "ml")])).toBe("3 z 4 fiol.");
+  });
+
+  it("shows the bare number for a pack without a cap and „nieznane” for an unknown quantity", () => {
+    expect(formatQuantity(7, [entry(null, null, "100", "ml")])).toBe("7");
+    expect(formatQuantity(null, [entry(null, null, "12", "tabl.")])).toBe("nieznane");
+  });
+});
+
 describe("todayIso", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -81,33 +166,60 @@ describe("todayIso", () => {
 
 describe("parseQuantityInput", () => {
   it("reads empty or blank text as an unknown quantity", () => {
-    expect(parseQuantityInput("", 30)).toEqual({ value: null });
-    expect(parseQuantityInput("   ", 30)).toEqual({ value: null });
+    expect(parseQuantityInput("")).toEqual({ value: null });
+    expect(parseQuantityInput("   ")).toEqual({ value: null });
   });
 
-  it("accepts 0 and the pack size, and refuses one more than the pack size", () => {
-    expect(parseQuantityInput("0", 30)).toEqual({ value: 0 });
-    expect(parseQuantityInput(" 30 ", 30)).toEqual({ value: 30 });
-    expect(parseQuantityInput("31", 30)).toEqual({ error: "Ilość nie może być większa niż 30" });
-  });
-
-  it("caps a pack without a size at MAX_QUANTITY", () => {
-    expect(parseQuantityInput(String(MAX_QUANTITY), null)).toEqual({ value: MAX_QUANTITY });
-    expect(parseQuantityInput(String(MAX_QUANTITY + 1), null)).toEqual({
+  it("accepts 0 and any quantity up to MAX_QUANTITY, and refuses one more", () => {
+    expect(parseQuantityInput("0")).toEqual({ value: 0 });
+    expect(parseQuantityInput(" 30 ")).toEqual({ value: 30 });
+    expect(parseQuantityInput(String(MAX_QUANTITY))).toEqual({ value: MAX_QUANTITY });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1))).toEqual({
       error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
     });
   });
 
   it("refuses a negative number, a fraction and text that is no number", () => {
     const error = { error: "Podaj liczbę całkowitą, 0 lub większą" };
-    expect(parseQuantityInput("-1", 30)).toEqual(error);
-    expect(parseQuantityInput("1.5", 30)).toEqual(error);
-    expect(parseQuantityInput("abc", 30)).toEqual(error);
+    expect(parseQuantityInput("-1")).toEqual(error);
+    expect(parseQuantityInput("1.5")).toEqual(error);
+    expect(parseQuantityInput("abc")).toEqual(error);
   });
 
   it("refuses an empty value the number field reported as unreadable, instead of reading it as unknown", () => {
-    expect(parseQuantityInput("", 30, true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
-    expect(parseQuantityInput("", 30, false)).toEqual({ value: null });
+    expect(parseQuantityInput("", true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
+    expect(parseQuantityInput("", false)).toEqual({ value: null });
+  });
+
+  it("with min 1 (adding an item) refuses an empty pack and accepts 1 and an unknown quantity", () => {
+    expect(parseQuantityInput("0", false, 1)).toEqual({ error: EMPTY_PACK_ON_ADD });
+    expect(parseQuantityInput(" 0 ", false, 1)).toEqual({ error: EMPTY_PACK_ON_ADD });
+    expect(parseQuantityInput("1", false, 1)).toEqual({ value: 1 });
+    expect(parseQuantityInput("", false, 1)).toEqual({ value: null });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1), false, 1)).toEqual({
+      error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
+    });
+  });
+
+  it("with min 1 names 1 as the lowest quantity for text that is not a whole number", () => {
+    const error = { error: "Podaj liczbę całkowitą, 1 lub większą" };
+    expect(parseQuantityInput("-1", false, 1)).toEqual(error);
+    expect(parseQuantityInput("1.5", false, 1)).toEqual(error);
+    expect(parseQuantityInput("", true, 1)).toEqual(error);
+  });
+});
+
+describe("overPackSize", () => {
+  it("is true only for a whole number above the pack size", () => {
+    expect(overPackSize("12", 12)).toBe(false);
+    expect(overPackSize(" 13 ", 12)).toBe(true);
+    expect(overPackSize("", 12)).toBe(false);
+    expect(overPackSize("abc", 12)).toBe(false);
+    expect(overPackSize("12.5", 12)).toBe(false);
+  });
+
+  it("never warns for a pack without a size", () => {
+    expect(overPackSize(String(MAX_QUANTITY), null)).toBe(false);
   });
 });
 

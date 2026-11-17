@@ -21,14 +21,14 @@ const B_CHOSEN = "Wybrano: Ibuprom Max · 400 mg · tabletki powlekane";
 function pack(
   packageId: number,
   productId: number,
-  { count = "30", withdrawn = false }: { count?: string; withdrawn?: boolean } = {},
+  { capacity = "30", withdrawn = false }: { capacity?: string; withdrawn?: boolean } = {},
 ): RegistryVariantPackage {
   return {
     packageId,
     productId,
     gtin: null,
     availabilityCategory: null,
-    units: [{ count, kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity, capacity_unit: "tabl.", info: null }],
     holder: null,
     withdrawn,
   };
@@ -216,12 +216,12 @@ describe("KitAddForm", () => {
     });
   });
   describe("withdrawn packs", () => {
-    const WITHDRAWN_LABEL = /^50 tabletki\s*· wycofane$/;
+    const WITHDRAWN_LABEL = /^50 tabl\.\s*· wycofane$/;
 
     it("lists an active and a withdrawn pack, marks the withdrawn one, chooses none itself and saves the one picked", async () => {
       const form = await openForm({
         packages: {
-          [ID.ibuprom400]: [pack(1001, ID.ibuprom400), pack(1003, ID.ibuprom400, { count: "50", withdrawn: true })],
+          [ID.ibuprom400]: [pack(1001, ID.ibuprom400), pack(1003, ID.ibuprom400, { capacity: "50", withdrawn: true })],
         },
       });
 
@@ -230,7 +230,7 @@ describe("KitAddForm", () => {
       const radios = screen.getAllByRole("radio");
       expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
       // The active pack has no mark; the withdrawn one has.
-      expect(screen.getByRole("radio", { name: "30 tabletki" })).toBe(radios[0]);
+      expect(screen.getByRole("radio", { name: "30 tabl." })).toBe(radios[0]);
       expect(screen.getByRole("radio", { name: WITHDRAWN_LABEL })).toBe(radios[1]);
       expect(screen.queryByLabelText(QUANTITY_LABEL)).toBeNull();
       expect(addButton()?.hasAttribute("disabled")).toBe(true);
@@ -250,7 +250,7 @@ describe("KitAddForm", () => {
 
     it("chooses a single withdrawn pack itself and marks it", async () => {
       const form = await openForm({
-        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { count: "50", withdrawn: true })] },
+        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { capacity: "50", withdrawn: true })] },
       });
 
       await form.choose(A_OPTION);
@@ -271,7 +271,7 @@ describe("KitAddForm", () => {
 
       const radios = screen.getAllByRole("radio");
       expect(radios).toHaveLength(1);
-      expect(screen.getByRole("radio", { name: "30 tabletki" }).getAttribute("aria-checked")).toBe("true");
+      expect(screen.getByRole("radio", { name: "30 tabl." }).getAttribute("aria-checked")).toBe("true");
       const button = addButton();
       if (!button) {
         throw new Error("No add button");
@@ -312,6 +312,50 @@ describe("KitAddForm", () => {
     });
   });
 
+  describe("quantity", () => {
+    it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” takes 90, and 91 only with a warning", async () => {
+      const bottle: RegistryVariantPackage = {
+        ...pack(1001, ID.ibuprom400),
+        units: [{ count: "1", kind: "butelka", capacity: "90", capacity_unit: "tabl.", info: null }],
+      };
+      const form = await openForm({ packages: { [ID.ibuprom400]: [bottle] }, addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+
+      expect(screen.getByText("z 90 tabl.")).toBeTruthy();
+
+      fireEvent.change(quantityField(), { target: { value: "90" } });
+      expect(screen.queryByText("Więcej niż w opakowaniu (90 tabl.)")).toBeNull();
+
+      // Above the pack size the field warns, joined to it, and the quantity is still sent.
+      fireEvent.change(quantityField(), { target: { value: "91" } });
+      const warning = screen.getByText("Więcej niż w opakowaniu (90 tabl.)");
+      expect(quantityField().getAttribute("aria-describedby")).toBe(warning.closest("p")?.id);
+      expect(quantityField().getAttribute("aria-invalid")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      await waitFor(() => {
+        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ packageId: 1001, quantity: 91 })]);
+      });
+    });
+
+    it("shows only the error, not the pack-size warning, for a quantity above 100000", async () => {
+      const bottle: RegistryVariantPackage = {
+        ...pack(1001, ID.ibuprom400),
+        units: [{ count: "1", kind: "butelka", capacity: "90", capacity_unit: "tabl.", info: null }],
+      };
+      const form = await openForm({ packages: { [ID.ibuprom400]: [bottle] }, addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+      expect(screen.getByText("z 90 tabl.")).toBeTruthy();
+
+      fireEvent.change(quantityField(), { target: { value: "200000" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      const error = screen.getByText("Ilość nie może być większa niż 100000");
+      expect(screen.queryByText("Więcej niż w opakowaniu (90 tabl.)")).toBeNull();
+      expect(quantityField().getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+      expect(addPosts(form.routed)).toEqual([]);
+    });
+  });
+
   describe("errors", () => {
     it("does not read an unreadable quantity as an unknown one and sends nothing", async () => {
       const form = await openForm({ addKit: () => reply({ id: 1 }, 201) });
@@ -322,8 +366,30 @@ describe("KitAddForm", () => {
       Object.defineProperty(quantityField(), "validity", { value: { badInput: true } });
       fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
 
-      expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+      expect(screen.getByText("Podaj liczbę całkowitą, 1 lub większą")).toBeTruthy();
       expect(addPosts(form.routed)).toEqual([]);
+    });
+
+    it("does not add an empty pack: 0 is refused at the field and sends nothing, 1 is added", async () => {
+      const form = await openForm({ addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+      expect(quantityField().min).toBe("1");
+
+      fireEvent.change(quantityField(), { target: { value: "0" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      const error = screen.getByText(
+        "Puste opakowanie nie trafia do apteczki: podaj 1 lub więcej albo zostaw pole puste",
+      );
+      expect(quantityField().getAttribute("aria-invalid")).toBe("true");
+      expect(quantityField().getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+      expect(addPosts(form.routed)).toEqual([]);
+
+      fireEvent.change(quantityField(), { target: { value: "1" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      await waitFor(() => {
+        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ quantity: 1 })]);
+      });
     });
 
     it("shows a Polish message for a rejected add, never the text of the server, and logs the answer", async () => {

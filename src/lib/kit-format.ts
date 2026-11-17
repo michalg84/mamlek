@@ -51,50 +51,113 @@ export function uniquePacks<T extends { productId: number; units: RegistryPackag
 }
 
 /**
- * Quantity unit and upper bound of a pack. Only a single-entry pack with a positive integer count has
- * them (unit = the entry's kind, max = its count); anything else has no cap and no unit word.
+ * Registry `capacity_unit` words for things a user counts one by one (tablets, capsules, patches). Lower case, compared
+ * after trimming. Doses (`dawek`, `dawka`) and measures (ml, g, mg) are left out on purpose.
  */
-export function packQuantity(units: RegistryPackageUnit[]): { unit: string | null; max: number | null } {
+const COUNTED_UNITS = new Set([
+  "tabl.",
+  "tabletek",
+  "kaps.",
+  "szt.",
+  "pastylek",
+  "pastylki",
+  "plastrów",
+  "plastry",
+  "plaster",
+  "systemów",
+  "systemy",
+]);
+
+/** A positive safe integer written as plain digits ("90"), or null for anything else ("0", "0,5", "", null). */
+function positiveInteger(value: string | null | undefined): number | null {
+  const trimmed = present(value);
+  if (trimmed === null || !/^\d+$/.test(trimmed)) {
+    return null;
+  }
+  const number = Number(trimmed);
+  return Number.isSafeInteger(number) && number > 0 ? number : null;
+}
+
+/** Quantity unit and size of a pack (`packQuantity`); null when the pack gives none. */
+export interface PackQuantity {
+  unit: string | null;
+  max: number | null;
+}
+
+/**
+ * Quantity unit and size of a pack (a quantity above the size is allowed, with a warning). Only a single-entry pack has them:
+ * - when its `capacity_unit` is counted one by one (tablets, capsules, ...) and its `capacity` is a positive integer,
+ *   the quantity is in those pieces: max = count × capacity (capacity alone without a count; capped at
+ *   `MAX_QUANTITY`), unit = the `capacity_unit` ("1 butelka 90 tabl." → 90 tabl.);
+ * - otherwise, with a positive integer count: unit = the entry's kind, max = its count ("4 fiol. 5 ml" → 4 fiol.).
+ * Anything else has no cap and no unit word.
+ */
+export function packQuantity(units: RegistryPackageUnit[]): PackQuantity {
   if (units.length !== 1) {
     return { unit: null, max: null };
   }
   const [unit] = units;
-  const count = present(unit.count);
-  if (count === null || !/^\d+$/.test(count)) {
+  const count = positiveInteger(unit.count);
+  const capacity = positiveInteger(unit.capacity);
+  const capacityUnit = present(unit.capacity_unit);
+  const countPresent = present(unit.count) !== null;
+  if (
+    capacity !== null &&
+    capacityUnit !== null &&
+    COUNTED_UNITS.has(capacityUnit.toLowerCase()) &&
+    (count !== null || !countPresent)
+  ) {
+    return { unit: capacityUnit, max: Math.min((count ?? 1) * capacity, MAX_QUANTITY) };
+  }
+  if (count === null) {
     return { unit: null, max: null };
   }
-  const max = Number(count);
-  if (!Number.isSafeInteger(max) || max <= 0) {
-    return { unit: null, max: null };
-  }
-  return { unit: present(unit.kind), max };
+  return { unit: present(unit.kind), max: count };
 }
+
+/** True when the typed quantity is a whole number above the pack size `max`: saved anyway, with a warning. */
+export function overPackSize(text: string, max: number | null): boolean {
+  const trimmed = text.trim();
+  if (max === null || trimmed === "") {
+    return false;
+  }
+  const value = Number(trimmed);
+  return Number.isInteger(value) && value > max;
+}
+
+/** Why 0 is refused when an item is added. */
+export const EMPTY_PACK_ON_ADD = "Puste opakowanie nie trafia do apteczki: podaj 1 lub więcej albo zostaw pole puste";
 
 /**
  * Quantity typed by the user, checked like the API does: empty text is an unknown quantity (`null`), anything else
- * must be an integer from 0 up to `max` (the pack size) or, for a pack without one, `MAX_QUANTITY`. `badInput` is the
+ * must be an integer from `min` up to `MAX_QUANTITY`. `min` is 1 when an item is added (an empty pack is not added)
+ * and 0 when a stored item is edited (the pack was used up). A quantity above the pack size is valid (a blister of 12
+ * can hold 14 loose tablets): the field only warns about it, see `overPackSize`. `badInput` is the
  * `validity.badInput` of the number field the text came from.
  */
 export function parseQuantityInput(
   text: string,
-  max: number | null,
   badInput = false,
+  min: 0 | 1 = 0,
 ): { value: number | null } | { error: string } {
   const trimmed = text.trim();
+  const notANumber = `Podaj liczbę całkowitą, ${min} lub większą`;
   // A number field answers "" for something it cannot read ("-", "1e"): that is a mistake, not an unknown quantity.
   if (badInput) {
-    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    return { error: notANumber };
   }
   if (trimmed === "") {
     return { value: null };
   }
   const value = Number(trimmed);
   if (!Number.isInteger(value) || value < 0) {
-    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    return { error: notANumber };
   }
-  const limit = max ?? MAX_QUANTITY;
-  if (value > limit) {
-    return { error: `Ilość nie może być większa niż ${limit}` };
+  if (value < min) {
+    return { error: EMPTY_PACK_ON_ADD };
+  }
+  if (value > MAX_QUANTITY) {
+    return { error: `Ilość nie może być większa niż ${MAX_QUANTITY}` };
   }
   return { value };
 }
