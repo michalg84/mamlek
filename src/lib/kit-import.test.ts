@@ -31,8 +31,9 @@ import type { KitItem, RegistryVariant, RegistryVariantTuple } from "@/types";
 //     separators ignored; audit F1 + F2), and every word of the row's strength is a whole word of that hit's
 //     strength ("4 mg" is not "40 mg"; impl review F1); every other hit gives suggestions (at most 5), no hit gives "none";
 //     queries under 3 letters/digits are skipped
-//   - variant key: lower(name) | lower(strength) | lower(form), null as ""; the strength of a kit item longer than
-//     80 characters is cut to its first 79 plus "…" first, as the suggestion list does
+//   - variant key: lower(btrim(name)) | lower(btrim(strength)) | lower(btrim(form)), null as ""; spaces at the start
+//     and end of a part are trimmed (a double space inside is not); the strength of a kit item is trimmed first, then,
+//     when longer than 80 characters, cut to its first 79 plus "…", as the suggestion list does
 //   - blocking reasons (fixed order): no-variant, no-package, invalid-expiry, invalid-quantity, quantity-over-pack,
 //     already-have, repeated-in-import; a removed row has none; the first not-removed row of a variant is not a
 //     repeat, the second and later ones are; "add" lifts already-have and repeated-in-import
@@ -341,6 +342,28 @@ describe("variantKey", () => {
     expect(variantKey("Ibuprom", "400 mg", null)).not.toBe(variantKey("Ibuprom", "200 mg", null));
     expect(variantKey("Ibuprom", null, "tabletki")).not.toBe(variantKey("Ibuprom", null, "syrop"));
   });
+
+  it("ignores spaces at the start and end of the name, strength and form", () => {
+    const key = variantKey("Dermovate", "0,5 mg/ml", "roztwór na skórę");
+
+    expect(variantKey(" Dermovate ", "0,5 mg/ml", "roztwór na skórę")).toBe(key);
+    expect(variantKey("Dermovate", "0,5 mg/ml ", "roztwór na skórę")).toBe(key);
+    expect(variantKey("Dermovate", " 0,5 mg/ml", "roztwór na skórę")).toBe(key);
+    expect(variantKey("Dermovate", "0,5 mg/ml", " roztwór na skórę ")).toBe(key);
+  });
+
+  it("trims spaces before the case is ignored, and a strength of spaces alone is empty", () => {
+    expect(variantKey(" IBUPROM ", " 400 MG ", " Tabletki ")).toBe("ibuprom|400 mg|tabletki");
+    expect(variantKey("Ibuprom", "   ", null)).toBe(variantKey("Ibuprom", null, null));
+  });
+
+  it("tells a double space inside a part apart from a single one (author's decision)", () => {
+    expect(variantKey("Dermovate", "0,5  mg/ml", null)).not.toBe(variantKey("Dermovate", "0,5 mg/ml", null));
+    expect(variantKey("Der  movate", null, null)).not.toBe(variantKey("Der movate", null, null));
+    expect(variantKey("Dermovate", null, "roztwór  na skórę")).not.toBe(
+      variantKey("Dermovate", null, "roztwór na skórę"),
+    );
+  });
 });
 
 function kitItem(overrides: Partial<KitItem> = {}): KitItem {
@@ -397,6 +420,39 @@ describe("kitItemVariantKey", () => {
 
   it("reads a missing strength and form as empty", () => {
     expect(kitItemVariantKey(kitItem({ name: "Rutinoscorbin", strength: null, form: null }))).toBe("rutinoscorbin||");
+  });
+
+  it("ignores spaces at the start and end of the name, strength and form", () => {
+    const padded = kitItem({ name: " Ibuprom ", strength: " 400 mg ", form: " tabletki powlekane " });
+
+    expect(kitItemVariantKey(padded)).toBe(kitItemVariantKey(kitItem()));
+  });
+
+  it("trims before it cuts: a strength of 80 characters and a trailing space has the key of the 80 characters", () => {
+    const strength = "a".repeat(80);
+
+    expect(kitItemVariantKey(kitItem({ strength: `${strength} ` }))).toBe(kitItemVariantKey(kitItem({ strength })));
+    expect(kitItemVariantKey(kitItem({ strength: ` ${strength}` }))).toBe(kitItemVariantKey(kitItem({ strength })));
+  });
+
+  it("trims before it cuts: a strength over 80 characters has the same key with and without a trailing space", () => {
+    const strength = "a".repeat(81);
+
+    expect(kitItemVariantKey(kitItem({ strength: `${strength} ` }))).toBe(kitItemVariantKey(kitItem({ strength })));
+    expect(kitItemVariantKey(kitItem({ strength: `${strength} ` }))).toBe(
+      `ibuprom|${"a".repeat(79)}…|tabletki powlekane`,
+    );
+    // A leading space would shift the cut by one character if the strength were cut first.
+    expect(kitItemVariantKey(kitItem({ strength: ` ${strength}` }))).toBe(kitItemVariantKey(kitItem({ strength })));
+  });
+
+  it("equals the key of the suggestion-list variant for a padded strength of 80 characters", () => {
+    // The list holds the strength as the registry has it (not cut at 80); the item's key must still be the same.
+    const listVariant = variant(1, "Ibuprom", "d".repeat(80), "tabletki powlekane");
+
+    const itemKey = kitItemVariantKey(kitItem({ strength: `${"d".repeat(80)} ` }));
+
+    expect(itemKey).toBe(variantKey(listVariant.name, listVariant.strength, listVariant.form));
   });
 });
 

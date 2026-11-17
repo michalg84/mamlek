@@ -136,17 +136,22 @@ export function matchRow(index: RegistrySearchIndex, request: RowMatchRequest): 
   return { kind: "none" };
 }
 
-/** Variant identity as the database defines it: `lower(name) | lower(strength) | lower(form)`, null as empty. */
+/**
+ * Variant identity as the database defines it: `lower(btrim(name)) | lower(btrim(strength)) | lower(btrim(form))`, null
+ * as empty. `trim()` also strips other white space (e.g. a non-breaking space) where Postgres `btrim` strips only plain
+ * spaces; the registry data holds plain spaces only at the ends, so the keys agree.
+ */
 export function variantKey(name: string, strength: string | null, form: string | null): string {
-  return `${name.toLowerCase()}|${(strength ?? "").toLowerCase()}|${(form ?? "").toLowerCase()}`;
+  return `${name.trim().toLowerCase()}|${(strength ?? "").trim().toLowerCase()}|${(form ?? "").trim().toLowerCase()}`;
 }
 
 /**
  * Key of a kit item's variant. The suggestion list cuts a strength longer than 80 characters to its first 79
- * plus `…`, so the item's strength is cut the same way to compare equal to the picked variant.
+ * plus `…`, so the item's strength is cut the same way to compare equal to the picked variant. Spaces are trimmed
+ * BEFORE the cut, as the list does (it keys on `btrim`, and the cut applies to the registry's value).
  */
 export function kitItemVariantKey(item: KitItem): string {
-  let strength = item.strength;
+  let strength = item.strength === null ? null : item.strength.trim();
   if (strength !== null) {
     // Postgres counts code points, not UTF-16 units.
     const chars = Array.from(strength);
