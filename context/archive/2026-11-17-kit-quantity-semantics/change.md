@@ -1,10 +1,10 @@
 ---
 change_id: kit-quantity-semantics
 title: Unambiguous kit quantity in tablets, also for packs with a unit count
-status: implementing
+status: archived
 created: 2026-11-17
 updated: 2026-11-17
-archived_at: null
+archived_at: 2026-11-17T17:41:19Z
 ---
 
 ## Notes
