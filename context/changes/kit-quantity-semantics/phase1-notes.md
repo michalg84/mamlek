@@ -32,3 +32,8 @@ Playwright na koncie testowym, pełny rejestr w lokalnej bazie:
 - Acodin 150 Junior (syrop, 1 butelka 100 ml): „z 1 butelka”, jak przed zmianą.
 
 Po teście usunięto 3 testowe pozycje `kit_items` i 3 konta; `kit_items` = 194 wiersze.
+
+## Dane produkcyjne 1.7 (2026-11-17, autor)
+
+- Zapytanie 1 (pozycje na opakowaniach liczonych teraz w sztukach): brak wierszy. Poprawka danych niepotrzebna.
+- Zapytanie 2 (ilość 0): 0 wierszy, 0 użytkowników. Minimum 1 przy dodawaniu i nowy werdykt (faza 3) nie zmieniają istniejących danych.

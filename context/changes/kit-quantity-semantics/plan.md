@@ -311,7 +311,7 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 
 - [x] 1.5 Formularz dodawania dla Oxbryty pokazuje „z 90 tabl.” i przyjmuje 90
 - [x] 1.6 Lek „12 tabl.” pokazuje „z 12 tabl.”, syrop (ml) bez zmian
-- [ ] 1.7 Autor uruchomił SELECT na produkcji i zdecydował o poprawce danych
+- [x] 1.7 Autor uruchomił SELECT na produkcji i zdecydował o poprawce danych
 
 ### Phase 2: Ponad pojemność — ostrzeżenie zamiast blokady
 
