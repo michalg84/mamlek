@@ -345,4 +345,4 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 - [ ] 3.6 Zapis 0 otwiera dialog usuwania; „Anuluj” zostawia puste opakowanie, „Usuń” usuwa
 - [ ] 3.7 Dodawanie i import odrzucają ilość 0
 - [ ] 3.8 Na /szukaj puste opakowanie daje „Nie masz tego leku” i sekcję „Puste opakowania”
-- [ ] 3.9 PRD, roadmapa i AGENTS.md opisują nową regułę
+- [x] 3.9 PRD, roadmapa i AGENTS.md opisują nową regułę
