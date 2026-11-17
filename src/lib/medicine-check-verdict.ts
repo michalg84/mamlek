@@ -1,3 +1,4 @@
+import { DEFAULT_MATCH_LEVEL, MATCH_LEVEL_TEXTS, isMatchLevel } from "@/lib/match-level";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 /** What the check screen shows for one answer of the medicine check. */
@@ -42,7 +43,8 @@ function isItem(value: unknown) {
 
 /**
  * Checks the body of `GET /api/kit/check` before the screen uses it. Null means the answer is not one the screen can
- * show: an unknown match type would drop out of both lists and read as "Nie masz tego leku".
+ * show: an unknown match type would drop out of both lists and read as "Nie masz tego leku". A missing `level` is the
+ * answer of a database without match levels, which always matched exactly; an unknown one is rejected.
  */
 export function parseMedicineCheck(body: unknown): MedicineCheckResponse | null {
   if (
@@ -50,11 +52,12 @@ export function parseMedicineCheck(body: unknown): MedicineCheckResponse | null 
     !isSearched(body.searched) ||
     typeof body.comparable !== "boolean" ||
     !Array.isArray(body.items) ||
-    !body.items.every(isItem)
+    !body.items.every(isItem) ||
+    (body.level !== undefined && !isMatchLevel(body.level))
   ) {
     return null;
   }
-  return body as unknown as MedicineCheckResponse;
+  return { ...body, level: body.level ?? DEFAULT_MATCH_LEVEL } as unknown as MedicineCheckResponse;
 }
 
 /** "1 opakowanie", "2 opakowania", "5 opakowań", "22 opakowania", "12 opakowań". */
@@ -85,7 +88,8 @@ export function emptyPacks(result: MedicineCheckResponse): MedicineCheckItem[] {
 
 /** Turns the answer of the medicine check into the verdict the screen shows; empty packs do not count. */
 export function checkVerdict(result: MedicineCheckResponse): CheckVerdict {
-  // The RPC already orders the items (variant first, nearest expiry, unknown last, newest first): only split them.
+  // The RPC already orders the items (by match strength, then nearest expiry, unknown last, newest first): only split.
+  const texts = MATCH_LEVEL_TEXTS[result.level];
   const items = result.items.filter((item) => !isEmpty(item));
   const variants = items.filter((item) => item.match === "variant");
   const same = items.filter((item) => item.match === "substance");
@@ -97,7 +101,7 @@ export function checkVerdict(result: MedicineCheckResponse): CheckVerdict {
   if (same.length > 0) {
     return {
       kind: "substance",
-      title: "Masz lek z tą samą substancją czynną",
+      title: texts.substanceTitle,
       detail: [...new Set(same.map((item) => item.name))].join(", "),
       ...shared,
     };
@@ -105,7 +109,7 @@ export function checkVerdict(result: MedicineCheckResponse): CheckVerdict {
   return {
     kind: "none",
     title: "Nie masz tego leku",
-    detail: result.comparable ? "Ani leku z tą samą substancją czynną" : null,
+    detail: result.comparable ? texts.noneDetail : null,
     ...shared,
   };
 }

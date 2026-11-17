@@ -117,13 +117,19 @@ export interface ImportKitItemsItemError {
   index: number;
 }
 
+/**
+ * Match level of the medicine check (`level` of `GET /api/kit/check`): "exact" the same active composition, "all" the
+ * kit medicine contains every active substance of the checked one, "any" they share at least one.
+ */
+export type MatchLevel = "exact" | "all" | "any";
+
 /** A kit item matching the checked medicine, as returned by `GET /api/kit/check`. */
 export interface MedicineCheckItem {
   id: number;
   packageId: number;
-  /** "variant": the same medicine (name, strength, form); "substance": the same active composition. */
+  /** "variant": the same medicine (name, strength, form); "substance": a matching active composition on the level. */
   match: "variant" | "substance";
-  /** Which set matched a "substance" item ("common_name" wins when both do); null for "variant" items. */
+  /** Which set matched a "substance" item best ("common_name" wins a tie); null for "variant" items. */
   matchedBy: "common_name" | "substances" | null;
   name: string;
   strength: string | null;
@@ -142,13 +148,18 @@ export interface MedicineCheckItem {
   createdAt: string;
 }
 
-/** Body of a successful `GET /api/kit/check` (200). Items: variant matches first, then nearest expiry, newest first. */
+/**
+ * Body of a successful `GET /api/kit/check` (200). Items by match strength (variant, equal composition, the kit
+ * medicine contains more, a shared substance), then nearest expiry (unknown last), newest first.
+ */
 export interface MedicineCheckResponse {
   /**
    * The checked medicine with its full (untruncated) strength. The RPC does not say whether it is withdrawn: the
    * screen takes that from the picked suggestion.
    */
   searched: Omit<RegistryVariant, "withdrawn">;
+  /** The level the items were matched on. */
+  level: MatchLevel;
   /** The searched medicine has a usable common name or substance set, so "substance" matches were possible. */
   comparable: boolean;
   items: MedicineCheckItem[];

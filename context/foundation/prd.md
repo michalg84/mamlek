@@ -266,21 +266,28 @@ więc przy takim dopasowaniu użytkownik widzi dwie różne listy substancji pod
 Leki złożone, z kilkoma substancjami czynnymi, obsługuje wybierany przez użytkownika
 poziom dopasowania — trzy stopnie, od najostrzejszego do najluźniejszego:
 
-- **Precyzyjny** — dokładna zgodność zestawu substancji czynnych.
-- **Zawiera wszystkie** — posiadany lek zawiera wszystkie substancje czynne
-  szukanego leku, ewentualnie także dodatkowe.
-- **Zawiera jeden** — posiadany lek zawiera przynajmniej jedną z substancji
-  czynnych szukanego leku.
+- **Ten sam skład** (precyzyjny, domyślny) — dokładna zgodność zestawu substancji
+  czynnych albo zestawu części nazwy powszechnej.
+- **Zawiera wszystkie składniki** — posiadany lek zawiera wszystkie substancje czynne
+  szukanego leku (albo wszystkie części jego nazwy powszechnej), ewentualnie także
+  dodatkowe.
+- **Zawiera którykolwiek składnik** — posiadany lek ma przynajmniej jedną wspólną
+  substancję czynną (albo część nazwy powszechnej) z lekiem szukanym.
+
+Obie ścieżki (zbiór substancji i zbiór części nazwy powszechnej) działają na każdym
+poziomie tym samym operatorem, więc wynik jest monotoniczny: wszystko, co pasuje
+przy „Ten sam skład”, pasuje przy „Zawiera wszystkie składniki”, a to — przy
+„Zawiera którykolwiek składnik”. Ogólniki (także nazwa powszechna „-”) nie pasują na
+żadnym poziomie. Pozycje są uporządkowane od najmocniejszego dopasowania: ten sam
+lek, równy zestaw, posiadany lek z dodatkowymi składnikami, wspólna część.
 
 Poziom jest widoczny przy wyszukiwaniu i użytkownik zmienia go sam, zamiast
-aplikacji zgadującej, jak bardzo chce być pobłażliwa. Dzięki temu reguła obsługuje
-zarówno lek jednoskładnikowy, jak i złożony, bez dorabiania wyjątków. Który poziom
-jest domyślny — patrz Open Questions.
-
-Stan na v3: aplikacja ma jeden stały poziom — zgodność zbioru substancji albo
-nazwy powszechnej, opisaną wyżej. Wybór poziomu (FR-016) wnosi wycinek S-06; przed
-jego planowaniem trzeba rozstrzygnąć, czy ścieżka po nazwie powszechnej należy do
-poziomu „precyzyjnego”.
+aplikacji zgadującej, jak bardzo chce być pobłażliwa; wybór zostaje zapamiętany na
+urządzeniu. Domyślny jest „Ten sam skład”, bo „Zawiera wszystkie składniki” zmienia
+wynik także dla 36% leków jednoskładnikowych (np. ibuprofen → lek złożony
+z ibuprofenem). Na poziomach luźnych wynik mówi „Masz lek zawierający składniki tego
+leku” albo „Masz lek ze wspólnym składnikiem” i ostrzega, że te leki mogą mieć inny
+skład (S-06).
 
 ## Access Control
 

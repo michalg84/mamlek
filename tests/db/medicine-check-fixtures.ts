@@ -157,12 +157,19 @@ export class World {
   }
 }
 
-/** Calls the RPC as the API role `authenticated`, signed in as the given synthetic account. */
-export async function checkAs(client: pg.Client, userId: string, productId: number): Promise<unknown> {
+/**
+ * Calls the RPC as the API role `authenticated`, signed in as the given synthetic account. Without a level the call
+ * leaves out `p_level`, as the service does for the default level.
+ */
+export async function checkAs(client: pg.Client, userId: string, productId: number, level?: string): Promise<unknown> {
   await actAs(client, userId);
-  const { rows } = await client.query<{ value: unknown }>("select public.medicine_check($1::bigint) as value", [
-    productId,
-  ]);
+  const { rows } =
+    level === undefined
+      ? await client.query<{ value: unknown }>("select public.medicine_check($1::bigint) as value", [productId])
+      : await client.query<{ value: unknown }>("select public.medicine_check($1::bigint, $2::text) as value", [
+          productId,
+          level,
+        ]);
   return rows[0].value;
 }
 

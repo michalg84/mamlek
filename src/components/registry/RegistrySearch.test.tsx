@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import RegistrySearch from "@/components/registry/RegistrySearch";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { stubRoutedFetch } from "../../../tests/helpers/fetch";
-import type { MedicineCheckItem, MedicineCheckResponse, RegistrySearchListPayload } from "@/types";
+import { forgetUnsavedMatchLevel, MATCH_LEVEL_STORAGE_KEY } from "@/components/hooks/useMatchLevel";
+import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse, RegistrySearchListPayload } from "@/types";
 
 // The texts below are pinned on purpose, like in MedicineCheckResult.test.tsx.
 const A_VERDICT = "Masz ten lek · 1 opakowanie";
@@ -30,6 +31,7 @@ const A_ANSWER: MedicineCheckResponse = {
     commonName: "Ibuprofenum",
     substances: ["Ibuprofenum"],
   },
+  level: "exact",
   comparable: true,
   items: [checkItem()],
 };
@@ -42,6 +44,7 @@ const B_ANSWER: MedicineCheckResponse = {
     commonName: "Ibuprofenum",
     substances: ["Ibuprofenum"],
   },
+  level: "exact",
   comparable: true,
   items: [],
 };
@@ -72,6 +75,7 @@ function crestorAnswer(id: number, strength: string): MedicineCheckResponse {
       commonName: "Rosuvastatinum",
       substances: ["Rosuvastatinum"],
     },
+    level: "exact",
     comparable: true,
     items: [],
   };
@@ -436,6 +440,152 @@ describe("RegistrySearch", () => {
       expect(screen.getByText(B_VERDICT, VISIBLE)).toBeTruthy();
       expect(cardName()).toBe("Crestor");
       expect(screen.queryByText(WITHDRAWN)).toBeNull();
+    });
+  });
+
+  describe("match level", () => {
+    const ANY_VERDICT = "Masz lek ze wspólnym składnikiem";
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+      forgetUnsavedMatchLevel();
+      window.localStorage.clear();
+    });
+
+    /** The `level` parameter of every check request so far, in call order. */
+    function checkLevels(checks: { fetchMock: { mock: { calls: Parameters<typeof fetch>[] } } }) {
+      return checks.fetchMock.mock.calls
+        .map(
+          ([input]) =>
+            new URL(
+              typeof input === "string" ? input : input instanceof URL ? input.href : input.url,
+              "http://localhost",
+            ),
+        )
+        .filter((url) => url.pathname === "/api/kit/check")
+        .map((url) => url.searchParams.get("level"));
+    }
+
+    function levelRadio(name: string) {
+      return within(screen.getByRole("radiogroup", { name: "Dopasowanie składu" })).getByRole("radio", { name });
+    }
+
+    /** A's answer on another level: a kit medicine sharing a substance, so the verdict differs from A_VERDICT. */
+    function answerOn(level: MatchLevel): MedicineCheckResponse {
+      return {
+        ...A_ANSWER,
+        level,
+        items: [{ ...checkItem(), id: 2, match: "substance", matchedBy: "common_name", name: "Nurofen" }],
+      };
+    }
+
+    it("checks on „Ten sam skład” (exact) by default", async () => {
+      const screenUnderTest = await openSearch();
+      expect(levelRadio("Ten sam skład").getAttribute("aria-checked")).toBe("true");
+
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact"]);
+    });
+
+    it("asks again on a new level and never shows the late answer of the previous one", async () => {
+      const screenUnderTest = await openSearch();
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+
+      fireEvent.click(levelRadio("Zawiera którykolwiek składnik"));
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
+      expect(screen.getByText(LOADING)).toBeTruthy();
+
+      // The abandoned exact request still answers, before the new one.
+      await screenUnderTest.answerCheck(A_ID, A_ANSWER);
+      expect(screen.queryByText(A_VERDICT, VISIBLE)).toBeNull();
+      expect(screen.getByText(LOADING)).toBeTruthy();
+
+      await screenUnderTest.answerCheck(A_ID, answerOn("any"));
+      expect(screen.getByText(ANY_VERDICT, VISIBLE)).toBeTruthy();
+      expect(screen.queryByText(A_VERDICT, VISIBLE)).toBeNull();
+      expect(cardName()).toBe("Ibuprom");
+    });
+
+    it("replaces the verdict shown on the old level with loading, then with the verdict of the new level", async () => {
+      const screenUnderTest = await openSearch();
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+      await screenUnderTest.answerCheck(A_ID, A_ANSWER);
+      expect(screen.getByText(A_VERDICT, VISIBLE)).toBeTruthy();
+
+      fireEvent.click(levelRadio("Zawiera wszystkie składniki"));
+
+      expect(screen.queryByText(A_VERDICT, VISIBLE)).toBeNull();
+      expect(screen.getByText(LOADING)).toBeTruthy();
+      await screenUnderTest.answerCheck(A_ID, answerOn("all"));
+      expect(screen.getByText("Masz lek zawierający składniki tego leku", VISIBLE)).toBeTruthy();
+    });
+
+    it("remembers the picked level and uses the stored one for the first check", async () => {
+      window.localStorage.setItem(MATCH_LEVEL_STORAGE_KEY, "all");
+      const screenUnderTest = await openSearch();
+      expect(levelRadio("Zawiera wszystkie składniki").getAttribute("aria-checked")).toBe("true");
+
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["all"]);
+
+      fireEvent.click(levelRadio("Zawiera którykolwiek składnik"));
+      expect(window.localStorage.getItem(MATCH_LEVEL_STORAGE_KEY)).toBe("any");
+    });
+
+    it.each(["ALL", "", "strict"])(
+      "falls back to exact for a stored value that is not a level (%j)",
+      async (stored) => {
+        window.localStorage.setItem(MATCH_LEVEL_STORAGE_KEY, stored);
+        const screenUnderTest = await openSearch();
+        await screenUnderTest.search("ibuprom");
+        screenUnderTest.pick(A_OPTION);
+
+        expect(levelRadio("Ten sam skład").getAttribute("aria-checked")).toBe("true");
+        expect(checkLevels(screenUnderTest.checks)).toEqual(["exact"]);
+      },
+    );
+
+    it("keeps working on the default level when storage refuses, and the switch still changes the level", async () => {
+      const refused = new DOMException("The operation is insecure.", "SecurityError");
+      vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+        throw refused;
+      });
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw refused;
+      });
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const screenUnderTest = await openSearch();
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact"]);
+
+      fireEvent.click(levelRadio("Zawiera którykolwiek składnik"));
+
+      expect(levelRadio("Zawiera którykolwiek składnik").getAttribute("aria-checked")).toBe("true");
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
+      // The refusal is logged, not hidden.
+      expect(warn).toHaveBeenCalled();
+    });
+
+    it("switches the level when saving fails but reading still works (full quota)", async () => {
+      window.localStorage.setItem(MATCH_LEVEL_STORAGE_KEY, "exact");
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("The quota has been exceeded.", "QuotaExceededError");
+      });
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const screenUnderTest = await openSearch();
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+
+      fireEvent.click(levelRadio("Zawiera którykolwiek składnik"));
+
+      expect(levelRadio("Zawiera którykolwiek składnik").getAttribute("aria-checked")).toBe("true");
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
     });
   });
 });

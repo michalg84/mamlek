@@ -6,7 +6,7 @@ import type pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { checkVerdict, parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckResponse } from "@/types";
-import { World, checkAs, connectLocal, type KitRef } from "./medicine-check-fixtures";
+import { World, actAs, checkAs, connectLocal, expectSqlError, type KitRef } from "./medicine-check-fixtures";
 
 type Match = "variant" | "substance";
 type MatchedBy = "common_name" | "substances" | null;
@@ -356,9 +356,9 @@ const paracetamolCaffeine = w.product({
   substances: ["Paracetamolum", "Coffeinum"],
 });
 const uG14Subset = w.user();
-w.kitItem(uG14Subset, paracetamolOnly.packageId);
+const kG14Subset = w.kitItem(uG14Subset, paracetamolOnly.packageId);
 const uG14Superset = w.user();
-w.kitItem(uG14Superset, paracetamolCaffeine.packageId);
+const kG14Superset = w.kitItem(uG14Superset, paracetamolCaffeine.packageId);
 
 // G15: a common name made of a real part and a placeholder is generic as a whole.
 const mixedA = w.product({
@@ -482,6 +482,107 @@ const shape = w.product({
 });
 const uShape = w.user();
 const kShape = w.kitItem(uShape, shape.packageId, { quantity: 12 });
+
+// --- Match levels (S-06, FR-016): exact = equal set, all = kit set contains the searched one, any = overlap ---------
+
+// G14 on the looser levels: the substances only overlap with an unrelated common name, so only the substance path can
+// match. The kit of uG14Superset holds paracetamol + caffeine (a superset of the searched paracetamol), the kit of
+// uG14Subset holds paracetamol alone (a subset of the searched paracetamol + caffeine).
+const paracetamolAscorbic = w.product({
+  name: "Paracetamol C",
+  strength: "500 mg + 200 mg",
+  form: "tabletki",
+  commonName: "Paracetamolum cum acido ascorbico",
+  substances: ["Paracetamolum", "Acidum ascorbicum"],
+});
+// Overlap that is neither a subset nor a superset: paracetamol + vitamin C against paracetamol + caffeine.
+const uOverlap = w.user();
+const kOverlap = w.kitItem(uOverlap, paracetamolAscorbic.packageId);
+
+// The common-name path on every level, with substances that share nothing.
+const npsSearched = w.product({
+  name: "Nomen Duo",
+  strength: "1 mg",
+  form: "tabletki",
+  commonName: "Npsalfum + Npsbetum",
+  substances: ["Substantia una"],
+});
+const npsSuperset = w.product({
+  name: "Nomen Tres",
+  strength: "1 mg",
+  form: "tabletki",
+  commonName: "Npsgammum + Npsbetum + Npsalfum",
+  substances: ["Substantia duo"],
+});
+const npsSubset = w.product({
+  name: "Nomen Unus",
+  strength: "1 mg",
+  form: "tabletki",
+  commonName: "Npsalfum",
+  substances: ["Substantia tres"],
+});
+const uNpsSuperset = w.user();
+const kNpsSuperset = w.kitItem(uNpsSuperset, npsSuperset.packageId);
+const uNpsSubset = w.user();
+const kNpsSubset = w.kitItem(uNpsSubset, npsSubset.packageId);
+
+// "-" as the common name is a placeholder: it never matches, also with itself (2 products in the 2026-11-16 registry).
+const dashA = w.product({ name: "Dash A", strength: null, form: "płyn", commonName: "-", substances: [] });
+const dashB = w.product({ name: "Dash B", strength: null, form: "krople", commonName: " - ", substances: [] });
+const uDash = w.user();
+w.kitItem(uDash, dashB.packageId);
+
+// Strength order: variant, equal set, superset, overlap, although the weaker matches expire sooner.
+const ordo = w.product({
+  name: "Ordo",
+  strength: "10 mg + 5 mg",
+  form: "tabletki",
+  commonName: "Ordinum + Secundum",
+  substances: ["Ordinum", "Secundum"],
+});
+const ordoEqual = w.product({
+  name: "Ordo Bis",
+  strength: "10 mg + 5 mg",
+  form: "tabletki",
+  commonName: "Secundum + Ordinum",
+  substances: ["Secundum", "Ordinum"],
+});
+const ordoSuperset = w.product({
+  name: "Ordo Plus",
+  strength: "10 mg + 5 mg + 1 mg",
+  form: "tabletki",
+  commonName: "Ordinum + Secundum + Tertium",
+  substances: ["Ordinum", "Secundum", "Tertium"],
+});
+const ordoOverlap = w.product({
+  name: "Ordo Mono",
+  strength: "10 mg",
+  form: "tabletki",
+  commonName: "Ordinum",
+  substances: ["Ordinum"],
+});
+const uStrength = w.user();
+const kStrengthOverlap = w.kitItem(uStrength, ordoOverlap.packageId, { expiresOn: "2020-01-31", precision: "month" });
+const kStrengthSuperset = w.kitItem(uStrength, ordoSuperset.packageId, { expiresOn: "2021-01-31", precision: "month" });
+const kStrengthEqual = w.kitItem(uStrength, ordoEqual.packageId, { expiresOn: "2030-01-31", precision: "month" });
+const kStrengthVariant = w.kitItem(uStrength, ordo.packageId);
+
+// matchedBy is the path with the smaller strength: a superset by common name (2) loses to an equal substance set (1).
+const ordoNamedMore = w.product({
+  name: "Ordo Quart",
+  strength: "10 mg + 5 mg",
+  form: "tabletki",
+  commonName: "Ordinum + Secundum + Quartum",
+  substances: ["Ordinum", "Secundum"],
+});
+const uTie = w.user();
+const kTie = w.kitItem(uTie, ordoNamedMore.packageId);
+
+// A searched product with no usable set matches nothing on any level, even with a full kit (the `x @> '{}'` trap).
+const uFullKit = w.user();
+for (const product of [sortis, metafen, diosmectite, aromaActiv, herbalB, homeoB, comboAB, paracetamolCaffeine]) {
+  w.kitItem(uFullKit, product.packageId);
+}
 
 const cases: RuleCase[] = [
   // Ported (17 of 17; "unknown id", "order" and "withdrawn" have their own tests below).
@@ -754,8 +855,8 @@ afterEach(async () => {
 });
 
 /** The answer of the rule, which must pass the guard the screen applies. */
-async function answer(user: string, product: number): Promise<MedicineCheckResponse> {
-  const raw = await checkAs(client, user, product);
+async function answer(user: string, product: number, level?: string): Promise<MedicineCheckResponse> {
+  const raw = await checkAs(client, user, product, level);
   const parsed = parseMedicineCheck(raw);
   if (!parsed) {
     throw new Error(`The screen would reject this answer of the rule: ${JSON.stringify(raw)}`);
@@ -838,5 +939,151 @@ describe("medicine_check rule", () => {
       expiryPrecision: null,
       withdrawn: false,
     });
+  });
+});
+
+type Level = "exact" | "all" | "any";
+const LEVELS: Level[] = ["exact", "all", "any"];
+/** [kit item, match, matchedBy] */
+type LevelItem = [KitRef, Match, MatchedBy];
+
+interface LevelCase {
+  name: string;
+  user: string;
+  searched: number;
+  /** The matching kit items on each level, in the order the rule must return them. */
+  levels: Record<Level, LevelItem[]>;
+}
+
+const levelCases: LevelCase[] = [
+  {
+    name: "G14: the kit holds a superset of the substances: matches from all on",
+    user: uG14Superset,
+    searched: paracetamolOnly.id,
+    levels: {
+      exact: [],
+      all: [[kG14Superset, "substance", "substances"]],
+      any: [[kG14Superset, "substance", "substances"]],
+    },
+  },
+  {
+    name: "G14: the kit holds a subset of the substances: matches only on any",
+    user: uG14Subset,
+    searched: paracetamolCaffeine.id,
+    levels: { exact: [], all: [], any: [[kG14Subset, "substance", "substances"]] },
+  },
+  {
+    name: "overlapping substances, neither subset nor superset: match only on any",
+    user: uOverlap,
+    searched: paracetamolCaffeine.id,
+    levels: { exact: [], all: [], any: [[kOverlap, "substance", "substances"]] },
+  },
+  {
+    name: "common-name parts superset with unrelated substances: matches from all on, by common_name",
+    user: uNpsSuperset,
+    searched: npsSearched.id,
+    levels: {
+      exact: [],
+      all: [[kNpsSuperset, "substance", "common_name"]],
+      any: [[kNpsSuperset, "substance", "common_name"]],
+    },
+  },
+  {
+    name: "common-name parts subset with unrelated substances: matches only on any, by common_name",
+    user: uNpsSubset,
+    searched: npsSearched.id,
+    levels: { exact: [], all: [], any: [[kNpsSubset, "substance", "common_name"]] },
+  },
+  {
+    name: 'common name "-" is a placeholder: no match on any level, also with itself',
+    user: uDash,
+    searched: dashA.id,
+    levels: { exact: [], all: [], any: [] },
+  },
+  {
+    name: "a searched product with no usable set matches nothing in a full kit (the x @> '{}' trap)",
+    user: uFullKit,
+    searched: homeoA.id,
+    levels: { exact: [], all: [], any: [] },
+  },
+  {
+    name: "a searched product with only a placeholder substance matches nothing in a full kit",
+    user: uFullKit,
+    searched: herbalA.id,
+    levels: { exact: [], all: [], any: [] },
+  },
+  {
+    name: "order by strength: variant, equal set, superset, overlap, although the weaker ones expire sooner",
+    user: uStrength,
+    searched: ordo.id,
+    levels: {
+      exact: [
+        [kStrengthVariant, "variant", null],
+        [kStrengthEqual, "substance", "common_name"],
+      ],
+      all: [
+        [kStrengthVariant, "variant", null],
+        [kStrengthEqual, "substance", "common_name"],
+        [kStrengthSuperset, "substance", "common_name"],
+      ],
+      any: [
+        [kStrengthVariant, "variant", null],
+        [kStrengthEqual, "substance", "common_name"],
+        [kStrengthSuperset, "substance", "common_name"],
+        [kStrengthOverlap, "substance", "common_name"],
+      ],
+    },
+  },
+  {
+    name: "matchedBy is the stronger path: an equal substance set beats a common-name superset",
+    user: uTie,
+    searched: ordo.id,
+    levels: {
+      exact: [[kTie, "substance", "substances"]],
+      all: [[kTie, "substance", "substances"]],
+      any: [[kTie, "substance", "substances"]],
+    },
+  },
+];
+
+describe("medicine_check match levels", () => {
+  it.each(levelCases.flatMap((c) => LEVELS.map((level) => ({ ...c, level, expected: c.levels[level] }))))(
+    "$name ($level)",
+    async ({ user, searched, level, expected }) => {
+      const result = await answer(user, searched, level);
+
+      expect(result.items.map((i) => [i.id, i.match, i.matchedBy])).toEqual(
+        expected.map(([ref, match, matchedBy]) => [ref.id, match, matchedBy]),
+      );
+      expect(checkVerdict(result).kind).toBe(
+        expected.some(([, match]) => match === "variant") ? "variant" : expected.length > 0 ? "substance" : "none",
+      );
+    },
+  );
+
+  it.each(cases)("monotonic: exact ⊆ all ⊆ any, and exact is the default ($name)", async ({ user, searched }) => {
+    const ids = async (level?: Level) => (await answer(user, searched, level)).items.map((i) => i.id);
+    const [byDefault, exact, all, any] = [await ids(), await ids("exact"), await ids("all"), await ids("any")];
+
+    expect(exact).toEqual(byDefault);
+    expect(all).toEqual(expect.arrayContaining(exact));
+    expect(any).toEqual(expect.arrayContaining(all));
+  });
+
+  it("echoes the level, exact when the call leaves it out", async () => {
+    for (const level of [undefined, ...LEVELS]) {
+      const raw = (await checkAs(client, uSame, sortis.id, level)) as { level?: unknown };
+      expect(raw.level).toBe(level ?? "exact");
+    }
+  });
+
+  it.each(["", "ALL", "exact,all", "none"])("rejects the unknown level %j with 22023", async (level) => {
+    await actAs(client, uSame);
+    await expectSqlError(client, "select public.medicine_check($1::bigint, $2::text)", [sortis.id, level], "22023");
+  });
+
+  it("rejects a NULL level with 22023", async () => {
+    await actAs(client, uSame);
+    await expectSqlError(client, "select public.medicine_check($1::bigint, null::text)", [sortis.id], "22023");
   });
 });

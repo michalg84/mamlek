@@ -1,9 +1,11 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import { createClient } from "@/lib/supabase";
+import { DEFAULT_MATCH_LEVEL, MATCH_LEVELS } from "@/lib/match-level";
 import { getMedicineCheck } from "@/lib/services/medicine-check";
 
 const productParam = z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive());
+const levelParam = z.enum(MATCH_LEVELS).default(DEFAULT_MATCH_LEVEL);
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -25,9 +27,13 @@ export const GET: APIRoute = async (context) => {
   if (!product.success) {
     return json({ error: "Invalid parameter product: expected a positive integer" }, 400);
   }
+  const level = levelParam.safeParse(context.url.searchParams.get("level") ?? undefined);
+  if (!level.success) {
+    return json({ error: `Invalid parameter level: expected one of ${MATCH_LEVELS.join(", ")}` }, 400);
+  }
 
   try {
-    const result = await getMedicineCheck(supabase, product.data);
+    const result = await getMedicineCheck(supabase, product.data, level.data);
     if (result === null) {
       return json({ error: "Medicine not found" }, 404);
     }

@@ -1,9 +1,13 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
+import { useMatchLevel } from "@/components/hooks/useMatchLevel";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
-import type { MedicineCheckResponse, RegistryVariant } from "@/types";
+import { isMatchLevel, MATCH_LEVEL_TEXTS, MATCH_LEVELS } from "@/lib/match-level";
+import type { MatchLevel, MedicineCheckResponse, RegistryVariant } from "@/types";
 
 interface Props {
   version: number;
@@ -43,12 +47,45 @@ function VariantCard({ variant, withdrawn }: { variant: SearchedMedicine; withdr
   );
 }
 
+/** The match level of the check: one group of three radios, stacked (the card is too narrow for a tidy row). */
+function MatchLevelSwitch({ level, onChange }: { level: MatchLevel; onChange: (level: MatchLevel) => void }) {
+  const legendId = useId();
+  const idPrefix = useId();
+  return (
+    <div className="min-w-0 space-y-2">
+      <p id={legendId} className="text-foreground text-sm font-medium">
+        Dopasowanie składu
+      </p>
+      <RadioGroup
+        aria-labelledby={legendId}
+        value={level}
+        onValueChange={(value) => {
+          if (isMatchLevel(value)) {
+            onChange(value);
+          }
+        }}
+        className="gap-2"
+      >
+        {MATCH_LEVELS.map((value) => (
+          <div key={value} className="flex min-w-0 items-center gap-2">
+            <RadioGroupItem id={`${idPrefix}-${value}`} value={value} />
+            <Label htmlFor={`${idPrefix}-${value}`} className="font-normal break-words">
+              {MATCH_LEVEL_TEXTS[value].label}
+            </Label>
+          </div>
+        ))}
+      </RadioGroup>
+    </div>
+  );
+}
+
 export default function RegistrySearch({ version }: Props) {
   // The picked suggestion; its `withdrawn` flag stays the card's source, because the check does not return it.
   const [selected, setSelected] = useState<RegistryVariant | null>(null);
   // Full data of the checked medicine (e.g. the full strength); until the check answers the card shows the suggestion.
   const [searched, setSearched] = useState<SearchedMedicine | null>(null);
   const shown = selected && searched?.id === selected.id ? searched : selected;
+  const [level, setLevel] = useMatchLevel();
 
   return (
     <div className="min-w-0 space-y-6">
@@ -60,6 +97,7 @@ export default function RegistrySearch({ version }: Props) {
           setSelected(null);
         }}
       />
+      <MatchLevelSwitch level={level} onChange={setLevel} />
       {/* Only the name is announced; the card itself is read when the user moves to it. The verdict is announced by
           MedicineCheckResult once the check answers. */}
       <p role="status" aria-live="polite" className="sr-only">
@@ -68,7 +106,7 @@ export default function RegistrySearch({ version }: Props) {
       {selected && shown && (
         <div className="min-w-0 space-y-4">
           <VariantCard variant={shown} withdrawn={selected.withdrawn} />
-          <MedicineCheckResult key={selected.id} productId={selected.id} onSearched={setSearched} />
+          <MedicineCheckResult key={selected.id} productId={selected.id} level={level} onSearched={setSearched} />
         </div>
       )}
     </div>

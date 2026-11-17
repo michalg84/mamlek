@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkVerdict, emptyPacks, parseMedicineCheck } from "@/lib/medicine-check-verdict";
-import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
+import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 let nextId = 1;
 
@@ -27,7 +27,7 @@ function item(match: MedicineCheckItem["match"], overrides: Partial<MedicineChec
   };
 }
 
-function response(items: MedicineCheckItem[], comparable = true): MedicineCheckResponse {
+function response(items: MedicineCheckItem[], comparable = true, level: MatchLevel = "exact"): MedicineCheckResponse {
   return {
     searched: {
       id: 1,
@@ -37,6 +37,7 @@ function response(items: MedicineCheckItem[], comparable = true): MedicineCheckR
       commonName: "Atorvastatinum",
       substances: ["Atorvastatinum calcicum"],
     },
+    level,
     comparable,
     items,
   };
@@ -138,6 +139,30 @@ describe("checkVerdict", () => {
   );
 });
 
+describe("checkVerdict on each match level", () => {
+  it.each([
+    ["exact", "Masz lek z tą samą substancją czynną", "Ani leku z tą samą substancją czynną"],
+    ["all", "Masz lek zawierający składniki tego leku", "Ani leku zawierającego jego składniki"],
+    ["any", "Masz lek ze wspólnym składnikiem", "Ani leku z żadnym z jego składników"],
+  ] as const)("names the %s level in the substance title and the none line", (level, substanceTitle, noneDetail) => {
+    const substance = checkVerdict(response([item("substance")], true, level));
+    const none = checkVerdict(response([], true, level));
+
+    expect(substance).toMatchObject({ kind: "substance", title: substanceTitle, caution: true });
+    expect(none).toMatchObject({ kind: "none", title: "Nie masz tego leku", detail: noneDetail });
+  });
+
+  it.each(["all", "any"] as const)("keeps the variant title on the %s level", (level) => {
+    expect(checkVerdict(response([item("variant"), item("substance")], true, level)).title).toBe(
+      "Masz ten lek · 1 opakowanie",
+    );
+  });
+
+  it.each(["all", "any"] as const)("makes no claim on the %s level when the medicine cannot be compared", (level) => {
+    expect(checkVerdict(response([], false, level)).detail).toBeNull();
+  });
+});
+
 describe("empty packs", () => {
   it("does not count a pack with quantity 0: only empty packs give „nie masz”", () => {
     const empty = [item("variant", { quantity: 0 }), item("substance", { quantity: 0 })];
@@ -192,6 +217,10 @@ describe("parseMedicineCheck", () => {
     ["an item whose expiry date is a number", { ...valid, items: [{ ...sortis, expiresOn: 20271231 }] }],
     ["an item whose pack units are not objects", { ...valid, items: [{ ...sortis, units: ["30 tabl."] }] }],
     ["a body without the comparable flag", { searched: valid.searched, items: [] }],
+    ["an unknown level", { ...valid, level: "ALL" }],
+    ["an empty level", { ...valid, level: "" }],
+    ["a level that is not a string", { ...valid, level: 2 }],
+    ["a null level", { ...valid, level: null }],
     ["null", null],
     ["an empty object", {}],
   ])("rejects %s", (_label, body) => {
@@ -206,6 +235,18 @@ describe("parseMedicineCheck", () => {
 
   it("returns an answer with both match types unchanged", () => {
     expect(parseMedicineCheck(valid)).toEqual(valid);
+  });
+
+  it.each(["exact", "all", "any"] as const)("keeps the %s level of the answer", (level) => {
+    const body = response([atoris], true, level);
+
+    expect(parseMedicineCheck(body)).toEqual(body);
+  });
+
+  it("reads an answer without a level (a database before match levels) as exact", () => {
+    const { level: _level, ...old } = valid;
+
+    expect(parseMedicineCheck(old)).toEqual({ ...valid, level: "exact" });
   });
 
   it("accepts an item whose optional fields are empty", () => {
