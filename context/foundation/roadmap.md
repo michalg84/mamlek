@@ -47,7 +47,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done        |
 | S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done        |
 | S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done        |
-| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | proposed    |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | in-progress |
 | S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done        |
 | S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | proposed    |
 | S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done        |
@@ -185,8 +185,8 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
   - Czy ścieżka po nazwie powszechnej należy do poziomu „precyzyjnego” — dziś liczy się do jedynego poziomu (PRD v3, Business Logic). Pomiar z 2026-11-16 znalazł 351 nazw powszechnych, pod którymi są produkty o rozłącznych zbiorach substancji (9 236 par); przejrzane przykłady to ta sama substancja zapisana inaczej (naproxenum / naproxenum natricum, fluorouracilum / 5-fluorouracilum, Pradaxa bez substancji), ale próbkę trzeba przejrzeć przed planem S-06 (pytania 8 i 10). Źródło: audyt `context/audits/prd-conformance/2026-11-16.md`, F6. — Owner: autor. Block: no.
   - Czy wynik ma rozróżniać „ta sama substancja czynna” i „ta sama nazwa powszechna” — baza zwraca już pole `matchedBy`, ekran go nie pokazuje. Pomysł autora z 2026-10-13 (plan `testing-check-verdict-correctness`). — Owner: autor. Block: no.
   - Czy czytnik ekranu ogłasza werdykt raz i w całości — po zmianach z S-03 (widoczny blok bez `role="status"`, komunikat `sr-only` w `MedicineCheckResult`) nie sprawdzono tego prawdziwym czytnikiem. S-06 zmienia komunikaty przy wyniku, więc to dobry moment na ręczne sprawdzenie. Źródło: impl-review `medicine-check`, F2/F6. — Owner: autor. Block: no.
-- **Risk:** Rozszerza regułę z S-03 na leki złożone bez dorabiania wyjątków; wydzielony, bo dla leków jednoskładnikowych wszystkie poziomy dają ten sam wynik, więc pierwsze sprawdzenia w aptece nie muszą na niego czekać.
-- **Status:** proposed
+- **Risk:** Rozszerza regułę z S-03 na leki złożone bez dorabiania wyjątków; wydzielony, żeby pierwsze sprawdzenia w aptece nie czekały na wybór poziomu; „zawiera wszystkie” zmienia wynik także dla 36% leków jednoskładnikowych, więc domyślny zostaje poziom precyzyjny.
+- **Status:** in-progress
 
 ### S-07: Codzienne odświeżanie rejestru z widoczną datą
 
