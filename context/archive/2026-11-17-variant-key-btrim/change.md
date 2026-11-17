@@ -1,10 +1,10 @@
 ---
 change_id: variant-key-btrim
 title: Variant key btrim
-status: implementing
+status: archived
 created: 2026-11-17
 updated: 2026-11-17
-archived_at: null
+archived_at: 2026-11-17T11:00:19Z
 ---
 
 ## Notes
