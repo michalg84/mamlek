@@ -1,7 +1,7 @@
 ---
 change_id: substance-match-level
 title: Choose the active-substance match level for compound medicines and see it in search
-status: implementing
+status: impl_reviewed
 created: 2026-11-17
 updated: 2026-11-17
 archived_at: null

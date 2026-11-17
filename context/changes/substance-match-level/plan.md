@@ -304,7 +304,7 @@ Przy `any` RPC może zwrócić kilkadziesiąt pozycji, ale jest ograniczone apte
 
 #### Manual
 
-- [x] 1.5 Na pełnym rejestrze: zapytanie tylko do odczytu dla 3 leków (jednoskładnikowy, złożony, z NPS `-`) daje liczby pozycji monotoniczne między poziomami — czeka na potwierdzenie użytkownika; wynik (20 354 produkty jako apteczka): Metafen 186 / 225 / 225, Cefalgin Migraplus 10 / 10 / 303, Zdrój (NPS `-`) 0 / 0 / 0. Powtórzone 2026-11-17 (agent, na prośbę użytkownika) w transakcji wycofanej na końcu, apteczka = jedno opakowanie każdego produktu (20 353), liczone z wariantem samego leku: Cefalgin Migraplus 11 / 11 / 304, Metafen (100145400) 16 / 16 / 498, Zdrój 1 / 1 / 1 (tylko on sam, `-` nic nie dopasowuje) — monotoniczne; `kit_items` = 99
+- [x] 1.5 Na pełnym rejestrze: zapytanie tylko do odczytu dla 3 leków (jednoskładnikowy, złożony, z NPS `-`) daje liczby pozycji monotoniczne między poziomami; wynik (20 354 produkty jako apteczka): Metafen 186 / 225 / 225, Cefalgin Migraplus 10 / 10 / 303, Zdrój (NPS `-`) 0 / 0 / 0. Powtórzone 2026-11-17 (agent, na prośbę użytkownika) w transakcji wycofanej na końcu, apteczka = jedno opakowanie każdego produktu (20 353), liczone z wariantem samego leku: Cefalgin Migraplus 11 / 11 / 304, Metafen (100145400) 16 / 16 / 498, Zdrój 1 / 1 / 1 (tylko on sam, `-` nic nie dopasowuje) — monotoniczne; `kit_items` = 99
 
 ### Phase 2: API i werdykt
 
@@ -316,7 +316,7 @@ Przy `any` RPC może zwrócić kilkadziesiąt pozycji, ale jest ograniczone apte
 
 #### Manual
 
-- [x] 2.4 `http://localhost:4333/api/kit/check?product=<id>&level=any` w zalogowanej przeglądarce zwraca `level: "any"` i więcej pozycji niż `level=exact` dla leku złożonego z apteczki testowej — czeka na potwierdzenie użytkownika; skrypt z kontem tymczasowym (Cefalgin Migraplus w apteczce, szukany Apap): brak/`exact` 0 pozycji, `all` i `any` Cefalgin (`substance`/`common_name`), `ALL` 400; konto usunięte, `kit_items` = 99. W zalogowanej przeglądarce (Playwright, konto tymczasowe): `level=exact` 0 pozycji, `level=any` `level: "any"` i Cefalgin Migraplus
+- [x] 2.4 `http://localhost:4333/api/kit/check?product=<id>&level=any` w zalogowanej przeglądarce zwraca `level: "any"` i więcej pozycji niż `level=exact` dla leku złożonego z apteczki testowej; skrypt z kontem tymczasowym (Cefalgin Migraplus w apteczce, szukany Apap): brak/`exact` 0 pozycji, `all` i `any` Cefalgin (`substance`/`common_name`), `ALL` 400; konto usunięte, `kit_items` = 99. W zalogowanej przeglądarce (Playwright, konto tymczasowe): `level=exact` 0 pozycji, `level=any` `level: "any"` i Cefalgin Migraplus
 
 ### Phase 3: Ekran
 
