@@ -18,7 +18,7 @@ interface MedicineCheckResultProps {
 }
 
 const UNCOMPARABLE =
-  "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków z tą samą substancją.";
+  "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków o podobnym składzie.";
 
 const VERDICT_STYLE: Record<CheckVerdict["kind"], { icon: LucideIcon; className: string }> = {
   variant: { icon: CircleCheck, className: "bg-success text-success-foreground" },

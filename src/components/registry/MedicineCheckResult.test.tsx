@@ -8,7 +8,7 @@ import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/typ
 // Question 5), and a change to it should be a conscious edit of this one constant.
 const CAUTION = "Ten sam skład czynny nie oznacza, że leki można zamieniać. Zapytaj farmaceutę lub lekarza.";
 const UNCOMPARABLE =
-  "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków z tą samą substancją.";
+  "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków o podobnym składzie.";
 // The caution of the loose levels: the matching medicines may differ in composition.
 const LOOSE_CAUTION = "Te leki mogą mieć inny skład. Nie zamieniaj ich bez porady farmaceuty lub lekarza.";
 const NOT_OWNED = "Nie masz tego leku";

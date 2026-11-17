@@ -4,7 +4,7 @@ import RegistrySearch from "@/components/registry/RegistrySearch";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { stubRoutedFetch } from "../../../tests/helpers/fetch";
-import { MATCH_LEVEL_STORAGE_KEY } from "@/components/hooks/useMatchLevel";
+import { forgetUnsavedMatchLevel, MATCH_LEVEL_STORAGE_KEY } from "@/components/hooks/useMatchLevel";
 import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse, RegistrySearchListPayload } from "@/types";
 
 // The texts below are pinned on purpose, like in MedicineCheckResult.test.tsx.
@@ -447,6 +447,8 @@ describe("RegistrySearch", () => {
     const ANY_VERDICT = "Masz lek ze wspólnym składnikiem";
 
     afterEach(() => {
+      vi.restoreAllMocks();
+      forgetUnsavedMatchLevel();
       window.localStorage.clear();
     });
 
@@ -568,6 +570,22 @@ describe("RegistrySearch", () => {
       expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
       // The refusal is logged, not hidden.
       expect(warn).toHaveBeenCalled();
+    });
+
+    it("switches the level when saving fails but reading still works (full quota)", async () => {
+      window.localStorage.setItem(MATCH_LEVEL_STORAGE_KEY, "exact");
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+        throw new DOMException("The quota has been exceeded.", "QuotaExceededError");
+      });
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const screenUnderTest = await openSearch();
+      await screenUnderTest.search("ibuprom");
+      screenUnderTest.pick(A_OPTION);
+
+      fireEvent.click(levelRadio("Zawiera którykolwiek składnik"));
+
+      expect(levelRadio("Zawiera którykolwiek składnik").getAttribute("aria-checked")).toBe("true");
+      expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
     });
   });
 });

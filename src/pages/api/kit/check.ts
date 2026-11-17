@@ -5,7 +5,7 @@ import { DEFAULT_MATCH_LEVEL, MATCH_LEVELS } from "@/lib/match-level";
 import { getMedicineCheck } from "@/lib/services/medicine-check";
 
 const productParam = z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().positive());
-const levelParam = z.enum(MATCH_LEVELS);
+const levelParam = z.enum(MATCH_LEVELS).default(DEFAULT_MATCH_LEVEL);
 
 function json(body: unknown, status: number) {
   return new Response(JSON.stringify(body), {
@@ -27,9 +27,7 @@ export const GET: APIRoute = async (context) => {
   if (!product.success) {
     return json({ error: "Invalid parameter product: expected a positive integer" }, 400);
   }
-  const rawLevel = context.url.searchParams.get("level");
-  const level =
-    rawLevel === null ? { success: true as const, data: DEFAULT_MATCH_LEVEL } : levelParam.safeParse(rawLevel);
+  const level = levelParam.safeParse(context.url.searchParams.get("level") ?? undefined);
   if (!level.success) {
     return json({ error: `Invalid parameter level: expected one of ${MATCH_LEVELS.join(", ")}` }, 400);
   }

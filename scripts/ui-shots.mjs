@@ -222,9 +222,14 @@ function checkState(name, answer, waitText, { level } = {}) {
     name,
     route: async (context) => {
       if (level) {
-        // The level the screen remembers (useMatchLevel), set before the page reads it.
+        // The level the screen remembers (MATCH_LEVEL_STORAGE_KEY in useMatchLevel), set before the page reads it.
+        // The script also runs in about:blank and foreign frames, where storage throws: only the app page needs it.
         await context.addInitScript((stored) => {
-          globalThis.localStorage.setItem("mamlek:match-level", stored);
+          try {
+            globalThis.localStorage.setItem("mamlek:match-level", stored);
+          } catch {
+            // no storage in this document
+          }
         }, level);
       }
       await context.route(CHECK_URL, (route) => answerCheck(route, answer));
