@@ -31,6 +31,7 @@ const ISSUE_TEXT: Record<RowIssue, string> = {
   "no-package": "wybierz opakowanie",
   "invalid-expiry": "popraw datę ważności",
   "invalid-quantity": "popraw ilość",
+  "empty-pack": "puste opakowanie — pomiń wiersz",
   "already-have": "już masz ten lek",
   "repeated-in-import": "powtórzony w imporcie",
   "choosing-variant": "dokończ wybór leku albo anuluj",
@@ -312,7 +313,9 @@ function RowQuantity({
 
   let error: string | null = null;
   if (row.quantity.kind === "invalid") {
-    error = `Nie da się odczytać ilości „${row.quantity.text}”. Wpisz liczbę od 0 do ${MAX_QUANTITY} albo wyczyść pole.`;
+    error = `Nie da się odczytać ilości „${row.quantity.text}”. Wpisz liczbę od 1 do ${MAX_QUANTITY} albo wyczyść pole.`;
+  } else if (row.quantity.kind === "ok" && row.quantity.value === 0) {
+    error = "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu albo popraw ilość.";
   }
   const size = [packSize.max, packSize.unit].filter((part) => part !== null).join(" ");
   const over = !error && row.quantity.kind === "ok" && packSize.max !== null && row.quantity.value > packSize.max;

@@ -3,9 +3,10 @@
 // (2) write nothing, (3) leak nothing from the inside of the server. Every boundary is tested from both sides: the
 // value just past it is rejected, the value on it is accepted. The boundaries come from the sources, not from the
 // validation schema in the code:
-//   - quantity: the database column is integer >= 0 (kit_items migration); 100000 is the cap (F1 of the
-//     add-medicine-to-kit review: a bound far below the integer limit), also on a pack with a size: a quantity above
-//     the pack size is stored, the screen only warns about it (kit-quantity-semantics plan, phase 2);
+//   - quantity: the database column is integer >= 0 (kit_items migration), but an item is added with at least 1: an
+//     empty pack is not added, only an item already in the kit may be edited to 0 (kit-quantity-semantics plan,
+//     phase 3); 100000 is the cap (F1 of the add-medicine-to-kit review: a bound far below the integer limit), also on
+//     a pack with a size: a quantity above the pack size is stored, the screen only warns about it (same plan, phase 2);
 //   - expiry: month 1-12 and a year range of 2000-2100 (same contract); the precision is always month;
 //   - ids: positive integers that exist in the registry as packs, active or withdrawn (the pack or its product): a
 //     medicine withdrawn from the registry can still be kept in the kit (withdrawn-medicine-in-kit plan, phase 2);
@@ -130,6 +131,7 @@ describe("POST /api/kit: packageId", () => {
 describe("POST /api/kit: quantity", () => {
   const rejected: Case[] = [
     ["negative", (d) => ({ packageId: d.sized.packageId, quantity: -1 })],
+    ["zero (an empty pack is not added)", (d) => ({ packageId: d.sized.packageId, quantity: 0 })],
     ["fractional", (d) => ({ packageId: d.sized.packageId, quantity: 1.5 })],
     ["a string", (d) => ({ packageId: d.sized.packageId, quantity: "5" })],
     ["a boolean", (d) => ({ packageId: d.sized.packageId, quantity: true })],
@@ -140,8 +142,8 @@ describe("POST /api/kit: quantity", () => {
     await expectRejected(400, () => sendJson(KIT, body(data), jar));
   });
 
-  it("zero is stored", async () => {
-    await expectStored({ packageId: data.sized.packageId, quantity: 0 });
+  it("one is stored", async () => {
+    await expectStored({ packageId: data.sized.packageId, quantity: 1 });
   });
 
   it("exactly the pack size is stored", async () => {
@@ -281,6 +283,7 @@ describe("POST /api/kit/import: items", () => {
     ["packageId a string", (d) => ({ packageId: String(d.sized.packageId) })],
     ["packageId zero", () => ({ packageId: 0 })],
     ["quantity negative", (d) => ({ packageId: d.sized.packageId, quantity: -1 })],
+    ["quantity zero (an empty pack is not added)", (d) => ({ packageId: d.sized.packageId, quantity: 0 })],
     ["quantity a string", (d) => ({ packageId: d.sized.packageId, quantity: "5" })],
     ["quantity above 100000", (d) => ({ packageId: d.sized.packageId, quantity: 100_001 })],
     ["expiry month 13", (d) => ({ packageId: d.sized.packageId, expiry: { month: 13, year: 2030 } })],
@@ -326,7 +329,7 @@ describe("POST /api/kit/import: items", () => {
 
   it("items on every boundary are stored together", async () => {
     await expectImported([
-      { packageId: data.sized.packageId, quantity: 0 },
+      { packageId: data.sized.packageId, quantity: 1 },
       { packageId: data.sized.packageId, quantity: data.sized.size },
       { packageId: data.sized.packageId, quantity: 100_000 },
       { packageId: data.sized.packageId, expiry: { month: 1, year: 2000 } },

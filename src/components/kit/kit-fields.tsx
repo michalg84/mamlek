@@ -75,6 +75,8 @@ type QuantityInputProps = Omit<ComponentProps<"input">, "type" | "min" | "max" |
   unit: string | null;
   /** The typed text (a controlled field). */
   value: string;
+  /** Lowest quantity: 1 when an item is added (an empty pack is not added), 0 (the default) when one is edited. */
+  min?: 0 | 1;
 };
 
 /** Warning under a quantity above the pack size (`size`: "12 tabl."). The quantity is still saved. */
@@ -97,6 +99,7 @@ export function OverPackWarning({ id, size }: { id: string; size: string }) {
  */
 export function QuantityInput({
   max,
+  min = 0,
   unit,
   value,
   className,
@@ -112,7 +115,7 @@ export function QuantityInput({
         <Input
           type="number"
           inputMode="numeric"
-          min={0}
+          min={min}
           // The pack size is not the bound: a quantity above it is saved with a warning.
           max={MAX_QUANTITY}
           value={value}

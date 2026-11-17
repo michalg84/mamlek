@@ -51,10 +51,12 @@ interface QuantityFieldProps {
   saving: boolean;
   onSavingChange: (saving: boolean) => void;
   onSaved: (item: KitItem) => void;
+  /** The save turned a pack with something left (or unknown) into an empty one; `field` gets the focus back later. */
+  onEmptied: (field: HTMLElement | null) => void;
 }
 
 /** The editable quantity of a row: "Zapisz" (or Enter) stores a changed value, the error stays under the field. */
-function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldProps) {
+function QuantityField({ item, saving, onSavingChange, onSaved, onEmptied }: QuantityFieldProps) {
   const { save } = useKitItemActions();
   const [draft, setDraft] = useState(() => quantityText(item.quantity));
   // The browser reports text it cannot read as a number ("-", "1e") as an empty value with `validity.badInput` set. It
@@ -88,6 +90,9 @@ function QuantityField({ item, saving, onSavingChange, onSaved }: QuantityFieldP
     onSaved(result.item);
     // "Zapisz" disappears with the change, so the field takes the focus back.
     inputRef.current?.focus();
+    if (result.item.quantity === 0 && item.quantity !== 0) {
+      onEmptied(inputRef.current);
+    }
   }
 
   return (
@@ -171,10 +176,15 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
 
   const description = [item.name, item.strength].filter(Boolean).join(" ");
 
-  function openConfirm(event: MouseEvent<HTMLButtonElement>) {
-    confirmOpenerRef.current = event.currentTarget;
+  // Also opened right after a save that emptied the pack: the user is asked once, "Anuluj" keeps the empty pack.
+  function askToRemove(opener: HTMLElement | null) {
+    confirmOpenerRef.current = opener;
     setRemoveError(null);
     setConfirmOpen(true);
+  }
+
+  function openConfirm(event: MouseEvent<HTMLButtonElement>) {
+    askToRemove(event.currentTarget);
   }
 
   async function confirmRemove(event: MouseEvent<HTMLButtonElement>) {
@@ -210,7 +220,13 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
         today={today}
         quantitySlot={
           editing ? undefined : (
-            <QuantityField item={item} saving={savingQuantity} onSavingChange={setSavingQuantity} onSaved={onSaved} />
+            <QuantityField
+              item={item}
+              saving={savingQuantity}
+              onSavingChange={setSavingQuantity}
+              onSaved={onSaved}
+              onEmptied={askToRemove}
+            />
           )
         }
       />
@@ -267,6 +283,9 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
             onSaved={(saved) => {
               onSaved(saved);
               closeEdit();
+              if (saved.quantity === 0 && item.quantity !== 0) {
+                askToRemove(editButtonRef.current);
+              }
             }}
             onCancel={closeEdit}
           />

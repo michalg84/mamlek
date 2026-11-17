@@ -334,9 +334,9 @@ Bez wpływu: reguła działa na już pobranym `units`, werdykt filtruje listę p
 
 #### Automated
 
-- [ ] 3.1 Testy jednostkowe i komponentów przechodzą: `npm test`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Lint i skan UI przechodzą
+- [x] 3.1 Testy jednostkowe i komponentów przechodzą: `npm test`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Lint i skan UI przechodzą
 - [ ] 3.4 Testy bazy przechodzą (za zgodą koordynatora)
 - [ ] 3.5 Testy API przechodzą (za zgodą koordynatora)
 

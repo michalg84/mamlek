@@ -348,8 +348,30 @@ describe("KitAddForm", () => {
       Object.defineProperty(quantityField(), "validity", { value: { badInput: true } });
       fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
 
-      expect(screen.getByText("Podaj liczbę całkowitą, 0 lub większą")).toBeTruthy();
+      expect(screen.getByText("Podaj liczbę całkowitą, 1 lub większą")).toBeTruthy();
       expect(addPosts(form.routed)).toEqual([]);
+    });
+
+    it("does not add an empty pack: 0 is refused at the field and sends nothing, 1 is added", async () => {
+      const form = await openForm({ addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+      expect(quantityField().min).toBe("1");
+
+      fireEvent.change(quantityField(), { target: { value: "0" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      const error = screen.getByText(
+        "Puste opakowanie nie trafia do apteczki: podaj 1 lub więcej albo zostaw pole puste",
+      );
+      expect(quantityField().getAttribute("aria-invalid")).toBe("true");
+      expect(quantityField().getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+      expect(addPosts(form.routed)).toEqual([]);
+
+      fireEvent.change(quantityField(), { target: { value: "1" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      await waitFor(() => {
+        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ quantity: 1 })]);
+      });
     });
 
     it("shows a Polish message for a rejected add, never the text of the server, and logs the answer", async () => {

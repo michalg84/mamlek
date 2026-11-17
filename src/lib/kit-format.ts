@@ -125,24 +125,36 @@ export function overPackSize(text: string, max: number | null): boolean {
   return Number.isInteger(value) && value > max;
 }
 
+/** Why 0 is refused when an item is added. */
+export const EMPTY_PACK_ON_ADD = "Puste opakowanie nie trafia do apteczki: podaj 1 lub więcej albo zostaw pole puste";
+
 /**
  * Quantity typed by the user, checked like the API does: empty text is an unknown quantity (`null`), anything else
- * must be an integer from 0 up to `MAX_QUANTITY`. A quantity above the pack size is valid (a blister of 12 can hold 14
- * loose tablets): the field only warns about it, see `overPackSize`. `badInput` is the `validity.badInput` of the
- * number field the text came from.
+ * must be an integer from `min` up to `MAX_QUANTITY`. `min` is 1 when an item is added (an empty pack is not added)
+ * and 0 when a stored item is edited (the pack was used up). A quantity above the pack size is valid (a blister of 12
+ * can hold 14 loose tablets): the field only warns about it, see `overPackSize`. `badInput` is the
+ * `validity.badInput` of the number field the text came from.
  */
-export function parseQuantityInput(text: string, badInput = false): { value: number | null } | { error: string } {
+export function parseQuantityInput(
+  text: string,
+  badInput = false,
+  min: 0 | 1 = 0,
+): { value: number | null } | { error: string } {
   const trimmed = text.trim();
+  const notANumber = `Podaj liczbę całkowitą, ${min} lub większą`;
   // A number field answers "" for something it cannot read ("-", "1e"): that is a mistake, not an unknown quantity.
   if (badInput) {
-    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    return { error: notANumber };
   }
   if (trimmed === "") {
     return { value: null };
   }
   const value = Number(trimmed);
   if (!Number.isInteger(value) || value < 0) {
-    return { error: "Podaj liczbę całkowitą, 0 lub większą" };
+    return { error: notANumber };
+  }
+  if (value < min) {
+    return { error: EMPTY_PACK_ON_ADD };
   }
   if (value > MAX_QUANTITY) {
     return { error: `Ilość nie może być większa niż ${MAX_QUANTITY}` };

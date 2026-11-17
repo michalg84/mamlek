@@ -29,6 +29,7 @@ export type RowIssue =
   | "no-package"
   | "invalid-expiry"
   | "invalid-quantity"
+  | "empty-pack"
   | "already-have"
   | "repeated-in-import";
 
@@ -227,6 +228,9 @@ export function rowIssues(row: ImportRow, context: RowIssueContext): RowIssue[] 
   // A quantity above the pack size is not a reason: the row only warns about it (KitImportRow).
   if (row.quantity.kind === "invalid") {
     issues.push("invalid-quantity");
+  } else if (row.quantity.kind === "ok" && row.quantity.value === 0) {
+    // An empty pack is not added to the kit: the row is skipped or its quantity corrected.
+    issues.push("empty-pack");
   }
   if (key !== null) {
     const accepted = row.duplicateDecision ?? [];

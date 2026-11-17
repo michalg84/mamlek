@@ -6,6 +6,7 @@ import {
   packQuantity,
   parseExpiryInput,
   overPackSize,
+  EMPTY_PACK_ON_ADD,
   parseQuantityInput,
   todayIso,
   uniquePacks,
@@ -188,6 +189,23 @@ describe("parseQuantityInput", () => {
   it("refuses an empty value the number field reported as unreadable, instead of reading it as unknown", () => {
     expect(parseQuantityInput("", true)).toEqual({ error: "Podaj liczbę całkowitą, 0 lub większą" });
     expect(parseQuantityInput("", false)).toEqual({ value: null });
+  });
+
+  it("with min 1 (adding an item) refuses an empty pack and accepts 1 and an unknown quantity", () => {
+    expect(parseQuantityInput("0", false, 1)).toEqual({ error: EMPTY_PACK_ON_ADD });
+    expect(parseQuantityInput(" 0 ", false, 1)).toEqual({ error: EMPTY_PACK_ON_ADD });
+    expect(parseQuantityInput("1", false, 1)).toEqual({ value: 1 });
+    expect(parseQuantityInput("", false, 1)).toEqual({ value: null });
+    expect(parseQuantityInput(String(MAX_QUANTITY + 1), false, 1)).toEqual({
+      error: `Ilość nie może być większa niż ${MAX_QUANTITY}`,
+    });
+  });
+
+  it("with min 1 names 1 as the lowest quantity for text that is not a whole number", () => {
+    const error = { error: "Podaj liczbę całkowitą, 1 lub większą" };
+    expect(parseQuantityInput("-1", false, 1)).toEqual(error);
+    expect(parseQuantityInput("1.5", false, 1)).toEqual(error);
+    expect(parseQuantityInput("", true, 1)).toEqual(error);
   });
 });
 

@@ -398,6 +398,28 @@ describe("KitImport", () => {
     expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 31, expiry: null }] }]);
   });
 
+  it("blocks an empty pack (quantity 0) until the quantity is corrected, and never sends it", async () => {
+    const routed = await review(csv("No-Spa;40 mg;tabletki;;0"), { importKit: () => reply({ ids: [7] }, 201) });
+    await packChosen(2);
+
+    const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
+    expect(text(2)).toContain("Wymaga decyzji: puste opakowanie — pomiń wiersz");
+    const error = within(row(2)).getByText(
+      "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu albo popraw ilość.",
+    );
+    expect(quantity.getAttribute("aria-invalid")).toBe("true");
+    expect(quantity.getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+    expect(saveBlocked()).toBe(true);
+    expect(routed.importRequests()).toEqual([]);
+
+    fireEvent.change(quantity, { target: { value: "1" } });
+    expect(text(2)).toContain(READY);
+    fireEvent.click(saveButton());
+
+    await screen.findByText("Wszystkie strony importu są już obsłużone.");
+    expect(routed.importRequests()).toEqual([{ items: [{ packageId: 801, quantity: 1, expiry: null }] }]);
+  });
+
   it("keeps the edited quantity when a removed row is restored", async () => {
     const routed = await review(csv("No-Spa;40 mg;tabletki;;20"), { importKit: () => reply({ ids: [7] }, 201) });
     await packChosen(2);

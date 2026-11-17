@@ -5,7 +5,7 @@ import { KitItemDetails } from "@/components/kit/KitItemDetails";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { todayIso } from "@/lib/kit-format";
-import { checkVerdict, type CheckVerdict } from "@/lib/medicine-check-verdict";
+import { checkVerdict, emptyPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
@@ -38,6 +38,27 @@ function ItemList({ items, today }: { items: MedicineCheckItem[]; today: string 
       ))}
     </ul>
   );
+}
+
+/** The empty packs of the matching medicines: in the kit, but left out of the verdict. */
+function EmptyPacks({ items, today }: { items: MedicineCheckItem[]; today: string }) {
+  const headingId = useId();
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <section className="min-w-0 space-y-2" aria-labelledby={headingId}>
+      <h3 id={headingId} className="text-foreground text-sm font-semibold">
+        Puste opakowania
+      </h3>
+      <ItemList items={items} today={today} />
+    </section>
+  );
+}
+
+/** The sentence the live region adds after the verdict when matching packs are empty. */
+function emptyPacksAnnouncement(count: number) {
+  return count > 0 ? `Puste opakowania w apteczce: ${count}` : "";
 }
 
 /** Result of checking the picked medicine against the kit: verdict, matching kit items, caution and notes. */
@@ -93,6 +114,8 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
     announcement = [verdict.title, verdict.detail, verdict.caution && CAUTION, verdict.uncomparable && UNCOMPARABLE]
       .filter(Boolean)
       .join(". ");
+    const empty = emptyPacks(result);
+    announcement = [announcement, emptyPacksAnnouncement(empty.length)].filter(Boolean).join(". ");
 
     content = (
       <div className="min-w-0 space-y-3">
@@ -122,6 +145,7 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
             <ItemList items={same} today={today} />
           </section>
         )}
+        <EmptyPacks items={empty} today={today} />
       </div>
     );
   }

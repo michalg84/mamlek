@@ -340,16 +340,59 @@ describe("KitList", () => {
       expect((await screen.findByRole("alert")).textContent).toBe("Nie udało się zapisać tej wartości");
     });
 
-    it("shows „Opakowanie puste” once 0 is saved", async () => {
+    it("asks to delete the pack once 0 is saved; „Anuluj” keeps it as „Opakowanie puste”, with the focus on the field", async () => {
       const item = kitItem();
-      stubKitItem(() => reply({ item: { ...item, quantity: 0 } }));
+      const routed = stubKitItem(() => reply({ item: { ...item, quantity: 0 } }));
       render(<KitList items={[item]} today="2026-11-04" />);
       expect(screen.queryByText(EMPTY_PACK)).toBeNull();
 
       fireEvent.change(quantityField("Lek 1"), { target: { value: "0" } });
       fireEvent.click(screen.getByRole("button", { name: SAVE }));
 
-      expect(await screen.findByText(EMPTY_PACK)).toBeTruthy();
+      const dialog = await screen.findByRole("alertdialog");
+      expect(within(dialog).getByText(CONFIRM_TITLE)).toBeTruthy();
+      fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(screen.getByText(EMPTY_PACK)).toBeTruthy();
+      expect(quantityField("Lek 1").value).toBe("0");
+      expect(document.activeElement).toBe(quantityField("Lek 1"));
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 0 } }]);
+    });
+
+    it("deletes the pack when „Usuń” is chosen in the dialog that a saved 0 opened", async () => {
+      const items = [kitItem(), kitItem()];
+      const routed = stubKitItem((request) =>
+        request.method === "PATCH" ? reply({ item: { ...items[0], quantity: 0 } }) : deleted(),
+      );
+      render(<KitList items={items} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "0" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+      fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: DELETE }));
+
+      await waitFor(() => {
+        expect(screen.queryByText("Lek 1")).toBeNull();
+      });
+      expect(routed.kitItemRequests()).toEqual([
+        { method: "PATCH", id: items[0].id, body: { quantity: 0 } },
+        { method: "DELETE", id: items[0].id, body: undefined },
+      ]);
+    });
+
+    it("does not ask after a save that leaves something in the pack", async () => {
+      const item = kitItem();
+      stubKitItem(() => reply({ item: { ...item, quantity: 1 } }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.change(quantityField("Lek 1"), { target: { value: "1" } });
+      fireEvent.click(screen.getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("button", { name: SAVE })).toBeNull();
+      });
+      expect(screen.queryByRole("alertdialog")).toBeNull();
     });
   });
 
@@ -429,6 +472,67 @@ describe("KitList", () => {
       expect(quantityField("Lek 1").value).toBe("45");
       expect(within(row("Lek 1")).getByText("z 60 tabl.")).toBeTruthy();
       expect(document.activeElement).toBe(editButton("Lek 1"));
+    });
+  });
+
+  describe("edit to an empty pack", () => {
+    function packsOf(item: KitItem) {
+      return {
+        [item.productId]: [
+          {
+            packageId: item.packageId,
+            productId: item.productId,
+            gtin: null,
+            availabilityCategory: null,
+            units: item.units,
+            holder: null,
+            withdrawn: false,
+          },
+        ],
+      };
+    }
+
+    it("asks to delete the pack when the panel saves 0; „Anuluj” gives the focus back to „Edytuj”", async () => {
+      const item = kitItem();
+      const routed = stubRoutedFetch(registrySearchList, packsOf(item), {
+        kitItem: () => reply({ item: { ...item, quantity: 0 } }),
+      });
+      render(<KitList items={[item]} today="2026-11-04" />);
+      const edit = within(row("Lek 1")).getByRole("button", { name: EDIT });
+
+      fireEvent.click(edit);
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      await within(panel).findByRole("radio", { name: "30 tabl." });
+      fireEvent.change(within(panel).getByLabelText("Ilość w opakowaniu (opcjonalnie)"), { target: { value: "0" } });
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      const dialog = await screen.findByRole("alertdialog");
+      fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));
+      await waitFor(() => {
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+      });
+      expect(screen.getByText(EMPTY_PACK)).toBeTruthy();
+      expect(document.activeElement).toBe(edit);
+      expect(routed.kitItemRequests()).toEqual([{ method: "PATCH", id: item.id, body: { quantity: 0 } }]);
+    });
+
+    it("does not ask again when the panel saves another change of a pack that was already empty", async () => {
+      const item = kitItem({ quantity: 0 });
+      stubRoutedFetch(registrySearchList, packsOf(item), {
+        kitItem: () => reply({ item: { ...item, expiresOn: null, expiryPrecision: null } }),
+      });
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.click(within(row("Lek 1")).getByRole("button", { name: EDIT }));
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      await within(panel).findByRole("radio", { name: "30 tabl." });
+      fireEvent.click(within(panel).getByRole("button", { name: "Wyczyść" }));
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("form")).toBeNull();
+      });
+      expect(screen.queryByRole("alertdialog")).toBeNull();
     });
   });
 
