@@ -297,10 +297,10 @@ Przy `any` RPC może zwrócić kilkadziesiąt pozycji, ale jest ograniczone apte
 
 #### Automated
 
-- [x] 1.1 Migracja nakłada się na wspólną bazę: `npx supabase migration up` (po zgodzie koordynatora) — za zgodą użytkownika, tylko lokalnie; pierwsze `test:db` złapało kolizję aliasu `strength` z kolumną mocy (99 testów czerwonych), więc lokalny rollback według AGENTS.md, alias `match_strength` i ponowne `migration up`
-- [x] 1.2 Testy reguły przechodzą: `npm run test:db` — 171/171; celowe zepsucie: wyłączenie nadzbioru i części wspólnej → 9 czerwonych, wyłączenie strażnika pustego zbioru → 16 czerwonych, po przywróceniu zielone
-- [x] 1.3 Testy unit, komponentów i registry przechodzą bez zmian: `npm test` — 710/710
-- [x] 1.4 Lint i typy: `npm run lint`, `npx astro check`
+- [x] 1.1 Migracja nakłada się na wspólną bazę: `npx supabase migration up` (po zgodzie koordynatora) — za zgodą użytkownika, tylko lokalnie; pierwsze `test:db` złapało kolizję aliasu `strength` z kolumną mocy (99 testów czerwonych), więc lokalny rollback według AGENTS.md, alias `match_strength` i ponowne `migration up` — bd0898c
+- [x] 1.2 Testy reguły przechodzą: `npm run test:db` — 171/171; celowe zepsucie: wyłączenie nadzbioru i części wspólnej → 9 czerwonych, wyłączenie strażnika pustego zbioru → 16 czerwonych, po przywróceniu zielone — bd0898c
+- [x] 1.3 Testy unit, komponentów i registry przechodzą bez zmian: `npm test` — 710/710 — bd0898c
+- [x] 1.4 Lint i typy: `npm run lint`, `npx astro check` — bd0898c
 
 #### Manual
 
@@ -310,13 +310,13 @@ Przy `any` RPC może zwrócić kilkadziesiąt pozycji, ale jest ograniczone apte
 
 #### Automated
 
-- [ ] 2.1 Testy unit i komponentów przechodzą: `npm test`
-- [ ] 2.2 Testy API przechodzą: `npm run test:api` (serwer na 4333, po zgodzie koordynatora)
-- [ ] 2.3 Lint i typy: `npm run lint`, `npx astro check`
+- [x] 2.1 Testy unit i komponentów przechodzą: `npm test` — 725/725 — cae9dd0
+- [ ] 2.2 Testy API przechodzą: `npm run test:api` (serwer na 4333, po zgodzie koordynatora) — lokalnie nie da się: wspólna baza ma pełny rejestr (20 354 produkty) zamiast fixture'ów v1, v1, v2, więc `loadBoundaryData` przerywa przed testami; import fixture'ów zmieniłby wspólny stan. Sprawdzi CI (`smoke`). Testy poziomu sprawdzają walidację i echo; dopasowanie nadzbioru zostaje w `test:db`, bo fixture'y nie mają pary nadzbioru
+- [x] 2.3 Lint i typy: `npm run lint`, `npx astro check` — cae9dd0
 
 #### Manual
 
-- [ ] 2.4 `http://localhost:4333/api/kit/check?product=<id>&level=any` w zalogowanej przeglądarce zwraca `level: "any"` i więcej pozycji niż `level=exact` dla leku złożonego z apteczki testowej
+- [ ] 2.4 `http://localhost:4333/api/kit/check?product=<id>&level=any` w zalogowanej przeglądarce zwraca `level: "any"` i więcej pozycji niż `level=exact` dla leku złożonego z apteczki testowej — czeka na potwierdzenie użytkownika; skrypt z kontem tymczasowym (Cefalgin Migraplus w apteczce, szukany Apap): brak/`exact` 0 pozycji, `all` i `any` Cefalgin (`substance`/`common_name`), `ALL` 400; konto usunięte, `kit_items` = 99
 
 ### Phase 3: Ekran
 
