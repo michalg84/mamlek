@@ -12,6 +12,8 @@ export interface RegistrySearchEntry {
   variant: RegistryVariant;
   /** Length of the original product name, the first sort key after the withdrawn flag. */
   nameLength: number;
+  /** Numeric key of the strength, the sort key after the name; null when the strength is missing or unparseable. */
+  strengthKey: StrengthKey | null;
   nameWords: string[];
   commonWords: string[];
   /** Words of all active substances together. */
@@ -77,11 +79,131 @@ export function isQueryLongEnough(query: string): boolean {
   return length >= MIN_QUERY_LENGTH;
 }
 
+/**
+ * Numeric sort key of a strength: the unit signature (e.g. `mg`, `mg/ml`, `mg+mg`, `(mg+mg)/ml`) and the numbers in
+ * order (each component's value, then its own denominator's value, then the shared denominator's value).
+ */
+interface StrengthKey {
+  signature: string;
+  values: number[];
+}
+
+/** A number: digit groups separated by single spaces ("10 000"), or digits with an optional decimal comma or dot. */
+const NUMBER = String.raw`(\d{1,3}(?: \d{3})+|\d+(?:[.,]\d+)?)`;
+/** A unit: words without digits, whitespace or `/ + ( ) ; ,`, joined by single spaces ("mg", "j.m.", "mln j."). */
+const UNIT = String.raw`([^\d\s/+();,]+(?: [^\d\s/+();,]+)*)`;
+const AMOUNT_PATTERN = new RegExp(String.raw`^${NUMBER} *${UNIT}$`);
+/** A denominator after `/`: an optional number (missing = 1) and a unit. */
+const DENOMINATOR_PATTERN = new RegExp(String.raw`^(?:${NUMBER} *)?${UNIT}$`);
+const TRAILING_NOTE_PATTERN = /\s*\([^()]*\)$/;
+const SHARED_DENOMINATOR_PATTERN = /^\((.*)\)\s*\/\s*(.+)$/;
+const COMPONENT_SEPARATOR = /\s*\+\s*/;
+const MASS_TO_MG = new Map<string, number>([
+  ["g", 1000],
+  ["mg", 1],
+  ["mcg", 0.001],
+  ["µg", 0.001],
+  ["μg", 0.001],
+]);
+
+interface Quantity {
+  unit: string;
+  value: number;
+}
+
+function parseNumber(text: string): number {
+  return Number(text.replace(/ /g, "").replace(",", "."));
+}
+
+/** Lowercase without dots; mass units (g, mg, mcg, µg, mikrogram*) become mg with the value converted. */
+function quantityOf(numberText: string | undefined, unitText: string): Quantity {
+  const unit = unitText.toLowerCase().replace(/\./g, "");
+  const value = numberText === undefined ? 1 : parseNumber(numberText);
+  const factor = unit.startsWith("mikrogram") ? 0.001 : MASS_TO_MG.get(unit);
+  return factor === undefined ? { unit, value } : { unit: "mg", value: value * factor };
+}
+
+function parseDenominator(text: string): Quantity | null {
+  const match = DENOMINATOR_PATTERN.exec(text.trim());
+  return match ? quantityOf(match[1], match[2]) : null;
+}
+
+/**
+ * Turns a strength text into its numeric sort key, or null when it is missing or does not follow the grammar:
+ * components joined by `+`, each an amount ("2,5 mg", "10 000 j.m.") with an optional own denominator ("/5 ml",
+ * "/ml"), optionally wrapped in parentheses with a shared denominator ("(50 mg + 7,5 mg)/5 ml"). One trailing
+ * parenthetical note ("1 mg/ml (0,1%)") is ignored. Lists ("5 mg; 10 mg"), ranges and free text give null.
+ */
+function strengthKeyOf(strength: string | null): StrengthKey | null {
+  if (strength === null) {
+    return null;
+  }
+  let body = strength.trim().replace(TRAILING_NOTE_PATTERN, "");
+  let shared: Quantity | null = null;
+  const sharedMatch = SHARED_DENOMINATOR_PATTERN.exec(body);
+  if (sharedMatch) {
+    body = sharedMatch[1];
+    shared = parseDenominator(sharedMatch[2]);
+    if (!shared) {
+      return null;
+    }
+  }
+
+  const units: string[] = [];
+  const values: number[] = [];
+  for (const component of body.trim().split(COMPONENT_SEPARATOR)) {
+    const parts = component.split("/");
+    if (parts.length > 2) {
+      return null;
+    }
+    const amountMatch = AMOUNT_PATTERN.exec(parts[0].trim());
+    if (!amountMatch) {
+      return null;
+    }
+    const amount = quantityOf(amountMatch[1], amountMatch[2]);
+    values.push(amount.value);
+    if (parts.length === 2) {
+      const denominator = parseDenominator(parts[1]);
+      if (!denominator) {
+        return null;
+      }
+      values.push(denominator.value);
+      units.push(`${amount.unit}/${denominator.unit}`);
+    } else {
+      units.push(amount.unit);
+    }
+  }
+
+  const signature = shared ? `(${units.join("+")})/${shared.unit}` : units.join("+");
+  if (shared) {
+    values.push(shared.value);
+  }
+  return { signature, values };
+}
+
+/** Parseable before null, then signature (plain string order), then values lexicographically (a shorter prefix first). */
+function compareStrengthKeys(a: StrengthKey | null, b: StrengthKey | null): number {
+  if (a === null || b === null) {
+    return Number(a === null) - Number(b === null);
+  }
+  if (a.signature !== b.signature) {
+    return a.signature < b.signature ? -1 : 1;
+  }
+  const length = Math.min(a.values.length, b.values.length);
+  for (let i = 0; i < length; i++) {
+    if (a.values[i] !== b.values[i]) {
+      return a.values[i] - b.values[i];
+    }
+  }
+  return a.values.length - b.values.length;
+}
+
 function compareEntries(a: RegistrySearchEntry, b: RegistrySearchEntry): number {
   return (
     Number(a.variant.withdrawn) - Number(b.variant.withdrawn) ||
     a.nameLength - b.nameLength ||
     collator.compare(a.variant.name, b.variant.name) ||
+    compareStrengthKeys(a.strengthKey, b.strengthKey) ||
     collator.compare(a.variant.strength ?? "", b.variant.strength ?? "") ||
     a.variant.id - b.variant.id
   );
@@ -103,6 +225,7 @@ export function buildSearchIndex(payload: RegistrySearchListPayload): RegistrySe
         // The 7th tuple element is present only for a withdrawn variant; a list without it reads as all active.
         variant: { id, name, strength, form, commonName, substances, withdrawn: withdrawn === true },
         nameLength: name.length,
+        strengthKey: strengthKeyOf(strength),
         nameWords,
         commonWords,
         substanceWords,

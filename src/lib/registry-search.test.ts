@@ -13,7 +13,9 @@ import { ID, registrySearchList } from "../../tests/fixtures/registry-search-lis
 //       A first word of the name, B another word of the name, C word of the common name, D word of a substance
 //   R4  every further query word must start a word of that level's field, or of strength/form; otherwise the
 //       variant falls to the next level
-//   R5  order: level, then shorter name (characters), then Polish name order, then strength order, then id
+//   R5  order: level, then shorter name (characters), then Polish name order, then strength order, then id;
+//       strength order (S-11) is numeric: parseable strengths first, grouped by unit signature, then by their
+//       numbers (mass converted to mg), unparseable or empty strengths last in Polish text order
 //   R6  at most `limit` (default 20) results; `total` counts all matches
 //   R7  prefix only, no typo tolerance
 
@@ -156,8 +158,8 @@ describe("searchVariants", () => {
     });
   });
 
-  // R5: same name, strengths with the same number of digits (200 mg, 400 mg): the strength decides, not the id
-  // (the 400 mg row has the lower id). Strengths with different digit counts are deliberately not compared.
+  // R5: same name, strengths 200 mg and 400 mg: the strength decides, not the id (the 400 mg row has the lower id).
+  // Numeric strength order across digit counts, units and shapes is covered by the strength-order block below.
   it("orders the same name by strength", () => {
     expect(search("ibuprom").ids.slice(0, 2)).toEqual([ID.ibuprom200, ID.ibuprom400]);
   });
@@ -279,6 +281,108 @@ describe("searchVariants with withdrawn variants", () => {
       substances: ["Rosuvastatinum"],
       withdrawn: true,
     });
+  });
+});
+
+// S-11 numeric strength order (context/changes/search-numeric-strength-order/plan.md, phase 1). Inside one name the
+// strength key decides: parseable strengths before unparseable ones; among parseable ones first the unit signature
+// (plain string order, so "mg" < "mg+mg" < "mg/ml"), then the numbers in order (each component's value, then its own
+// denominator; g, mg and mcg converted to mg); ties and unparseable strengths fall back to Polish text order, then id.
+// Every case below is one name at level A; the expected orders are derived by hand from that rule. Ids run in reverse
+// of the expected order, so the id never decides.
+describe("searchVariants strength order", () => {
+  const strengthList: RegistrySearchListPayload = {
+    version: 1,
+    snapshotDate: "2026-11-17",
+    variants: [
+      // Different digit counts: 250 < 500 < 1000.
+      [101, "Digitum", "1000 mg", "tabletki", null, []],
+      [102, "Digitum", "500 mg", "tabletki", null, []],
+      [103, "Digitum", "250 mg", "tabletki", null, []],
+      // Decimal comma: 2.5 < 5 < 10.
+      [111, "Decimum", "10 mg", "tabletki", null, []],
+      [112, "Decimum", "5 mg", "tabletki", null, []],
+      [113, "Decimum", "2,5 mg", "tabletki", null, []],
+      // Mass in g: 1 g = 1000 mg, so after 750 mg.
+      [121, "Grammex", "1 g", "tabletki", null, []],
+      [122, "Grammex", "750 mg", "tabletki", null, []],
+      [123, "Grammex", "500 mg", "tabletki", null, []],
+      // Mass in mcg: 250 mcg = 0.25 mg < 0.5 mg.
+      [131, "Microdose", "0,5 mg", "tabletki", null, []],
+      [132, "Microdose", "250 mcg", "tabletki", null, []],
+      // Unit groups: signature "mg" < "mg/ml", so every tablet before every solution, each group by number.
+      [141, "Groupix", "7,5 mg/ml", "roztwór", null, []],
+      [142, "Groupix", "1 mg/ml", "roztwór", null, []],
+      [143, "Groupix", "10 mg", "tabletki", null, []],
+      [144, "Groupix", "5 mg", "tabletki", null, []],
+      // Concentrations, signature "jm/ml": numerators 1000 < 2000 < 3000 < 10000 (spaces separate thousands).
+      [151, "Unitex", "10 000 j.m./ml", "roztwór", null, []],
+      [152, "Unitex", "3 000 j.m./0,3 ml", "roztwór", null, []],
+      [153, "Unitex", "2000 j.m./ml", "roztwór", null, []],
+      [154, "Unitex", "1000 j.m./0,5 ml", "roztwór", null, []],
+      // Equal numerator: the denominator decides, 5 ml < 10 ml.
+      [161, "Ratiomed", "5 mg/10 ml", "roztwór", null, []],
+      [162, "Ratiomed", "5 mg/5 ml", "roztwór", null, []],
+      // Combinations, component by component: (2.5, 1.25) < (5, 2.5) < (10, 5) < (10, 10).
+      [171, "Combix", "10 mg + 10 mg", "tabletki", null, []],
+      [172, "Combix", "10 mg + 5 mg", "tabletki", null, []],
+      [173, "Combix", "5 mg + 2,5 mg", "tabletki", null, []],
+      [174, "Combix", "2,5 mg + 1,25 mg", "tabletki", null, []],
+      // Unparseable after the parseable "20 mg", among themselves in Polish text order: empty (null) first, then
+      // punctuation, digits, letters.
+      [181, "Restmed", "Produkt złożony", "tabletki", null, []],
+      [182, "Restmed", "5 mg; 10 mg", "tabletki", null, []],
+      [183, "Restmed", "-", "tabletki", null, []],
+      [184, "Restmed", null, "tabletki", null, []],
+      [185, "Restmed", "20 mg", "tabletki", null, []],
+      // A trailing parenthetical does not change the key: "1 mg/ml (0,1%)" reads as 1 mg/ml, between 0.5 and 5 mg/ml
+      // (were it unparseable, it would go last).
+      [191, "Parenthin", "5 mg/ml", "krople", null, []],
+      [192, "Parenthin", "1 mg/ml (0,1%)", "krople", null, []],
+      [193, "Parenthin", "0,5 mg/ml", "krople", null, []],
+    ],
+  };
+  const strengthIndex = buildSearchIndex(strengthList);
+
+  function strengthsOf(query: string) {
+    const { results, total } = searchVariants(strengthIndex, query);
+    return { strengths: results.map((variant) => variant.strength), total };
+  }
+
+  it.each([
+    ["digitum", ["250 mg", "500 mg", "1000 mg"]],
+    ["decimum", ["2,5 mg", "5 mg", "10 mg"]],
+    ["grammex", ["500 mg", "750 mg", "1 g"]],
+    ["microdose", ["250 mcg", "0,5 mg"]],
+    ["groupix", ["5 mg", "10 mg", "1 mg/ml", "7,5 mg/ml"]],
+    ["unitex", ["1000 j.m./0,5 ml", "2000 j.m./ml", "3 000 j.m./0,3 ml", "10 000 j.m./ml"]],
+    ["ratiomed", ["5 mg/5 ml", "5 mg/10 ml"]],
+    ["combix", ["2,5 mg + 1,25 mg", "5 mg + 2,5 mg", "10 mg + 5 mg", "10 mg + 10 mg"]],
+    ["restmed", ["20 mg", null, "-", "5 mg; 10 mg", "Produkt złożony"]],
+    ["parenthin", ["0,5 mg/ml", "1 mg/ml (0,1%)", "5 mg/ml"]],
+  ])("orders the strengths of „%s” numerically", (query, expected) => {
+    expect(strengthsOf(query)).toEqual({ strengths: expected, total: expected.length });
+  });
+
+  // The higher keys stay: a shorter name beats a longer one whatever the strength, and an active variant beats a
+  // withdrawn one of the same name although its strength is greater.
+  it("keeps the withdrawn flag and the name length before the strength", () => {
+    const ordoList: RegistrySearchListPayload = {
+      version: 1,
+      snapshotDate: "2026-11-17",
+      variants: [
+        // Withdrawn, the lowest strength and the shortest name: last.
+        [201, "Ordo", "250 mg", "tabletki", null, [], true],
+        // Active, longer name (10 characters), lower strength: after the active 4-character name.
+        [202, "Ordo Forte", "250 mg", "tabletki", null, []],
+        // Active, shortest name, highest strength: first.
+        [203, "Ordo", "1000 mg", "tabletki", null, []],
+      ],
+    };
+
+    const { results, total } = searchVariants(buildSearchIndex(ordoList), "ordo");
+
+    expect({ ids: results.map((variant) => variant.id), total }).toEqual({ ids: [203, 202, 201], total: 3 });
   });
 });
 
