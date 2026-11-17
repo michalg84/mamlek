@@ -94,7 +94,7 @@ export function OverPackWarning({ id, size }: { id: string; size: string }) {
 
 /**
  * Number field for a quantity, with the pack size after it ("z 30 tabl.") when the pack has one, and a warning under it
- * when the typed quantity is above the pack size. The warning is joined to the field by `aria-describedby`, after the
+ * when the typed quantity is above the pack size (not while the field is `aria-invalid`). The warning is joined to the field by `aria-describedby`, after the
  * caller's own description (an error message).
  */
 export function QuantityInput({
@@ -108,7 +108,8 @@ export function QuantityInput({
 }: QuantityInputProps) {
   const warningId = useId();
   const size = [max, unit].filter((part) => part !== null).join(" ");
-  const over = overPackSize(value, max);
+  // An invalid value shows only its error, as in the import row.
+  const over = !props["aria-invalid"] && overPackSize(value, max);
   return (
     <div className="min-w-0">
       <div className="flex min-w-0 items-center gap-2">

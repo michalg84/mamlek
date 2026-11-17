@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { CircleAlert } from "lucide-react";
 import KitImport from "@/components/kit/KitImport";
 import { createClient } from "@/lib/supabase";
-import { kitItemVariantKey } from "@/lib/kit-import";
+import { ownedVariantKeys } from "@/lib/kit-import";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
 import { listKitItems } from "@/lib/services/kit";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ try {
   if (supabase) {
     const [version, items] = await Promise.all([getSearchListVersion(supabase), listKitItems(supabase)]);
     list = version;
-    kitVariantKeys = [...new Set(items.map(kitItemVariantKey))];
+    kitVariantKeys = ownedVariantKeys(items);
   } else {
     failed = true;
   }

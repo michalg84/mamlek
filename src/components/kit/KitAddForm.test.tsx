@@ -336,6 +336,24 @@ describe("KitAddForm", () => {
         expect(addRequests(form.routed)).toEqual([expect.objectContaining({ packageId: 1001, quantity: 91 })]);
       });
     });
+
+    it("shows only the error, not the pack-size warning, for a quantity above 100000", async () => {
+      const bottle: RegistryVariantPackage = {
+        ...pack(1001, ID.ibuprom400),
+        units: [{ count: "1", kind: "butelka", capacity: "90", capacity_unit: "tabl.", info: null }],
+      };
+      const form = await openForm({ packages: { [ID.ibuprom400]: [bottle] }, addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+      expect(screen.getByText("z 90 tabl.")).toBeTruthy();
+
+      fireEvent.change(quantityField(), { target: { value: "200000" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+
+      const error = screen.getByText("Ilość nie może być większa niż 100000");
+      expect(screen.queryByText("Więcej niż w opakowaniu (90 tabl.)")).toBeNull();
+      expect(quantityField().getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);
+      expect(addPosts(form.routed)).toEqual([]);
+    });
   });
 
   describe("errors", () => {

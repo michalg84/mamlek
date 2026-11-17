@@ -405,7 +405,7 @@ describe("KitImport", () => {
     const quantity = within(row(2)).getByLabelText<HTMLInputElement>("Ilość");
     expect(text(2)).toContain("Wymaga decyzji: puste opakowanie — pomiń wiersz");
     const error = within(row(2)).getByText(
-      "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu albo popraw ilość.",
+      "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu, popraw ilość albo wyczyść pole.",
     );
     expect(quantity.getAttribute("aria-invalid")).toBe("true");
     expect(quantity.getAttribute("aria-describedby")).toBe(error.closest("[id]")?.id);

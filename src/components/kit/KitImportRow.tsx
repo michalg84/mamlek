@@ -315,7 +315,7 @@ function RowQuantity({
   if (row.quantity.kind === "invalid") {
     error = `Nie da się odczytać ilości „${row.quantity.text}”. Wpisz liczbę od 1 do ${MAX_QUANTITY} albo wyczyść pole.`;
   } else if (row.quantity.kind === "ok" && row.quantity.value === 0) {
-    error = "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu albo popraw ilość.";
+    error = "Puste opakowanie nie trafia do apteczki. Usuń wiersz z importu, popraw ilość albo wyczyść pole.";
   }
   const size = [packSize.max, packSize.unit].filter((part) => part !== null).join(" ");
   const over = !error && row.quantity.kind === "ok" && packSize.max !== null && row.quantity.value > packSize.max;

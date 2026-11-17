@@ -144,6 +144,14 @@ export function variantKey(name: string, strength: string | null, form: string |
 }
 
 /**
+ * Variant keys of the medicines the kit holds ("already have" in the import), each once. An empty pack (quantity 0)
+ * does not count as owned, as in the medicine check on the search screen; an unknown quantity does.
+ */
+export function ownedVariantKeys(items: KitItem[]): string[] {
+  return [...new Set(items.filter((item) => item.quantity !== 0).map(kitItemVariantKey))];
+}
+
+/**
  * Key of a kit item's variant. The suggestion list cuts a strength longer than 80 characters to its first 79
  * plus `…`, so the item's strength is cut the same way to compare equal to the picked variant. Spaces are trimmed
  * BEFORE the cut, as the list does (it keys on `btrim`, and the cut applies to the registry's value).

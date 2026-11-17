@@ -8,6 +8,7 @@ import {
   createImportRow,
   earlierVariantKeys,
   kitItemVariantKey,
+  ownedVariantKeys,
   matchRow,
   pageCount,
   pageOf,
@@ -384,6 +385,18 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     ...overrides,
   };
 }
+
+describe("ownedVariantKeys", () => {
+  it("gives each owned variant once", () => {
+    expect(ownedVariantKeys([kitItem(), kitItem({ quantity: 3 }), kitItem({ quantity: null })])).toEqual([
+      "ibuprom|400 mg|tabletki powlekane",
+    ]);
+  });
+
+  it("leaves out an empty pack: it does not count as owned, as on the search screen", () => {
+    expect(ownedVariantKeys([kitItem({ quantity: 0 })])).toEqual([]);
+  });
+});
 
 describe("kitItemVariantKey", () => {
   it("is the key of the variant", () => {
