@@ -1,10 +1,10 @@
 ---
 change_id: search-numeric-strength-order
 title: Order variants of the same name in search suggestions by numeric strength
-status: implemented
+status: archived
 created: 2026-11-17
 updated: 2026-11-17
-archived_at: null
+archived_at: 2026-11-17T16:04:23Z
 ---
 
 ## Notes
