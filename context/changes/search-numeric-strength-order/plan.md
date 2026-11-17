@@ -207,19 +207,19 @@ Brak migracji. Wdrożenie przez zwykły merge (Cloudflare deploy); wycofanie prz
 
 #### Automated
 
-- [x] 1.1 Plik wzorcowy zapisany na niezmienionym kodzie
-- [x] 1.2 Nowe testy kolejności mocy nie przechodzą przed zmianą
-- [x] 1.3 Testy jednostkowe, komponentów i rejestru przechodzą
-- [x] 1.4 Lint przechodzi
-- [x] 1.5 Typy przechodzą
+- [x] 1.1 Plik wzorcowy zapisany na niezmienionym kodzie — 35b3236
+- [x] 1.2 Nowe testy kolejności mocy nie przechodzą przed zmianą — 35b3236
+- [x] 1.3 Testy jednostkowe, komponentów i rejestru przechodzą — 35b3236
+- [x] 1.4 Lint przechodzi — 35b3236
+- [x] 1.5 Typy przechodzą — 35b3236
 
 ### Phase 2: Weryfikacja na pełnym rejestrze
 
 #### Automated
 
-- [ ] 2.1 search:check pokazuje tylko różnice kolejności mocy, nowy wzorzec zapisany
-- [ ] 2.2 perf w zapasie względem main
+- [x] 2.1 search:check pokazuje tylko różnice kolejności mocy, nowy wzorzec zapisany
+- [x] 2.2 perf w zapasie względem main
 
 #### Manual
 
-- [ ] 2.3 Kolejność mocy na /szukaj dla duomox, abilify, acebis
+- [x] 2.3 Kolejność mocy na /szukaj dla duomox, abilify, acebis
