@@ -94,13 +94,34 @@ async function typeQuery(page, text) {
   await page.locator(INPUT).pressSequentially(text, { delay: 40 });
 }
 
+// The query comes from a product that is in the imported list (the first three letters of the first name that starts with letters), never a fixed
+// word: with the small registry fixtures a hardcoded query finds nothing and every state waits out its timeout.
+let cachedQuery = null;
+async function queryFromList(page) {
+  if (cachedQuery) return cachedQuery;
+  const query = await page.evaluate(async () => {
+    const response = await globalThis.fetch("/api/registry/search-list");
+    if (!response.ok) return null;
+    const { variants } = await response.json();
+    if (!Array.isArray(variants)) return null;
+    for (const variant of variants) {
+      const letters = /^\p{L}{3}/u.exec(String(variant[1] ?? ""));
+      if (letters) return letters[0];
+    }
+    return null;
+  });
+  if (!query) throw new StateError("Could not take a query from the search list (is the registry imported?)");
+  cachedQuery = query;
+  return query;
+}
+
 async function openSuggestions(page, baseUrl) {
   await openReady(page, baseUrl);
-  await typeQuery(page, "ibu");
+  await typeQuery(page, await queryFromList(page));
   await page.locator(OPTION).first().waitFor({ timeout: STATE_TIMEOUT_MS });
 }
 
-// Picks the first suggestion of "ibu", which starts the medicine check.
+// Picks the first suggestion of the query taken from the list, which starts the medicine check.
 async function pickFirst(page, baseUrl) {
   await openSuggestions(page, baseUrl);
   await page.keyboard.press("ArrowDown");
