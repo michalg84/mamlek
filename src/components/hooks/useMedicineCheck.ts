@@ -1,29 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 import { parseMedicineCheck } from "@/lib/medicine-check-verdict";
-import type { MedicineCheckResponse } from "@/types";
+import type { MatchLevel, MedicineCheckResponse } from "@/types";
 
 export type MedicineCheckStatus = "loading" | "ready" | "unauthorized" | "error";
 
 interface Loaded {
-  /** Identifies the request (product + attempt) this result belongs to. */
+  /** Identifies the request (product + level + attempt) this result belongs to. */
   key: string;
   status: Exclude<MedicineCheckStatus, "loading">;
   result: MedicineCheckResponse | null;
 }
 
 /**
- * Checks the picked medicine against the kit (`GET /api/kit/check`). Changing `productId` aborts the previous request
- * and starts a new one; until it answers the status is "loading". 401 means the session is gone; anything else that
- * goes wrong (404 and an answer the screen cannot read included) is a generic error with retry.
+ * Checks the picked medicine against the kit (`GET /api/kit/check`) on the given match level. Changing `productId` or
+ * `level` aborts the previous request and starts a new one; until it answers the status is "loading", so a verdict of
+ * another level is never shown. 401 means the session is gone; anything else that goes wrong (404, an answer the
+ * screen cannot read and an answer for another level included) is a generic error with retry.
  */
-export function useMedicineCheck(productId: number) {
+export function useMedicineCheck(productId: number, level: MatchLevel) {
   const [attempt, setAttempt] = useState(0);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const key = `${productId}:${attempt}`;
+  const key = `${productId}:${level}:${attempt}`;
 
   useEffect(() => {
     const controller = new AbortController();
-    const requestKey = `${productId}:${attempt}`;
+    const requestKey = `${productId}:${level}:${attempt}`;
     const finish = (status: Loaded["status"], result: MedicineCheckResponse | null = null) => {
       if (!controller.signal.aborted) {
         setLoaded({ key: requestKey, status, result });
@@ -32,7 +33,9 @@ export function useMedicineCheck(productId: number) {
 
     async function load() {
       try {
-        const response = await fetch(`/api/kit/check?product=${productId}`, { signal: controller.signal });
+        const response = await fetch(`/api/kit/check?product=${productId}&level=${level}`, {
+          signal: controller.signal,
+        });
         if (response.status === 401) {
           finish("unauthorized");
           return;
@@ -42,7 +45,8 @@ export function useMedicineCheck(productId: number) {
           return;
         }
         const result = parseMedicineCheck(await response.json());
-        if (!result) {
+        // An answer of another level would show the wrong texts; the API echoes the level it checked.
+        if (result?.level !== level) {
           finish("error");
           return;
         }
@@ -57,7 +61,7 @@ export function useMedicineCheck(productId: number) {
     return () => {
       controller.abort();
     };
-  }, [productId, attempt]);
+  }, [productId, level, attempt]);
 
   const retry = useCallback(() => {
     setAttempt((value) => value + 1);

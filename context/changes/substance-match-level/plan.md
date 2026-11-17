@@ -322,10 +322,10 @@ Przy `any` RPC może zwrócić kilkadziesiąt pozycji, ale jest ograniczone apte
 
 #### Automated
 
-- [ ] 3.1 Testy unit i komponentów przechodzą: `npm test`
-- [ ] 3.2 Skan wartości dosłownych czysty: `npm run ui:scan`
-- [ ] 3.3 Lint, typy, build: `npm run lint`, `npx astro check`, `npm run build`
-- [ ] 3.4 Zrzuty wszystkich stanów: `BASE_URL=http://localhost:4333 npm run ui:shots -- --label s06` (po zgodzie koordynatora)
+- [x] 3.1 Testy unit i komponentów przechodzą: `npm test` — 744/744 (unit + component + registry)
+- [x] 3.2 Skan wartości dosłownych czysty: `npm run ui:scan` — 0 trafień w 14 plikach
+- [x] 3.3 Lint, typy, build: `npm run lint`, `npx astro check`, `npm run build`
+- [x] 3.4 Zrzuty wszystkich stanów: `BASE_URL=http://localhost:4333 npm run ui:shots -- --label s06` (po zgodzie koordynatora) — 38/38. Przełącznik zawsze pionowy: przy 1280 karta jest wąska i rząd łamał się 2 + 1. Konta tymczasowe `shots-*` usunięte. Odstępstwa od planu: (1) nagłówek „Także z tą samą substancją czynną” też zależy od poziomu (`alsoHeading` w `match-level.ts`), bo na poziomach luźnych byłby nieprawdziwy; (2) sekcja „Puste opakowania” zostaje bez zastrzeżenia także na poziomach luźnych, jak na `exact` od S-12: puste opakowanie to przypomnienie, nie zamiennik, a werdykt i jego zastrzeżenie go nie liczą; (3) `useMatchLevel` używa `useSyncExternalStore` zamiast `useEffect` (reguła `react-hooks/set-state-in-effect`), z tym samym kontraktem: serwer i hydratacja dają `exact`; przy odmowie `localStorage` przełącznik działa dla otwartej strony, a błąd idzie do `console.warn`
 
 #### Manual
 

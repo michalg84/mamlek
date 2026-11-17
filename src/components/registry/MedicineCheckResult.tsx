@@ -5,16 +5,18 @@ import { KitItemDetails } from "@/components/kit/KitItemDetails";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { todayIso } from "@/lib/kit-format";
+import { MATCH_LEVEL_TEXTS } from "@/lib/match-level";
 import { checkVerdict, emptyPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
-import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
+import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
   productId: number;
+  /** The match level of the check; it picks the verdict texts and the caution. */
+  level: MatchLevel;
   /** Called with the full data of the searched medicine once the check has answered. */
   onSearched?: (searched: MedicineCheckResponse["searched"]) => void;
 }
 
-const CAUTION = "Ten sam skład czynny nie oznacza, że leki można zamieniać. Zapytaj farmaceutę lub lekarza.";
 const UNCOMPARABLE =
   "Rejestr nie podaje substancji czynnych tego leku, więc nie dało się sprawdzić leków z tą samą substancją.";
 
@@ -62,8 +64,8 @@ function emptyPacksAnnouncement(count: number) {
 }
 
 /** Result of checking the picked medicine against the kit: verdict, matching kit items, caution and notes. */
-export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResultProps) {
-  const { status, result, retry } = useMedicineCheck(productId);
+export function MedicineCheckResult({ productId, level, onSearched }: MedicineCheckResultProps) {
+  const { status, result, retry } = useMedicineCheck(productId, level);
   const mainId = useId();
   const extraId = useId();
 
@@ -106,12 +108,14 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
     );
   } else {
     const verdict = checkVerdict(result);
+    // The hook only returns a result of the requested level, so these texts match the verdict.
+    const { caution, alsoHeading } = MATCH_LEVEL_TEXTS[result.level];
     const { variants, same } = verdict;
     const { icon: Icon, className } = VERDICT_STYLE[verdict.kind];
     const today = todayIso();
     const main = variants.length > 0 ? variants : same;
     // The notes carry the safety caveats, so they are announced together with the verdict.
-    announcement = [verdict.title, verdict.detail, verdict.caution && CAUTION, verdict.uncomparable && UNCOMPARABLE]
+    announcement = [verdict.title, verdict.detail, verdict.caution && caution, verdict.uncomparable && UNCOMPARABLE]
       .filter(Boolean)
       .join(". ");
     const empty = emptyPacks(result);
@@ -126,7 +130,7 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
             {verdict.detail && <p className="text-sm break-words">{verdict.detail}</p>}
           </div>
         </div>
-        {verdict.kind === "substance" && <Note>{CAUTION}</Note>}
+        {verdict.kind === "substance" && <Note>{caution}</Note>}
         {verdict.uncomparable && <Note>{UNCOMPARABLE}</Note>}
         {main.length > 0 && (
           <section className="min-w-0 space-y-2" aria-labelledby={mainId}>
@@ -139,9 +143,9 @@ export function MedicineCheckResult({ productId, onSearched }: MedicineCheckResu
         {variants.length > 0 && same.length > 0 && (
           <section className="min-w-0 space-y-2" aria-labelledby={extraId}>
             <h3 id={extraId} className="text-foreground text-sm font-semibold">
-              Także z tą samą substancją czynną
+              {alsoHeading}
             </h3>
-            <Note>{CAUTION}</Note>
+            <Note>{caution}</Note>
             <ItemList items={same} today={today} />
           </section>
         )}

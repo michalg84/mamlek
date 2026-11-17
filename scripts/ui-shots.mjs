@@ -177,6 +177,24 @@ const NUROFEN = checkItem({
   expiresOn: "2027-11-30",
 });
 
+// A combination medicine sharing ibuprofen: it only matches on the loose levels.
+const METAFEN = checkItem({
+  id: 4,
+  packageId: 4,
+  match: "substance",
+  matchedBy: "common_name",
+  name: "Metafen",
+  strength: "200 mg + 325 mg",
+  form: "Tabletki",
+  holder: "Polpharma",
+  commonName: "Ibuprofenum + Paracetamolum",
+  substances: ["Ibuprofenum", "Paracetamolum"],
+  units: [{ ...UNIT, count: "10" }],
+  quantity: 6,
+  expiresOn: "2027-05-31",
+});
+
+// The level is filled in from the request (see answerCheck), like the API echoes the level it checked.
 const CHECK_ANSWERS = {
   have: {
     searched: SEARCHED,
@@ -185,6 +203,7 @@ const CHECK_ANSWERS = {
   },
   same: { searched: SEARCHED, comparable: true, items: [NUROFEN] },
   none: { searched: SEARCHED, comparable: true, items: [] },
+  substanceAny: { searched: SEARCHED, comparable: true, items: [NUROFEN, METAFEN] },
   noneUncomparable: {
     searched: { ...SEARCHED, name: "Sinupret", strength: null, commonName: "Preparat złożony", substances: [] },
     comparable: false,
@@ -192,11 +211,23 @@ const CHECK_ANSWERS = {
   },
 };
 
-function checkState(name, answer, waitText) {
+/** Answers a check request with `answer` on the level the request asked for (exact when it names none). */
+function answerCheck(route, answer) {
+  const level = new URL(route.request().url()).searchParams.get("level") ?? "exact";
+  return route.fulfill({ json: { ...answer, level } });
+}
+
+function checkState(name, answer, waitText, { level } = {}) {
   return {
     name,
     route: async (context) => {
-      await context.route(CHECK_URL, (route) => route.fulfill({ json: answer }));
+      if (level) {
+        // The level the screen remembers (useMatchLevel), set before the page reads it.
+        await context.addInitScript((stored) => {
+          globalThis.localStorage.setItem("mamlek:match-level", stored);
+        }, level);
+      }
+      await context.route(CHECK_URL, (route) => answerCheck(route, answer));
     },
     reach: async (page, baseUrl) => {
       await pickFirst(page, baseUrl);
@@ -271,7 +302,7 @@ const STATES = [
     name: "edited-after-pick",
     // Editing the text after a pick must drop the card and the verdict (they would sit under a different name).
     route: async (context) => {
-      await context.route(CHECK_URL, (route) => route.fulfill({ json: CHECK_ANSWERS.same }));
+      await context.route(CHECK_URL, (route) => answerCheck(route, CHECK_ANSWERS.same));
     },
     reach: async (page, baseUrl) => {
       await pickFirst(page, baseUrl);
@@ -286,6 +317,7 @@ const STATES = [
   checkState("check-same", CHECK_ANSWERS.same, "Masz lek z tą samą substancją czynną"),
   checkState("check-none", CHECK_ANSWERS.none, "Nie masz tego leku"),
   checkState("check-none-uncomparable", CHECK_ANSWERS.noneUncomparable, "Nie masz tego leku"),
+  checkState("check-substance-any", CHECK_ANSWERS.substanceAny, "Masz lek ze wspólnym składnikiem", { level: "any" }),
   {
     name: "check-error",
     route: async (context) => {

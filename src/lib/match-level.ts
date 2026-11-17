@@ -21,6 +21,8 @@ export interface MatchLevelTexts {
   substanceTitle: string;
   /** The line under "Nie masz tego leku" when the checked medicine could be compared. */
   noneDetail: string;
+  /** The heading of the matching-composition items listed under the medicine itself. */
+  alsoHeading: string;
   /** The consult-a-pharmacist notice shown with matching-composition items. */
   caution: string;
 }
@@ -32,18 +34,21 @@ export const MATCH_LEVEL_TEXTS: Record<MatchLevel, MatchLevelTexts> = {
     label: "Ten sam skład",
     substanceTitle: "Masz lek z tą samą substancją czynną",
     noneDetail: "Ani leku z tą samą substancją czynną",
+    alsoHeading: "Także z tą samą substancją czynną",
     caution: "Ten sam skład czynny nie oznacza, że leki można zamieniać. Zapytaj farmaceutę lub lekarza.",
   },
   all: {
     label: "Zawiera wszystkie składniki",
     substanceTitle: "Masz lek zawierający składniki tego leku",
     noneDetail: "Ani leku zawierającego jego składniki",
+    alsoHeading: "Także leki zawierające jego składniki",
     caution: LOOSE_CAUTION,
   },
   any: {
     label: "Zawiera którykolwiek składnik",
     substanceTitle: "Masz lek ze wspólnym składnikiem",
     noneDetail: "Ani leku z żadnym z jego składników",
+    alsoHeading: "Także leki ze wspólnym składnikiem",
     caution: LOOSE_CAUTION,
   },
 };
