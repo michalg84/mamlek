@@ -231,24 +231,24 @@ Dwie migracje, obie tylko redefiniują funkcje (bez zmian danych i schematu). Pr
 
 #### Automated
 
-- [x] 1.1 Nowy `tests/db/variant-key.test.ts` i nowe przypadki w `src/lib/kit-import.test.ts` padają przed zmianą reguły (zapisane wyjście czerwonego przebiegu)
-- [x] 1.2 Migracje stosują się na lokalnej bazie bez resetu: `npx supabase migration up`
-- [x] 1.3 `npm run test:db` przechodzi (w tym `registry-import.test.ts` ze strażnikiem `REGISTRY_MIGRATIONS` i nowy test wariantu)
-- [x] 1.4 `npx vitest run --project unit --project component --project registry` przechodzi
+- [x] 1.1 Nowy `tests/db/variant-key.test.ts` i nowe przypadki w `src/lib/kit-import.test.ts` padają przed zmianą reguły (zapisane wyjście czerwonego przebiegu) — dcd37cc
+- [x] 1.2 Migracje stosują się na lokalnej bazie bez resetu: `npx supabase migration up` — dcd37cc
+- [x] 1.3 `npm run test:db` przechodzi (w tym `registry-import.test.ts` ze strażnikiem `REGISTRY_MIGRATIONS` i nowy test wariantu) — dcd37cc
+- [x] 1.4 `npx vitest run --project unit --project component --project registry` przechodzi — dcd37cc
 - [ ] 1.5 `node scripts/registry-import-check.mjs` przechodzi na lokalnej bazie
-- [x] 1.6 `npm run lint` i `npx astro check` bez błędów
+- [x] 1.6 `npm run lint` i `npx astro check` bez błędów — dcd37cc
 
 #### Manual
 
-- [x] 1.7 Na lokalnej bazie lista ma 16 273 warianty (było 16 278), a Dermovate `0,5 mg/ml` roztwór na skórę jest w podpowiedziach raz
+- [x] 1.7 Na lokalnej bazie lista ma 16 273 warianty (było 16 278), a Dermovate `0,5 mg/ml` roztwór na skórę jest w podpowiedziach raz — dcd37cc
 
 ### Phase 2: Dokumentacja i weryfikacja
 
 #### Automated
 
-- [ ] 2.1 `npm run search:check -- --save`, a potem `npm run search:check` kończy się kodem 0
-- [ ] 2.2 `npm run lint` bez błędów po zmianach dokumentacji
-- [ ] 2.3 `npm run roadmap:sync -- --dry-run` pokazuje tylko zmianę S-14
+- [x] 2.1 `npm run search:check -- --save`, a potem `npm run search:check` kończy się kodem 0
+- [x] 2.2 `npm run lint` bez błędów po zmianach dokumentacji
+- [x] 2.3 `npm run roadmap:sync -- --dry-run` pokazuje tylko zmianę S-14
 
 #### Manual
 
