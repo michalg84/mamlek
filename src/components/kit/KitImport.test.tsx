@@ -28,14 +28,14 @@ const NO_SPA_KEY = "no-spa|40 mg|tabletki";
 function pack(
   packageId: number,
   productId: number,
-  { count = "30", withdrawn = false }: { count?: string; withdrawn?: boolean } = {},
+  { capacity = "30", withdrawn = false }: { capacity?: string; withdrawn?: boolean } = {},
 ): RegistryVariantPackage {
   return {
     packageId,
     productId,
     gtin: null,
     availabilityCategory: null,
-    units: [{ count, kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity, capacity_unit: "tabl.", info: null }],
     holder: null,
     withdrawn,
   };
@@ -110,7 +110,7 @@ function pickSuggestion(line: number, name: RegExp) {
 
 /** Waits until the row's pack is loaded (and, being the only one, chosen). */
 async function packChosen(line: number) {
-  await within(row(line)).findByText("Opakowanie: 30 tabletki");
+  await within(row(line)).findByText("Opakowanie: 30 tabl.");
 }
 
 function saveButton() {
@@ -229,7 +229,7 @@ describe("KitImport", () => {
       packages: {
         [ZODAC_WITHDRAWN_ID]: [
           pack(7001, ZODAC_WITHDRAWN_ID),
-          pack(7002, ZODAC_WITHDRAWN_ID, { count: "20", withdrawn: true }),
+          pack(7002, ZODAC_WITHDRAWN_ID, { capacity: "20", withdrawn: true }),
         ],
       },
     });
@@ -238,8 +238,8 @@ describe("KitImport", () => {
 
     const radios = await within(row(2)).findAllByRole("radio");
     expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
-    expect(within(row(2)).getByRole("radio", { name: "30 tabletki" })).toBe(radios[0]);
-    expect(within(row(2)).getByRole("radio", { name: /^20 tabletki\s*· wycofane$/ })).toBe(radios[1]);
+    expect(within(row(2)).getByRole("radio", { name: "30 tabl." })).toBe(radios[0]);
+    expect(within(row(2)).getByRole("radio", { name: /^20 tabl\.\s*· wycofane$/ })).toBe(radios[1]);
     expect(text(2)).toContain(`Lek: Zodac · 10 mg · tabletki${WITHDRAWN_NOTE}`);
     expect(text(2)).toContain("wybierz opakowanie");
     expect(saveBlocked()).toBe(true);
@@ -262,7 +262,7 @@ describe("KitImport", () => {
     fireEvent.click(within(row(2)).getByRole("button", { name: new RegExp(WITHDRAWN_NOTE) }));
 
     await packChosen(2);
-    expect(text(2)).toContain("Opakowanie: 30 tabletki · wycofane");
+    expect(text(2)).toContain("Opakowanie: 30 tabl. · wycofane");
     expect(text(2)).toContain(READY);
   });
 

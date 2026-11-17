@@ -31,7 +31,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     strength: "20 mg",
     form: "tabletki powlekane",
     holder: null,
-    units: [{ count: "30", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity: "30", capacity_unit: "tabl.", info: null }],
     quantity: 10,
     expiresOn: "2027-12-31",
     expiryPrecision: "month",
@@ -96,9 +96,9 @@ describe("KitList", () => {
     const rows = screen.getAllByRole("listitem");
     expect(rows.map((item) => within(item).getAllByText(/./)[0].textContent)).toEqual(["Sortis", "Atoris", "Smecta"]);
     expect(within(rows[0]).getByText("20 mg · tabletki powlekane")).toBeTruthy();
-    expect(within(rows[0]).getByText("30 tabletki")).toBeTruthy();
+    expect(within(rows[0]).getByText("30 tabl.")).toBeTruthy();
     expect(quantityField("Sortis").value).toBe("12");
-    expect(within(rows[0]).getByText("z 30 tabletki")).toBeTruthy();
+    expect(within(rows[0]).getByText("z 30 tabl.")).toBeTruthy();
     expect(within(rows[0]).getByText("Ważny do: 12/2027")).toBeTruthy();
     expect(quantityField("Smecta").value).toBe("");
     expect(quantityField("Smecta").placeholder).toBe("nieznane");
@@ -353,7 +353,7 @@ describe("KitList", () => {
       const bigger = {
         ...own,
         packageId: item.packageId + 500,
-        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+        units: [{ count: null, kind: null, capacity: "60", capacity_unit: "tabl.", info: null }],
       };
       return stubRoutedFetch(registrySearchList, { [item.productId]: [own, bigger] }, { kitItem: respond });
     }
@@ -368,9 +368,9 @@ describe("KitList", () => {
 
       expect(editButton("Lek 1").getAttribute("aria-expanded")).toBe("true");
       const panel = within(row("Lek 1")).getByRole("form", { name: "Edycja: Lek 1" });
-      expect(await within(panel).findByRole("radio", { name: "30 tabletki" })).toBeTruthy();
+      expect(await within(panel).findByRole("radio", { name: "30 tabl." })).toBeTruthy();
       expect(within(row("Lek 1")).queryByLabelText("Ilość: Lek 1")).toBeNull();
-      expect(within(row("Lek 1")).getByText("Ilość: 10 z 30 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("Ilość: 10 z 30 tabl.")).toBeTruthy();
       // The other row keeps its own field.
       expect(quantityField("Lek 2")).toBeTruthy();
 
@@ -388,7 +388,7 @@ describe("KitList", () => {
       const stored: KitItem = {
         ...item,
         packageId: item.packageId + 500,
-        units: [{ count: "60", kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+        units: [{ count: null, kind: null, capacity: "60", capacity_unit: "tabl.", info: null }],
         quantity: 45,
       };
       const routed = stubPacks(item, () => reply({ item: stored }));
@@ -396,7 +396,7 @@ describe("KitList", () => {
 
       fireEvent.click(editButton("Lek 1"));
       const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
-      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabletki" }));
+      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabl." }));
       fireEvent.change(within(panel).getByLabelText("Ilość w opakowaniu (opcjonalnie)"), { target: { value: "45" } });
       fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
 
@@ -406,9 +406,9 @@ describe("KitList", () => {
       expect(routed.kitItemRequests()).toEqual([
         { method: "PATCH", id: item.id, body: { packageId: stored.packageId, quantity: 45 } },
       ]);
-      expect(within(row("Lek 1")).getByText("60 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("60 tabl.")).toBeTruthy();
       expect(quantityField("Lek 1").value).toBe("45");
-      expect(within(row("Lek 1")).getByText("z 60 tabletki")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("z 60 tabl.")).toBeTruthy();
       expect(document.activeElement).toBe(editButton("Lek 1"));
     });
   });
@@ -422,7 +422,7 @@ describe("KitList", () => {
       const dialog = screen.getByRole("alertdialog");
       expect(within(dialog).getByText(CONFIRM_TITLE)).toBeTruthy();
       expect(within(dialog).getByText("Sortis 20 mg")).toBeTruthy();
-      expect(within(dialog).getByText("30 tabletki")).toBeTruthy();
+      expect(within(dialog).getByText("30 tabl.")).toBeTruthy();
       expect(within(dialog).getByText(IRREVERSIBLE)).toBeTruthy();
 
       fireEvent.click(within(dialog).getByRole("button", { name: CANCEL }));

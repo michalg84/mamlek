@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MAX_QUANTITY,
   expiryInput,
+  formatQuantity,
+  packQuantity,
   parseExpiryInput,
   parseQuantityInput,
   todayIso,
@@ -45,6 +47,87 @@ describe("uniquePacks", () => {
       { id: 901, productId: 2, units: tablets("30") },
     ];
     expect(uniquePacks(packs).map((pack) => pack.id)).toEqual([801, 901]);
+  });
+});
+
+function entry(count: string | null, kind: string | null, capacity: string | null, capacityUnit: string | null) {
+  return { count, kind, capacity, capacity_unit: capacityUnit, info: null };
+}
+
+describe("packQuantity", () => {
+  // Shapes as the registry writes them (count, kind, capacity, capacity_unit); expected values typed from the shape.
+  it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” → 90 tabl.", () => {
+    expect(packQuantity([entry("1", "butelka", "90", "tabl.")])).toEqual({ unit: "tabl.", max: 90 });
+  });
+
+  it("multiplies the count by the capacity: „2 blistry 10 tabl.” → 20 tabl.", () => {
+    expect(packQuantity([entry("2", "blistry", "10", "tabl.")])).toEqual({ unit: "tabl.", max: 20 });
+  });
+
+  it("takes the capacity alone without a count: „12 tabl.” → 12 tabl.", () => {
+    expect(packQuantity([entry(null, null, "12", "tabl.")])).toEqual({ unit: "tabl.", max: 12 });
+  });
+
+  it("counts capsules, pieces and patches the same way", () => {
+    expect(packQuantity([entry(null, null, "28", "kaps.")])).toEqual({ unit: "kaps.", max: 28 });
+    expect(packQuantity([entry("3", "sasz.", "5", "szt.")])).toEqual({ unit: "szt.", max: 15 });
+    expect(packQuantity([entry(null, null, "8", "plastrów")])).toEqual({ unit: "plastrów", max: 8 });
+    expect(packQuantity([entry("1", "tuba", "30", "Systemów")])).toEqual({ unit: "Systemów", max: 30 });
+  });
+
+  it("matches the unit whatever its case and surrounding spaces, and shows it trimmed as the registry writes it", () => {
+    expect(packQuantity([entry("1", "butelka", "90", " TABL. ")])).toEqual({ unit: "TABL.", max: 90 });
+    expect(packQuantity([entry(null, null, " 12 ", "Tabletek")])).toEqual({ unit: "Tabletek", max: 12 });
+  });
+
+  it("keeps the old rule for doses: „1 inhalator 200 dawek” → 1 inhalator", () => {
+    expect(packQuantity([entry("1", "inhalator", "200", "dawek")])).toEqual({ unit: "inhalator", max: 1 });
+  });
+
+  it("keeps the old rule for a measure: „1 butelka 100 ml” → 1 butelka, „4 fiol. 5 ml” → 4 fiol.", () => {
+    expect(packQuantity([entry("1", "butelka", "100", "ml")])).toEqual({ unit: "butelka", max: 1 });
+    expect(packQuantity([entry("4", "fiol.", "5", "ml")])).toEqual({ unit: "fiol.", max: 4 });
+  });
+
+  it("keeps the old rule for a count without a capacity: „10 sasz.” → 10 sasz.", () => {
+    expect(packQuantity([entry("10", "sasz.", null, null)])).toEqual({ unit: "sasz.", max: 10 });
+  });
+
+  it("keeps the old rule for a fractional capacity: „2 blistry 0,5 tabl.” → 2 blistry, „0,5 tabl.” → none", () => {
+    expect(packQuantity([entry("2", "blistry", "0,5", "tabl.")])).toEqual({ unit: "blistry", max: 2 });
+    expect(packQuantity([entry(null, null, "0,5", "tabl.")])).toEqual({ unit: null, max: null });
+  });
+
+  it("keeps the old rule when the count is there but no positive integer", () => {
+    expect(packQuantity([entry("0", "butelka", "90", "tabl.")])).toEqual({ unit: null, max: null });
+    expect(packQuantity([entry("1,5", "butelka", "90", "tabl.")])).toEqual({ unit: null, max: null });
+  });
+
+  it("caps the product at MAX_QUANTITY: „1000 blistrów 1000 tabl.” → 100000 tabl.", () => {
+    expect(packQuantity([entry("1000", "blistrów", "1000", "tabl.")])).toEqual({ unit: "tabl.", max: 100000 });
+  });
+
+  it("gives no unit and no cap to a pack of several entries or of none", () => {
+    const syringeAndNeedle = [entry("1", "amp.-strzyk.", "1", "ml"), entry("1", "igła", null, null)];
+    expect(packQuantity(syringeAndNeedle)).toEqual({ unit: null, max: null });
+    expect(packQuantity([entry("1", "butelka", "90", "tabl."), entry("1", "miarka", null, null)])).toEqual({
+      unit: null,
+      max: null,
+    });
+    expect(packQuantity([])).toEqual({ unit: null, max: null });
+  });
+});
+
+describe("formatQuantity", () => {
+  it("shows the quantity with the cap and the unit of the pack", () => {
+    expect(formatQuantity(8, [entry(null, null, "12", "tabl.")])).toBe("8 z 12 tabl.");
+    expect(formatQuantity(60, [entry("1", "butelka", "90", "tabl.")])).toBe("60 z 90 tabl.");
+    expect(formatQuantity(3, [entry("4", "fiol.", "5", "ml")])).toBe("3 z 4 fiol.");
+  });
+
+  it("shows the bare number for a pack without a cap and „nieznane” for an unknown quantity", () => {
+    expect(formatQuantity(7, [entry(null, null, "100", "ml")])).toBe("7");
+    expect(formatQuantity(null, [entry(null, null, "12", "tabl.")])).toBe("nieznane");
   });
 });
 

@@ -51,23 +51,62 @@ export function uniquePacks<T extends { productId: number; units: RegistryPackag
 }
 
 /**
- * Quantity unit and upper bound of a pack. Only a single-entry pack with a positive integer count has
- * them (unit = the entry's kind, max = its count); anything else has no cap and no unit word.
+ * Registry `capacity_unit` words for things a user counts one by one (tablets, capsules, patches). Lower case, compared
+ * after trimming. Doses (`dawek`, `dawka`) and measures (ml, g, mg) are left out on purpose.
+ */
+const COUNTED_UNITS = new Set([
+  "tabl.",
+  "tabletek",
+  "kaps.",
+  "szt.",
+  "pastylek",
+  "pastylki",
+  "plastrów",
+  "plastry",
+  "plaster",
+  "systemów",
+  "systemy",
+]);
+
+/** A positive safe integer written as plain digits ("90"), or null for anything else ("0", "0,5", "", null). */
+function positiveInteger(value: string | null | undefined): number | null {
+  const trimmed = present(value);
+  if (trimmed === null || !/^\d+$/.test(trimmed)) {
+    return null;
+  }
+  const number = Number(trimmed);
+  return Number.isSafeInteger(number) && number > 0 ? number : null;
+}
+
+/**
+ * Quantity unit and upper bound of a pack. Only a single-entry pack has them:
+ * - when its `capacity_unit` is counted one by one (tablets, capsules, ...) and its `capacity` is a positive integer,
+ *   the quantity is in those pieces: max = count × capacity (capacity alone without a count; capped at
+ *   `MAX_QUANTITY`), unit = the `capacity_unit` ("1 butelka 90 tabl." → 90 tabl.);
+ * - otherwise, with a positive integer count: unit = the entry's kind, max = its count ("4 fiol. 5 ml" → 4 fiol.).
+ * Anything else has no cap and no unit word.
  */
 export function packQuantity(units: RegistryPackageUnit[]): { unit: string | null; max: number | null } {
   if (units.length !== 1) {
     return { unit: null, max: null };
   }
   const [unit] = units;
-  const count = present(unit.count);
-  if (count === null || !/^\d+$/.test(count)) {
+  const count = positiveInteger(unit.count);
+  const capacity = positiveInteger(unit.capacity);
+  const capacityUnit = present(unit.capacity_unit);
+  const countPresent = present(unit.count) !== null;
+  if (
+    capacity !== null &&
+    capacityUnit !== null &&
+    COUNTED_UNITS.has(capacityUnit.toLowerCase()) &&
+    (count !== null || !countPresent)
+  ) {
+    return { unit: capacityUnit, max: Math.min((count ?? 1) * capacity, MAX_QUANTITY) };
+  }
+  if (count === null) {
     return { unit: null, max: null };
   }
-  const max = Number(count);
-  if (!Number.isSafeInteger(max) || max <= 0) {
-    return { unit: null, max: null };
-  }
-  return { unit: present(unit.kind), max };
+  return { unit: present(unit.kind), max: count };
 }
 
 /**

@@ -1,5 +1,7 @@
 // Helpers of the API tests: a session over cookies (its own copy of scripts/smoke.mjs, which stays dependency-free),
 // raw HTTP requests, boundary data picked from the local registry, and the checks every rejected request goes through.
+import { packQuantity } from "@/lib/kit-format";
+import type { RegistryPackageUnit } from "@/types";
 import { connectLocal, LOCAL_HOSTS } from "../db/medicine-check-fixtures";
 
 // Vitest itself sets BASE_URL to "/" (Vite's base path), so only an absolute URL counts as the caller's choice.
@@ -132,21 +134,34 @@ async function one<T extends object>(what: string, sql: string): Promise<T> {
   return rows[0];
 }
 
-// Active = the pack and its product are not withdrawn. A pack "with a size" has exactly one `units` entry whose count
-// is a positive integer (the rule of POST /api/kit: the quantity may not exceed it).
-const SIZE_SHAPE = `jsonb_array_length(pk.units) = 1 and btrim(coalesce(pk.units->0->>'count', '')) ~ '^[0-9]+$'`;
-// Certainly without a size for the app whatever the whitespace (its trim also strips tabs and NBSP, btrim does not):
-// not exactly one entry, or a count with no digit at all.
-const UNSIZED_SHAPE = `(jsonb_array_length(pk.units) <> 1 or coalesce(pk.units->0->>'count', '') !~ '[0-9]')`;
+// Active = the pack and its product are not withdrawn. A pack "with a size" is one `packQuantity` gives a cap: the
+// rule of the API (the quantity may not exceed it). The cap is computed by that same function, never re-encoded in SQL,
+// so the boundaries follow the rule (e.g. "1 butelka 90 tabl." has a size of 90, "12 tabl." of 12, "4 fiol. 5 ml" of 4).
 
-/** SQL for the numeric size of pack `alias` (null when it has none); the CASE keeps the cast away from non-digits. */
-function sizeOf(alias: string): string {
-  return `(case when ${SIZE_SHAPE.replaceAll("pk.", `${alias}.`)} then btrim(${alias}.units->0->>'count')::numeric end)`;
+interface PackRow {
+  package_id: number;
+  product_id: number;
+  units: RegistryPackageUnit[];
 }
 
-/** The numeric size of pack `alias` lies in lo..hi. */
-function sizeIn(alias: string, lo: number, hi: number): string {
-  return `${sizeOf(alias)} between ${lo} and ${hi}`;
+/** The size of a pack as the app computes it, or null when the pack has none. */
+function sizeOf(pack: PackRow): number | null {
+  return packQuantity(pack.units).max;
+}
+
+/** The size of a pack lies in lo..hi. */
+function sizeIn(pack: PackRow, lo: number, hi: number): boolean {
+  const size = sizeOf(pack);
+  return size !== null && size >= lo && size <= hi;
+}
+
+/** The first pack (rows come ordered by id) that passes `test`, or an error naming what the registry lacks. */
+function first<T extends PackRow>(what: string, rows: T[], test: (pack: T) => boolean): T {
+  const found = rows.find(test);
+  if (!found) {
+    throw new Error(`The local registry has no ${what}: import the fixtures (see AGENTS.md, registry:import)`);
+  }
+  return found;
 }
 
 export interface BoundaryData {
@@ -180,21 +195,14 @@ export interface BoundaryData {
 }
 
 export async function loadBoundaryData(): Promise<BoundaryData> {
-  const sized = await one<{ package_id: number; size: number; product_id: number; name: string }>(
-    "active pack with a numeric size",
-    `select pk.id::float8 as package_id, btrim(pk.units->0->>'count')::int as size, p.id::float8 as product_id, p.name
+  const activePacks = await query<PackRow & { name: string }>(
+    `select pk.id::float8 as package_id, p.id::float8 as product_id, pk.units, p.name
        from registry_packages pk join registry_products p on p.id = pk.product_id
-      where pk.removed_at is null and p.removed_at is null and ${SIZE_SHAPE}
-        and btrim(pk.units->0->>'count')::numeric between 3 and 99999
-      order by pk.id limit 1`,
+      where pk.removed_at is null and p.removed_at is null
+      order by pk.id`,
   );
-  const unsized = await one<{ package_id: number }>(
-    "active pack without a numeric size",
-    `select pk.id::float8 as package_id
-       from registry_packages pk join registry_products p on p.id = pk.product_id
-      where pk.removed_at is null and p.removed_at is null and ${UNSIZED_SHAPE}
-      order by pk.id limit 1`,
-  );
+  const sized = first("active pack with a size from 3 to 99999", activePacks, (pack) => sizeIn(pack, 3, 99999));
+  const unsized = first("active pack without a size", activePacks, (pack) => sizeOf(pack) === null);
   const withdrawnPackage = await one<{ package_id: number }>(
     "withdrawn pack of an active product",
     `select pk.id::float8 as package_id
@@ -208,39 +216,52 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
       where p.removed_at is not null order by pk.id limit 1`,
   );
   // The pair comes from one product: its packs are in the variant of the product, which is what a pack change needs.
-  const siblings = await one<{
-    small_id: number;
-    small_size: number;
-    large_id: number;
-    large_size: number;
-    product_id: number;
-  }>(
-    "product with two active packs of different numeric sizes",
-    `select a.id::float8 as small_id, btrim(a.units->0->>'count')::int as small_size,
-            b.id::float8 as large_id, btrim(b.units->0->>'count')::int as large_size, a.product_id::float8 as product_id
-       from registry_packages a
-       join registry_products p on p.id = a.product_id
-       join registry_packages b on b.product_id = a.product_id and b.id <> a.id
-      where a.removed_at is null and b.removed_at is null and p.removed_at is null
-        and ${sizeIn("a", 1, 99998)} and ${sizeIn("b", 2, 99999)}
-        and ${sizeOf("a")} < ${sizeOf("b")}
-      order by a.id, b.id limit 1`,
-  );
-  const otherVariants = await query<{ package_id: number }>(
-    `select pk.id::float8 as package_id
+  // First by (small id, large id), like an ordered join of the packs with each other.
+  const packsOfProduct = new Map<number, PackRow[]>();
+  for (const pack of activePacks) {
+    packsOfProduct.set(pack.product_id, [...(packsOfProduct.get(pack.product_id) ?? []), pack]);
+  }
+  let siblings: { small: PackRow; large: PackRow } | null = null;
+  for (const small of activePacks) {
+    if (!sizeIn(small, 1, 99998)) {
+      continue;
+    }
+    const smallSize = sizeOf(small) ?? 0;
+    const large = (packsOfProduct.get(small.product_id) ?? []).find(
+      (pack) =>
+        pack.product_id === small.product_id &&
+        pack.package_id !== small.package_id &&
+        sizeIn(pack, 2, 99999) &&
+        (sizeOf(pack) ?? 0) > smallSize,
+    );
+    if (large) {
+      siblings = { small, large };
+      break;
+    }
+  }
+  if (siblings === null) {
+    throw new Error(
+      "The local registry has no product with two active packs of different sizes: import the fixtures (see AGENTS.md, registry:import)",
+    );
+  }
+  const siblingsProductId = siblings.small.product_id;
+  const otherVariants = await query<PackRow>(
+    `select pk.id::float8 as package_id, p.id::float8 as product_id, pk.units
        from registry_packages pk
        join registry_products p on p.id = pk.product_id
        join registry_products base on base.id = $1
-      where pk.removed_at is null and p.removed_at is null and ${SIZE_SHAPE}
+      where pk.removed_at is null and p.removed_at is null
         and not (lower(p.name) = lower(base.name)
              and lower(coalesce(p.strength, '')) = lower(coalesce(base.strength, ''))
              and lower(coalesce(p.pharmaceutical_form, '')) = lower(coalesce(base.pharmaceutical_form, '')))
-      order by pk.id limit 1`,
-    [siblings.product_id],
+      order by pk.id`,
+    [siblingsProductId],
   );
-  if (otherVariants.length === 0) {
-    throw new Error("The local registry has no active pack of another variant: import the fixtures");
-  }
+  const otherVariant = first(
+    "active pack with a size of another variant",
+    otherVariants,
+    (pack) => sizeOf(pack) !== null,
+  );
   // Same variant-key rule as registry_variant_packages (lower name, strength, pharmaceutical form).
   const sameVariantAsSiblings = `lower(p.name) = lower(base.name)
              and lower(coalesce(p.strength, '')) = lower(coalesce(base.strength, ''))
@@ -252,7 +273,7 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
        join registry_products base on base.id = $1
       where (pk.removed_at is not null or p.removed_at is not null) and not (${sameVariantAsSiblings})
       order by pk.id limit 1`,
-    [siblings.product_id],
+    [siblingsProductId],
   );
   if (otherVariantsWithdrawn.length === 0) {
     throw new Error("The local registry has no withdrawn pack of another variant: import the fixtures");
@@ -264,7 +285,7 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
        join registry_products base on base.id = $1
       where pk.removed_at is not null and p.removed_at is null and ${sameVariantAsSiblings}
       order by pk.id limit 1`,
-    [siblings.product_id],
+    [siblingsProductId],
   );
   if (siblingsWithdrawn.length === 0) {
     throw new Error(
@@ -280,28 +301,35 @@ export async function loadBoundaryData(): Promise<BoundaryData> {
       where p.removed_at is not null
       order by a.id, b.id limit 1`,
   );
-  const withdrawnSized = await one<{ package_id: number; size: number }>(
-    "withdrawn pack with a numeric size of an active product",
-    `select pk.id::float8 as package_id, btrim(pk.units->0->>'count')::int as size
+  const withdrawnPacks = await query<PackRow>(
+    `select pk.id::float8 as package_id, p.id::float8 as product_id, pk.units
        from registry_packages pk join registry_products p on p.id = pk.product_id
-      where pk.removed_at is not null and p.removed_at is null and ${sizeIn("pk", 1, 99999)}
-      order by pk.id limit 1`,
+      where pk.removed_at is not null and p.removed_at is null
+      order by pk.id`,
+  );
+  const withdrawnSized = first("withdrawn pack with a size of an active product", withdrawnPacks, (pack) =>
+    sizeIn(pack, 1, 99999),
   );
   return {
     siblings: {
-      productId: siblings.product_id,
-      small: { packageId: siblings.small_id, size: siblings.small_size },
-      large: { packageId: siblings.large_id, size: siblings.large_size },
+      productId: siblingsProductId,
+      small: { packageId: siblings.small.package_id, size: sizeOf(siblings.small) ?? 0 },
+      large: { packageId: siblings.large.package_id, size: sizeOf(siblings.large) ?? 0 },
     },
-    otherVariant: { packageId: otherVariants[0].package_id },
+    otherVariant: { packageId: otherVariant.package_id },
     otherVariantWithdrawn: { packageId: otherVariantsWithdrawn[0].package_id },
     siblingWithdrawn: { packageId: siblingsWithdrawn[0].package_id },
     withdrawnProductPair: {
       from: { packageId: withdrawnProductPair.from_id },
       to: { packageId: withdrawnProductPair.to_id },
     },
-    withdrawnSized: { packageId: withdrawnSized.package_id, size: withdrawnSized.size },
-    sized: { packageId: sized.package_id, size: sized.size, productId: sized.product_id, productName: sized.name },
+    withdrawnSized: { packageId: withdrawnSized.package_id, size: sizeOf(withdrawnSized) ?? 0 },
+    sized: {
+      packageId: sized.package_id,
+      size: sizeOf(sized) ?? 0,
+      productId: sized.product_id,
+      productName: sized.name,
+    },
     unsized: { packageId: unsized.package_id },
     withdrawnPackage: { packageId: withdrawnPackage.package_id },
     withdrawnProductPackage: { packageId: withdrawnProductPackage.package_id },

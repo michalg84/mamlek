@@ -21,14 +21,14 @@ const B_CHOSEN = "Wybrano: Ibuprom Max · 400 mg · tabletki powlekane";
 function pack(
   packageId: number,
   productId: number,
-  { count = "30", withdrawn = false }: { count?: string; withdrawn?: boolean } = {},
+  { capacity = "30", withdrawn = false }: { capacity?: string; withdrawn?: boolean } = {},
 ): RegistryVariantPackage {
   return {
     packageId,
     productId,
     gtin: null,
     availabilityCategory: null,
-    units: [{ count, kind: "tabletki", capacity: null, capacity_unit: null, info: null }],
+    units: [{ count: null, kind: null, capacity, capacity_unit: "tabl.", info: null }],
     holder: null,
     withdrawn,
   };
@@ -216,12 +216,12 @@ describe("KitAddForm", () => {
     });
   });
   describe("withdrawn packs", () => {
-    const WITHDRAWN_LABEL = /^50 tabletki\s*· wycofane$/;
+    const WITHDRAWN_LABEL = /^50 tabl\.\s*· wycofane$/;
 
     it("lists an active and a withdrawn pack, marks the withdrawn one, chooses none itself and saves the one picked", async () => {
       const form = await openForm({
         packages: {
-          [ID.ibuprom400]: [pack(1001, ID.ibuprom400), pack(1003, ID.ibuprom400, { count: "50", withdrawn: true })],
+          [ID.ibuprom400]: [pack(1001, ID.ibuprom400), pack(1003, ID.ibuprom400, { capacity: "50", withdrawn: true })],
         },
       });
 
@@ -230,7 +230,7 @@ describe("KitAddForm", () => {
       const radios = screen.getAllByRole("radio");
       expect(radios.map((radio) => radio.getAttribute("aria-checked"))).toEqual(["false", "false"]);
       // The active pack has no mark; the withdrawn one has.
-      expect(screen.getByRole("radio", { name: "30 tabletki" })).toBe(radios[0]);
+      expect(screen.getByRole("radio", { name: "30 tabl." })).toBe(radios[0]);
       expect(screen.getByRole("radio", { name: WITHDRAWN_LABEL })).toBe(radios[1]);
       expect(screen.queryByLabelText(QUANTITY_LABEL)).toBeNull();
       expect(addButton()?.hasAttribute("disabled")).toBe(true);
@@ -250,7 +250,7 @@ describe("KitAddForm", () => {
 
     it("chooses a single withdrawn pack itself and marks it", async () => {
       const form = await openForm({
-        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { count: "50", withdrawn: true })] },
+        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { capacity: "50", withdrawn: true })] },
       });
 
       await form.choose(A_OPTION);
@@ -271,7 +271,7 @@ describe("KitAddForm", () => {
 
       const radios = screen.getAllByRole("radio");
       expect(radios).toHaveLength(1);
-      expect(screen.getByRole("radio", { name: "30 tabletki" }).getAttribute("aria-checked")).toBe("true");
+      expect(screen.getByRole("radio", { name: "30 tabl." }).getAttribute("aria-checked")).toBe("true");
       const button = addButton();
       if (!button) {
         throw new Error("No add button");
@@ -309,6 +309,30 @@ describe("KitAddForm", () => {
       expect(screen.getByText("Brak opakowań tego leku w rejestrze")).not.toBeNull();
       expect(screen.queryAllByRole("radio")).toEqual([]);
       expect(addButton()?.hasAttribute("disabled")).toBe(true);
+    });
+  });
+
+  describe("quantity", () => {
+    it("counts a bottle of tablets in tablets: „1 butelka 90 tabl.” takes 90 and refuses 91", async () => {
+      const bottle: RegistryVariantPackage = {
+        ...pack(1001, ID.ibuprom400),
+        units: [{ count: "1", kind: "butelka", capacity: "90", capacity_unit: "tabl.", info: null }],
+      };
+      const form = await openForm({ packages: { [ID.ibuprom400]: [bottle] }, addKit: () => reply({ id: 1 }, 201) });
+      await form.choose(A_OPTION);
+
+      expect(screen.getByText("z 90 tabl.")).toBeTruthy();
+
+      fireEvent.change(quantityField(), { target: { value: "91" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      expect(screen.getByText("Ilość nie może być większa niż 90")).toBeTruthy();
+      expect(addPosts(form.routed)).toEqual([]);
+
+      fireEvent.change(quantityField(), { target: { value: "90" } });
+      fireEvent.click(screen.getByRole("button", { name: ADD_BUTTON }));
+      await waitFor(() => {
+        expect(addRequests(form.routed)).toEqual([expect.objectContaining({ packageId: 1001, quantity: 90 })]);
+      });
     });
   });
 
