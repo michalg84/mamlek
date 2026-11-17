@@ -235,7 +235,7 @@ Dwie migracje, obie tylko redefiniują funkcje (bez zmian danych i schematu). Pr
 - [x] 1.2 Migracje stosują się na lokalnej bazie bez resetu: `npx supabase migration up` — dcd37cc
 - [x] 1.3 `npm run test:db` przechodzi (w tym `registry-import.test.ts` ze strażnikiem `REGISTRY_MIGRATIONS` i nowy test wariantu) — dcd37cc
 - [x] 1.4 `npx vitest run --project unit --project component --project registry` przechodzi — dcd37cc
-- [ ] 1.5 `node scripts/registry-import-check.mjs` przechodzi na lokalnej bazie
+- [x] 1.5 `node scripts/registry-import-check.mjs` przechodzi na lokalnej bazie (sprawdzone w CI, job smoke zielony, PR #84) — dcd37cc
 - [x] 1.6 `npm run lint` i `npx astro check` bez błędów — dcd37cc
 
 #### Manual
@@ -254,4 +254,4 @@ Dwie migracje, obie tylko redefiniują funkcje (bez zmian danych i schematu). Pr
 
 - [x] 2.4 W aplikacji (lokalnie, `http://localhost:4321/szukaj`) z pozycją Dermovate ze spacją w mocy w apteczce: sprawdzenie Dermovate z podpowiedzi daje „Masz ten lek” (wcześniej „ta sama substancja”) (sprawdzone przez API na działającym serwerze: `match: variant`)
 - [x] 2.5 To samo dla Citrafleet `(0,01 g + 3,50 g + 10,97 g)/saszetkę` (wcześniej „Nie masz”) (sprawdzone przez API na działającym serwerze: `match: variant`)
-- [ ] 2.6 Po merge i `npx supabase db push` na produkcji: `select variant_count from registry_search_list` mniejsze o 5 względem stanu sprzed push, a sprawdzenie Dermovate jak wyżej
+- [x] 2.6 Po merge i `npx supabase db push` na produkcji: `select variant_count from registry_search_list` mniejsze o 5 względem stanu sprzed push, a sprawdzenie Dermovate jak wyżej (sprawdzone ręcznie przez autora 2026-11-17) — 247b03f
