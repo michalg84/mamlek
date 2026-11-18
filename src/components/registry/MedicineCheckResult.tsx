@@ -22,6 +22,7 @@ const UNCOMPARABLE =
 
 const VERDICT_STYLE: Record<CheckVerdict["kind"], { icon: LucideIcon; className: string }> = {
   variant: { icon: CircleCheck, className: "bg-success text-success-foreground" },
+  expired: { icon: CircleAlert, className: "bg-destructive/10 text-destructive" },
   substance: { icon: Info, className: "bg-warning text-warning-foreground" },
   none: { icon: CircleMinus, className: "bg-muted text-foreground" },
 };
@@ -107,12 +108,12 @@ export function MedicineCheckResult({ productId, level, onSearched }: MedicineCh
       </div>
     );
   } else {
-    const verdict = checkVerdict(result);
+    const today = todayIso();
+    const verdict = checkVerdict(result, today);
     // The hook only returns a result of the requested level, so these texts match the verdict.
     const { caution, alsoHeading } = MATCH_LEVEL_TEXTS[result.level];
     const { variants, same } = verdict;
     const { icon: Icon, className } = VERDICT_STYLE[verdict.kind];
-    const today = todayIso();
     const main = variants.length > 0 ? variants : same;
     // The notes carry the safety caveats, so they are announced together with the verdict.
     announcement = [verdict.title, verdict.detail, verdict.caution && caution, verdict.uncomparable && UNCOMPARABLE]
