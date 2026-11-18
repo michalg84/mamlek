@@ -1,7 +1,7 @@
 ---
 change_id: auth-screens-ui
 title: Auth screens in Polish on the app's light tokens
-status: implementing
+status: implemented
 created: 2026-11-18
 updated: 2026-11-18
 archived_at: null

@@ -495,13 +495,13 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [x] 5.1 Strażnik przechodzi na całej liście: `npm run ui:scan`
-- [x] 5.2 Brak użyć `bg-cosmic` w `src/`
-- [x] 5.3 Lint przechodzi: `npm run lint`
-- [x] 5.4 Typy przechodzą: `npx astro check`
-- [x] 5.5 Testy przechodzą: `npm test`
-- [x] 5.6 Build przechodzi: `npm run build`
+- [x] 5.1 Strażnik przechodzi na całej liście: `npm run ui:scan` — 10521e1
+- [x] 5.2 Brak użyć `bg-cosmic` w `src/` — 10521e1
+- [x] 5.3 Lint przechodzi: `npm run lint` — 10521e1
+- [x] 5.4 Typy przechodzą: `npx astro check` — 10521e1
+- [x] 5.5 Testy przechodzą: `npm test` — 10521e1
+- [x] 5.6 Build przechodzi: `npm run build` — 10521e1
 
 #### Manual
 
-- [x] 5.7 Celowy literał palety w `SignInForm.tsx` sprawia, że `npm run ui:scan` kończy się kodem 1 (potem cofnięty)
+- [x] 5.7 Celowy literał palety w `SignInForm.tsx` sprawia, że `npm run ui:scan` kończy się kodem 1 (potem cofnięty) — 10521e1
