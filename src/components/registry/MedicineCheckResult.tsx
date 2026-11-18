@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { todayIso } from "@/lib/kit-format";
 import { MATCH_LEVEL_TEXTS } from "@/lib/match-level";
-import { checkVerdict, emptyPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
+import { checkVerdict, emptyPacks, expiredPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
 import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
@@ -22,6 +22,7 @@ const UNCOMPARABLE =
 
 const VERDICT_STYLE: Record<CheckVerdict["kind"], { icon: LucideIcon; className: string }> = {
   variant: { icon: CircleCheck, className: "bg-success text-success-foreground" },
+  expired: { icon: CircleAlert, className: "bg-destructive/10 text-destructive" },
   substance: { icon: Info, className: "bg-warning text-warning-foreground" },
   none: { icon: CircleMinus, className: "bg-muted text-foreground" },
 };
@@ -61,6 +62,11 @@ function EmptyPacks({ items, today }: { items: MedicineCheckItem[]; today: strin
 /** The sentence the live region adds after the verdict when matching packs are empty. */
 function emptyPacksAnnouncement(count: number) {
   return count > 0 ? `Puste opakowania w apteczce: ${count}` : "";
+}
+
+/** The sentence the live region adds after the verdict (and the empty packs) when matching packs are expired. */
+function expiredPacksAnnouncement(count: number) {
+  return count > 0 ? `Przeterminowane opakowania w apteczce: ${count}` : "";
 }
 
 /** Result of checking the picked medicine against the kit: verdict, matching kit items, caution and notes. */
@@ -107,19 +113,25 @@ export function MedicineCheckResult({ productId, level, onSearched }: MedicineCh
       </div>
     );
   } else {
-    const verdict = checkVerdict(result);
+    const today = todayIso();
+    const verdict = checkVerdict(result, today);
     // The hook only returns a result of the requested level, so these texts match the verdict.
     const { caution, alsoHeading } = MATCH_LEVEL_TEXTS[result.level];
     const { variants, same } = verdict;
     const { icon: Icon, className } = VERDICT_STYLE[verdict.kind];
-    const today = todayIso();
     const main = variants.length > 0 ? variants : same;
     // The notes carry the safety caveats, so they are announced together with the verdict.
     announcement = [verdict.title, verdict.detail, verdict.caution && caution, verdict.uncomparable && UNCOMPARABLE]
       .filter(Boolean)
       .join(". ");
     const empty = emptyPacks(result);
-    announcement = [announcement, emptyPacksAnnouncement(empty.length)].filter(Boolean).join(". ");
+    announcement = [
+      announcement,
+      emptyPacksAnnouncement(empty.length),
+      expiredPacksAnnouncement(expiredPacks(result, today).length),
+    ]
+      .filter(Boolean)
+      .join(". ");
 
     content = (
       <div className="min-w-0 space-y-3">

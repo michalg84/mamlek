@@ -231,6 +231,43 @@ export function isExpired(expiresOn: string | null, today: string): boolean {
   return expiresOn !== null && expiresOn < today;
 }
 
+/** Where a pack's expiry date stands on `today`: past it, ending this month or the next, later, or unknown. */
+export type ExpiryStatus = "expired" | "expiring" | "valid" | "unknown";
+
+/** The month after today's, as "YYYY-MM" (December rolls over to January of the next year). */
+function nextMonth(today: string): string {
+  const year = Number(today.slice(0, 4));
+  const month = Number(today.slice(5, 7));
+  return month === 12 ? `${String(year + 1).padStart(4, "0")}-01` : `${today.slice(0, 4)}-${pad2(month + 1)}`;
+}
+
+/**
+ * The state of a pack's expiry date on `today` (both YYYY-MM-DD). A pack not yet expired is "expiring" when its date
+ * falls in the current or the next calendar month: dates are stored by month, so the warning counts months too.
+ */
+export function expiryStatus(expiresOn: string | null, today: string): ExpiryStatus {
+  if (expiresOn === null) {
+    return "unknown";
+  }
+  if (isExpired(expiresOn, today)) {
+    return "expired";
+  }
+  return expiresOn.slice(0, 7) <= nextMonth(today) ? "expiring" : "valid";
+}
+
+/** "1 opakowanie", "2 opakowania", "5 opakowań", "22 opakowania", "12 opakowań". */
+export function packCount(count: number): string {
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  if (count === 1) {
+    return "1 opakowanie";
+  }
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) {
+    return `${count} opakowania`;
+  }
+  return `${count} opakowań`;
+}
+
 /** Display of a remaining quantity: "12 z 30 sasz.", "12" (no known cap) or "nieznane". */
 export function formatQuantity(quantity: number | null, units: RegistryPackageUnit[]): string {
   if (quantity === null) {

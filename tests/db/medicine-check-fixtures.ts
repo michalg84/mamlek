@@ -6,6 +6,12 @@ import { URL } from "node:url";
 import pg from "pg";
 import { expect } from "vitest";
 
+/**
+ * A date before every expiry date in the fixtures: these tests check the rule of the RPC, so the verdict they read must
+ * not turn "expired" as the calendar moves on.
+ */
+export const BEFORE_ANY_EXPIRY = "2000-01-01";
+
 // Local databases only: the rows are rolled back, but the inserts would still fire triggers and take locks elsewhere.
 export const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
