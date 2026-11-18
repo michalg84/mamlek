@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CircleAlert } from "lucide-react";
 import KitAddForm from "@/components/kit/KitAddForm";
 import KitList from "@/components/kit/KitList";
+import RegistryStateDate from "@/components/registry/RegistryStateDate.astro";
 import { createClient } from "@/lib/supabase";
 import { todayIso } from "@/lib/kit-format";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
@@ -14,6 +15,9 @@ import { plural } from "@/lib/plural";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { KitItem, RegistrySearchListVersion } from "@/types";
+
+// One "today" for the kit list and the registry state date, so both judge dates against the same day.
+const today = todayIso("Europe/Warsaw");
 
 // `?zaimportowano=<n>` comes from the end of an import; only a count an import can reach is shown.
 const importedParam = Astro.url.searchParams.get("zaimportowano");
@@ -112,7 +116,8 @@ try {
                   <h2 id="list-heading" class="text-foreground mb-3 text-lg font-semibold">
                     W apteczce
                   </h2>
-                  <KitList items={items} today={todayIso("Europe/Warsaw")} client:load />
+                  <KitList items={items} today={today} client:load />
+                  {list && <RegistryStateDate snapshotDate={list.snapshotDate} today={today} class="mt-4" />}
                 </section>
               </div>
             )}

@@ -201,11 +201,14 @@ odnosiły się do tych samych identyfikatorów.
 - Dane rejestru, na których opiera się odpowiedź, nie są starsze niż 7 dni. To cel
   operacyjny, nie gwarancja wymuszana przez aplikację: rejestr jest importowany
   codziennie, a jego świeżość widać po dacie „Stan rejestru na …” (data stanu
-  z eksportu RPL) na ekranie `/szukaj`. Aplikacja nie porównuje tej daty z dzisiejszą.
-  Nieudany przebieg importu jest zgłaszany autorowi mailem z GitHuba. Harmonogram
-  wyłączony przez GitHuba po 60 dniach bez aktywności w repozytorium nie daje
-  żadnego sygnału poza starzejącą się datą — zabezpieczenie to wycinek S-16
-  (keepalive), poza MVP.
+  z eksportu RPL) na ekranach `/szukaj` i `/apteczka`. Od 2026-11-18 (S-16)
+  aplikacja porównuje tę datę z dzisiejszą (czas polski) i gdy jest starsza niż
+  7 dni, wyróżnia ją jako ostrzeżenie „dane mogą być nieaktualne”.
+  Nieudany przebieg importu jest zgłaszany autorowi mailem z GitHuba. Przed
+  wyłączeniem harmonogramu przez GitHuba po 60 dniach bez aktywności chroni job
+  `keepalive` w workflowie, który przy każdym przebiegu ponownie włącza workflow
+  przez API; GitHub nie dokumentuje, że to zeruje licznik, więc sygnałem
+  pozostaje ostrzeżenie przy dacie.
 - Zawartość apteczki jest dostępna wyłącznie po zalogowaniu na konto domu i nie
   jest widoczna dla nikogo spoza tego konta.
 - Aplikacja jest używalna na ekranie telefonu bez powiększania i bez poziomego

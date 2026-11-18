@@ -57,7 +57,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done     |
 | S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done     |
 | S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | proposed |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done     |
 | S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed |
 
 ## Streams
@@ -318,7 +318,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Unknowns:**
   - Którą opcję wybrać: krok keepalive wołający API workflowu (np. `gautamkrishnar/keepalive-workflow` w trybie API — sprawdzić, czy zeruje licznik), zewnętrzny cron na Cloudflare czy tylko ostrzeżenie przy dacie stanu starszej niż 7 dni (opóźnienia publikacji RPL mogą dawać fałszywe alarmy). — Owner: autor. Block: no.
 - **Risk:** Zastępuje Open Roadmap Question 12 (decyzja autora z audytu 2026-11-16, F7). Przebiegi 13–15.11 zakończone sukcesem, więc dziś nic nie płonie; PRD v3 opisuje NFR świeżości jako cel operacyjny, a ten wycinek jest jego zabezpieczeniem. Poza M-1 — planowany po zamknięciu kamienia milowego. `npm run roadmap:sync` przypisuje wszystkie pozycje do jednego kamienia milowego na GitHubie, więc na tablicy S-16 będzie stał w M-1.
-- **Status:** proposed
+- **Status:** done
 
 ### S-17: Przejścia substancja ↔ lek i dodanie leku z wyszukiwania (po M-1)
 
@@ -415,3 +415,4 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **S-12: użytkownik podaje ilość leku tak, jak ją widzi — w tabletkach (sztukach) — także dla opakowań, które rejestr opisuje liczbą jednostek („1 butelka po 90 tabl.”, „2 blistry po 10 tabl.”), a aplikacja pokazuje tę ilość jednoznacznie, bez mieszania „butelek” z „tabletkami”.** — Archived 2026-11-17 → `context/archive/2026-11-17-kit-quantity-semantics/`. Lesson: —.
 - **S-06: użytkownik wybiera poziom dopasowania — precyzyjny, zawiera wszystkie, zawiera jeden — widzi go przy wyszukiwaniu, a wynik sprawdzenia leku złożonego zmienia się zgodnie z wybranym poziomem.** — Archived 2026-11-17 → `context/archive/2026-11-17-substance-match-level/`. Lesson: —.
 - **S-08: użytkownik widzi ostrzeżenie o zbliżającym się końcu ważności leku — razem z datą — na liście apteczki i przy wyniku sprawdzenia, gdy ma dany lek lub lek z tą samą substancją czynną.** — Archived 2026-11-18 → `context/archive/2026-11-18-expiry-warning/`. Lesson: —.
+- **S-16: autor może polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu, gdy GitHub wyłączy harmonogram po 60 dniach bez aktywności w publicznym repozytorium.** — Archived 2026-11-18 → `context/archive/2026-11-18-registry-import-keepalive/`. Lesson: —.

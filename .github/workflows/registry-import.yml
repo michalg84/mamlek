@@ -42,3 +42,21 @@ jobs:
             exit 1
           fi
           npm run registry:import
+
+  # GitHub disables scheduled workflows in a public repository after 60 days without repository activity, and the
+  # daily import would then stop silently. A commit cannot keep it alive (main requires a PR), and third-party
+  # keepalive actions are a supply-chain risk, so every run re-enables this workflow through the REST API instead.
+  # GitHub does not document that this resets the 60-day counter: the stale-data warning on /szukaj and /apteczka
+  # is the independent signal if it does not. Separate job, so the import job with the production secret gets no
+  # extra permission, and no `needs`, so it runs even when the import fails.
+  keepalive:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Re-enable this workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/registry-import.yml/enable"
