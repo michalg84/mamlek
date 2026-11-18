@@ -1,10 +1,10 @@
 ---
 change_id: expiry-warning
 title: Ostrzeżenie o kończącej się dacie ważności na liście apteczki i przy wyniku sprawdzenia
-status: impl_reviewed
+status: archived
 created: 2026-11-18
 updated: 2026-11-18
-archived_at: null
+archived_at: 2026-11-18T16:52:54Z
 ---
 
 ## Notes
