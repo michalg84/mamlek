@@ -244,8 +244,8 @@ Zaktualizować miejsca, które opisują ryzyko 60 dni jako przyjęte, i opisać 
 
 #### Automated
 
-- [x] 3.1 Formatting passes
+- [x] 3.1 Formatting passes — f1c151c
 
 #### Manual
 
-- [x] 3.2 Author confirms the changed paragraphs match the decisions
+- [x] 3.2 Author confirms the changed paragraphs match the decisions — f1c151c

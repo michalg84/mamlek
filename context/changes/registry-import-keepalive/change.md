@@ -1,7 +1,7 @@
 ---
 change_id: registry-import-keepalive
 title: Keep the daily registry import alive past GitHub's 60-day schedule shutoff
-status: implementing
+status: implemented
 created: 2026-11-18
 updated: 2026-11-18
 archived_at: null
