@@ -480,28 +480,28 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [x] 4.1 Lint przechodzi: `npm run lint`
-- [x] 4.2 Typy przechodzą: `npx astro check`
-- [x] 4.3 Testy przechodzą, w tym nowe `SignInForm.test.tsx` i `SignUpForm.test.tsx`: `npm test`
-- [x] 4.4 Skan plików auth nie zwraca trafień
+- [x] 4.1 Lint przechodzi: `npm run lint` — 130cc79
+- [x] 4.2 Typy przechodzą: `npx astro check` — 130cc79
+- [x] 4.3 Testy przechodzą, w tym nowe `SignInForm.test.tsx` i `SignUpForm.test.tsx`: `npm test` — 130cc79
+- [x] 4.4 Skan plików auth nie zwraca trafień — 130cc79
 
 #### Manual
 
-- [x] 4.5 Zrzuty 1280 i 390 px wszystkich stanów macierzy obejrzane i opisane w raporcie fazy
-- [x] 4.6 Fokus z klawiatury widoczny na każdej kontrolce, w tym na przełączniku hasła i linku
-- [x] 4.7 Czytnik ekranu (albo drzewo dostępności) odczytuje błąd pola razem z etykietą
+- [x] 4.5 Zrzuty 1280 i 390 px wszystkich stanów macierzy obejrzane i opisane w raporcie fazy — 130cc79
+- [x] 4.6 Fokus z klawiatury widoczny na każdej kontrolce, w tym na przełączniku hasła i linku — 130cc79
+- [x] 4.7 Czytnik ekranu (albo drzewo dostępności) odczytuje błąd pola razem z etykietą — 130cc79
 
 ### Phase 5: Strażnik — reguła i kontrola
 
 #### Automated
 
-- [ ] 5.1 Strażnik przechodzi na całej liście: `npm run ui:scan`
-- [ ] 5.2 Brak użyć `bg-cosmic` w `src/`
-- [ ] 5.3 Lint przechodzi: `npm run lint`
-- [ ] 5.4 Typy przechodzą: `npx astro check`
-- [ ] 5.5 Testy przechodzą: `npm test`
-- [ ] 5.6 Build przechodzi: `npm run build`
+- [x] 5.1 Strażnik przechodzi na całej liście: `npm run ui:scan`
+- [x] 5.2 Brak użyć `bg-cosmic` w `src/`
+- [x] 5.3 Lint przechodzi: `npm run lint`
+- [x] 5.4 Typy przechodzą: `npx astro check`
+- [x] 5.5 Testy przechodzą: `npm test`
+- [x] 5.6 Build przechodzi: `npm run build`
 
 #### Manual
 
-- [ ] 5.7 Celowy literał palety w `SignInForm.tsx` sprawia, że `npm run ui:scan` kończy się kodem 1 (potem cofnięty)
+- [x] 5.7 Celowy literał palety w `SignInForm.tsx` sprawia, że `npm run ui:scan` kończy się kodem 1 (potem cofnięty)

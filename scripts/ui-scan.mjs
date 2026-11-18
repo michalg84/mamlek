@@ -31,6 +31,19 @@ const GUARDED = [
   "src/pages/apteczka/import.astro",
   "src/components/kit/KitImport.tsx",
   "src/components/kit/KitImportRow.tsx",
+  "src/pages/auth/signin.astro",
+  "src/pages/auth/signup.astro",
+  "src/pages/auth/confirm-email.astro",
+  "src/components/auth/AuthShell.astro",
+  "src/components/auth/FormField.tsx",
+  "src/components/auth/FieldError.tsx",
+  "src/components/auth/PasswordToggle.tsx",
+  "src/components/auth/ServerError.tsx",
+  "src/components/auth/SubmitButton.tsx",
+  "src/components/auth/SignInForm.tsx",
+  "src/components/auth/SignUpForm.tsx",
+  "src/components/Banner.astro",
+  "src/layouts/Layout.astro",
 ];
 
 const PATTERN = new RegExp(
