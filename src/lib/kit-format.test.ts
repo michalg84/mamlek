@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   MAX_QUANTITY,
   expiryInput,
+  expiryStatus,
+  packCount,
   formatQuantity,
   packQuantity,
   parseExpiryInput,
@@ -241,5 +243,42 @@ describe("expiryInput", () => {
     expect(expiryInput("2027-03-31")).toEqual({ month: "3", year: "2027" });
     expect(expiryInput("2027-12-15")).toEqual({ month: "12", year: "2027" });
     expect(expiryInput(null)).toEqual({ month: "", year: "" });
+  });
+});
+
+describe("expiryStatus", () => {
+  it.each([
+    ["the last day of the current month", "2026-11-30", "2026-11-18", "expiring"],
+    ["today itself", "2026-11-18", "2026-11-18", "expiring"],
+    ["the next month", "2026-12-31", "2026-11-18", "expiring"],
+    ["the month after the next one", "2027-01-31", "2026-11-18", "valid"],
+    ["January after December, across the year", "2027-01-31", "2026-12-05", "expiring"],
+    ["February after December, across the year", "2027-02-28", "2026-12-05", "valid"],
+    ["the same month a year later", "2027-11-30", "2026-11-18", "valid"],
+    ["yesterday", "2026-11-17", "2026-11-18", "expired"],
+    ["the previous month", "2026-10-31", "2026-11-01", "expired"],
+    ["a day-precision date in the next month", "2026-12-15", "2026-11-18", "expiring"],
+    ["a day-precision date two months ahead", "2027-01-02", "2026-11-30", "valid"],
+  ])("reads %s (%s on %s) as %s", (_label, expiresOn, today, status) => {
+    expect(expiryStatus(expiresOn, today)).toBe(status);
+  });
+
+  it("never warns about an unknown date", () => {
+    expect(expiryStatus(null, "2026-11-18")).toBe("unknown");
+  });
+});
+
+describe("packCount", () => {
+  it.each([
+    [1, "1 opakowanie"],
+    [2, "2 opakowania"],
+    [4, "4 opakowania"],
+    [5, "5 opakowań"],
+    [12, "12 opakowań"],
+    [14, "14 opakowań"],
+    [22, "22 opakowania"],
+    [112, "112 opakowań"],
+  ])("names %i pack(s) „%s”", (count, label) => {
+    expect(packCount(count)).toBe(label);
   });
 });

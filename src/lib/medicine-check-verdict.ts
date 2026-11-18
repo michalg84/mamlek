@@ -1,14 +1,16 @@
+import { expiryStatus, formatExpiry, packCount } from "@/lib/kit-format";
 import { DEFAULT_MATCH_LEVEL, MATCH_LEVEL_TEXTS, isMatchLevel } from "@/lib/match-level";
 import type { MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 /** What the check screen shows for one answer of the medicine check. */
 export interface CheckVerdict {
-  kind: "variant" | "substance" | "none";
+  /** "expired": the kit holds the medicine, but every pack of it with something left is past its date. */
+  kind: "variant" | "expired" | "substance" | "none";
   title: string;
   detail: string | null;
-  /** Kit items that are the checked medicine itself. */
+  /** Kit items that are the checked medicine itself: the packs still valid first, then the expired ones. */
   variants: MedicineCheckItem[];
-  /** Kit items that only share the active composition. */
+  /** Kit items that only share the active composition, ordered like `variants`. */
   same: MedicineCheckItem[];
   /** At least one same-substance item is shown, so the consult-a-pharmacist notice must be too. */
   caution: boolean;
@@ -60,19 +62,6 @@ export function parseMedicineCheck(body: unknown): MedicineCheckResponse | null 
   return { ...body, level: body.level ?? DEFAULT_MATCH_LEVEL } as unknown as MedicineCheckResponse;
 }
 
-/** "1 opakowanie", "2 opakowania", "5 opakowań", "22 opakowania", "12 opakowań". */
-function packCount(count: number) {
-  const lastDigit = count % 10;
-  const lastTwo = count % 100;
-  if (count === 1) {
-    return "1 opakowanie";
-  }
-  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) {
-    return `${count} opakowania`;
-  }
-  return `${count} opakowań`;
-}
-
 /** An empty pack (quantity 0) is in the kit but gives no medicine; an unknown quantity (null) counts as having it. */
 function isEmpty(item: MedicineCheckItem) {
   return item.quantity === 0;
@@ -86,25 +75,82 @@ export function emptyPacks(result: MedicineCheckResponse): MedicineCheckItem[] {
   return result.items.filter(isEmpty);
 }
 
-/** Turns the answer of the medicine check into the verdict the screen shows; empty packs do not count. */
-export function checkVerdict(result: MedicineCheckResponse): CheckVerdict {
+function isExpiredPack(item: MedicineCheckItem, today: string) {
+  return expiryStatus(item.expiresOn, today) === "expired";
+}
+
+/**
+ * The expired packs with something left among the matching kit items, in the order of the RPC. They stay in the item
+ * lists (last), and the screen announces their number.
+ */
+export function expiredPacks(result: MedicineCheckResponse, today: string): MedicineCheckItem[] {
+  return result.items.filter((item) => !isEmpty(item) && isExpiredPack(item, today));
+}
+
+/** The latest expiry date among the items (all dated), shown with that item's precision. */
+function latestExpiry(items: MedicineCheckItem[]): string {
+  const latest = items.reduce((last, item) => ((item.expiresOn ?? "") > (last.expiresOn ?? "") ? item : last));
+  return formatExpiry(latest.expiresOn, latest.expiryPrecision);
+}
+
+/** One match group split into the packs still valid (an unknown date included) and the expired ones. */
+function splitByExpiry(items: MedicineCheckItem[], today: string) {
+  const valid = items.filter((item) => !isExpiredPack(item, today));
+  const expired = items.filter((item) => isExpiredPack(item, today));
+  const ending = valid.length > 0 && valid.every((item) => expiryStatus(item.expiresOn, today) === "expiring");
+  return { valid, expired, ordered: [...valid, ...expired], ending };
+}
+
+/**
+ * Turns the answer of the medicine check into the verdict the screen shows on `today` (YYYY-MM-DD). Empty packs do not
+ * count; expired packs do not count toward "Masz ten lek", but they keep the medicine apart from "Nie masz".
+ */
+export function checkVerdict(result: MedicineCheckResponse, today: string): CheckVerdict {
   // The RPC already orders the items (by match strength, then nearest expiry, unknown last, newest first): only split.
   const texts = MATCH_LEVEL_TEXTS[result.level];
   const items = result.items.filter((item) => !isEmpty(item));
-  const variants = items.filter((item) => item.match === "variant");
-  const same = items.filter((item) => item.match === "substance");
-  const shared = { variants, same, caution: same.length > 0, uncomparable: !result.comparable };
+  const variants = splitByExpiry(
+    items.filter((item) => item.match === "variant"),
+    today,
+  );
+  const same = splitByExpiry(
+    items.filter((item) => item.match === "substance"),
+    today,
+  );
+  const shared = {
+    variants: variants.ordered,
+    same: same.ordered,
+    caution: same.ordered.length > 0,
+    uncomparable: !result.comparable,
+  };
 
-  if (variants.length > 0) {
-    return { kind: "variant", title: `Masz ten lek · ${packCount(variants.length)}`, detail: null, ...shared };
-  }
-  if (same.length > 0) {
+  if (variants.valid.length > 0) {
     return {
-      kind: "substance",
-      title: texts.substanceTitle,
-      detail: [...new Set(same.map((item) => item.name))].join(", "),
+      kind: "variant",
+      title: `Masz ten lek · ${packCount(variants.valid.length)}`,
+      // The title counts only valid packs, so the ending date stays clear even with expired packs listed below.
+      detail: variants.ending ? `Ważność kończy się ${latestExpiry(variants.valid)}` : null,
       ...shared,
     };
+  }
+  if (variants.expired.length > 0) {
+    return {
+      kind: "expired",
+      title: "Masz ten lek, ale przeterminowany",
+      detail: `Termin ważności minął: ${latestExpiry(variants.expired)}`,
+      ...shared,
+    };
+  }
+  if (same.ordered.length > 0) {
+    const names = [...new Set(same.ordered.map((item) => item.name))].join(", ");
+    let suffix = "";
+    if (same.valid.length === 0) {
+      suffix = " · wszystkie przeterminowane";
+    } else if (same.ending && same.expired.length === 0) {
+      // The line names every pack, expired ones too, so an ending date only when none of them has expired.
+      suffix = ` · ważność kończy się ${latestExpiry(same.valid)}`;
+    }
+    return { kind: "substance", title: texts.substanceTitle, detail: names + suffix, ...shared };
   }
   return {
     kind: "none",

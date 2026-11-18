@@ -13,7 +13,7 @@ import type pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { checkVerdict, parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckResponse } from "@/types";
-import { World, actAs, actAsOwner, checkAs, connectLocal } from "./medicine-check-fixtures";
+import { BEFORE_ANY_EXPIRY, World, actAs, actAsOwner, checkAs, connectLocal } from "./medicine-check-fixtures";
 
 const w = new World();
 
@@ -135,15 +135,15 @@ describe("variant key: a space at the end of the strength is the same medicine",
     const result = await answer(uKitPadded, plain.id);
 
     expect(result.items.map((i) => [i.id, i.match, i.matchedBy])).toEqual([[kKitPadded.id, "variant", null]]);
-    expect(checkVerdict(result).kind).toBe("variant");
-    expect(checkVerdict(result).title).toBe("Masz ten lek · 1 opakowanie");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe("variant");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).title).toBe("Masz ten lek · 1 opakowanie");
   });
 
   it("medicine_check finds the kit item of the plain spelling when the padded one is checked", async () => {
     const result = await answer(uKitPlain, padded.id);
 
     expect(result.items.map((i) => [i.id, i.match, i.matchedBy])).toEqual([[kKitPlain.id, "variant", null]]);
-    expect(checkVerdict(result).kind).toBe("variant");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe("variant");
   });
 
   it("registry_variant_packages of the plain product returns the packs of both spellings, its own first", async () => {
@@ -174,7 +174,7 @@ describe("variant key: a double space inside the strength is not trimmed (author
     const result = await answer(uKitDoubled, single.id);
 
     expect(result.items).toEqual([]);
-    expect(checkVerdict(result).kind).toBe("none");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe("none");
   });
 
   it("registry_variant_packages returns the packs of the one spelling only", async () => {

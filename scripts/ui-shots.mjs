@@ -141,6 +141,16 @@ const SEARCHED = {
   commonName: "Ibuprofenum",
   substances: ["Ibuprofenum"],
 };
+/**
+ * The last day of the month `offset` months from the run date, as YYYY-MM-DD. The expiry dates of the check answers are
+ * relative to the run, so each state shows the same verdict on any day (the screen compares them with today).
+ */
+function monthEnd(offset) {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+  return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+}
+
 const UNIT = { count: "12", kind: "tabl.", capacity: null, capacity_unit: null, info: null };
 
 function checkItem(overrides) {
@@ -157,7 +167,8 @@ function checkItem(overrides) {
     substances: ["Ibuprofenum"],
     units: [UNIT],
     quantity: 3,
-    expiresOn: "2026-03-31",
+    // Expired: next to a valid pack it makes "check-have" the mixed case.
+    expiresOn: monthEnd(-8),
     expiryPrecision: "month",
     withdrawn: false,
     createdAt: "2026-09-01T10:00:00Z",
@@ -174,7 +185,7 @@ const NUROFEN = checkItem({
   holder: "Reckitt Benckiser",
   units: [{ ...UNIT, count: "24" }],
   quantity: 20,
-  expiresOn: "2027-11-30",
+  expiresOn: monthEnd(12),
 });
 
 // A combination medicine sharing ibuprofen: it only matches on the loose levels.
@@ -191,7 +202,7 @@ const METAFEN = checkItem({
   substances: ["Ibuprofenum", "Paracetamolum"],
   units: [{ ...UNIT, count: "10" }],
   quantity: 6,
-  expiresOn: "2027-05-31",
+  expiresOn: monthEnd(6),
 });
 
 // The level is filled in from the request (see answerCheck), like the API echoes the level it checked.
@@ -199,7 +210,19 @@ const CHECK_ANSWERS = {
   have: {
     searched: SEARCHED,
     comparable: true,
-    items: [checkItem({}), checkItem({ id: 2, quantity: null, expiresOn: "2027-08-31", withdrawn: true }), NUROFEN],
+    items: [checkItem({}), checkItem({ id: 2, quantity: null, expiresOn: monthEnd(9), withdrawn: true }), NUROFEN],
+  },
+  // Every pack of the medicine is past its date: the red verdict.
+  expired: {
+    searched: SEARCHED,
+    comparable: true,
+    items: [checkItem({}), checkItem({ id: 2, quantity: 5, expiresOn: monthEnd(-2) })],
+  },
+  // Every valid pack ends this month or the next: the verdict names the date.
+  haveExpiring: {
+    searched: SEARCHED,
+    comparable: true,
+    items: [checkItem({ expiresOn: monthEnd(0) }), checkItem({ id: 2, quantity: 5, expiresOn: monthEnd(1) })],
   },
   same: { searched: SEARCHED, comparable: true, items: [NUROFEN] },
   none: { searched: SEARCHED, comparable: true, items: [] },
@@ -318,7 +341,9 @@ const STATES = [
       if ((await page.locator(VERDICT).count()) > 0) throw new StateError("The verdict stayed after editing the text");
     },
   },
-  checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek"),
+  checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek ·"),
+  checkState("check-expired", CHECK_ANSWERS.expired, "Masz ten lek, ale przeterminowany"),
+  checkState("check-have-expiring", CHECK_ANSWERS.haveExpiring, "Ważność kończy się"),
   checkState("check-same", CHECK_ANSWERS.same, "Masz lek z tą samą substancją czynną"),
   checkState("check-none", CHECK_ANSWERS.none, "Nie masz tego leku"),
   checkState("check-none-uncomparable", CHECK_ANSWERS.noneUncomparable, "Nie masz tego leku"),

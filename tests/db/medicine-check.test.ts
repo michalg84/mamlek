@@ -6,7 +6,15 @@ import type pg from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { checkVerdict, parseMedicineCheck } from "@/lib/medicine-check-verdict";
 import type { MedicineCheckResponse } from "@/types";
-import { World, actAs, checkAs, connectLocal, expectSqlError, type KitRef } from "./medicine-check-fixtures";
+import {
+  BEFORE_ANY_EXPIRY,
+  World,
+  actAs,
+  checkAs,
+  connectLocal,
+  expectSqlError,
+  type KitRef,
+} from "./medicine-check-fixtures";
 
 type Match = "variant" | "substance";
 type MatchedBy = "common_name" | "substances" | null;
@@ -872,7 +880,7 @@ describe("medicine_check rule", () => {
       items.map(([ref, match, matchedBy, withdrawn]) => [ref.id, match, matchedBy, withdrawn]),
     );
     expect(result.comparable).toBe(comparable);
-    expect(checkVerdict(result).kind).toBe(kind);
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe(kind);
   });
 
   it("returns the searched product with its full data (same product)", async () => {
@@ -894,7 +902,7 @@ describe("medicine_check rule", () => {
     expect(result.items).toHaveLength(2);
     expect(result.items.every((i) => i.match === "variant" && i.withdrawn)).toBe(true);
     expect(result.items.map((i) => i.id).sort()).toEqual([kRemovedPackage.id, kRemovedProduct.id].sort());
-    expect(checkVerdict(result).kind).toBe("variant");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe("variant");
   });
 
   it("orders variant first, then by expiry (expired, later, none), then the substance item", async () => {
@@ -908,7 +916,7 @@ describe("medicine_check rule", () => {
     ]);
     expect(result.items[0].expiresOn).toBe("2020-01-31");
     expect(result.items[0].expiryPrecision).toBe("month");
-    expect(checkVerdict(result).kind).toBe("variant");
+    expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe("variant");
   });
 
   it("returns null for an unknown product, which neither passes the guard nor yields a verdict", async () => {
@@ -1055,7 +1063,7 @@ describe("medicine_check match levels", () => {
       expect(result.items.map((i) => [i.id, i.match, i.matchedBy])).toEqual(
         expected.map(([ref, match, matchedBy]) => [ref.id, match, matchedBy]),
       );
-      expect(checkVerdict(result).kind).toBe(
+      expect(checkVerdict(result, BEFORE_ANY_EXPIRY).kind).toBe(
         expected.some(([, match]) => match === "variant") ? "variant" : expected.length > 0 ? "substance" : "none",
       );
     },
