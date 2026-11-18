@@ -341,7 +341,7 @@ const STATES = [
       if ((await page.locator(VERDICT).count()) > 0) throw new StateError("The verdict stayed after editing the text");
     },
   },
-  checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek"),
+  checkState("check-have", CHECK_ANSWERS.have, "Masz ten lek ·"),
   checkState("check-expired", CHECK_ANSWERS.expired, "Masz ten lek, ale przeterminowany"),
   checkState("check-have-expiring", CHECK_ANSWERS.haveExpiring, "Ważność kończy się"),
   checkState("check-same", CHECK_ANSWERS.same, "Masz lek z tą samą substancją czynną"),

@@ -128,6 +128,7 @@ export function checkVerdict(result: MedicineCheckResponse, today: string): Chec
     return {
       kind: "variant",
       title: `Masz ten lek · ${packCount(variants.valid.length)}`,
+      // The title counts only valid packs, so the ending date stays clear even with expired packs listed below.
       detail: variants.ending ? `Ważność kończy się ${latestExpiry(variants.valid)}` : null,
       ...shared,
     };
@@ -146,6 +147,7 @@ export function checkVerdict(result: MedicineCheckResponse, today: string): Chec
     if (same.valid.length === 0) {
       suffix = " · wszystkie przeterminowane";
     } else if (same.ending && same.expired.length === 0) {
+      // The line names every pack, expired ones too, so an ending date only when none of them has expired.
       suffix = ` · ważność kończy się ${latestExpiry(same.valid)}`;
     }
     return { kind: "substance", title: texts.substanceTitle, detail: names + suffix, ...shared };

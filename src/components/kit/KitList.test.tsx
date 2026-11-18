@@ -596,6 +596,30 @@ describe("KitList", () => {
       expect(within(row("Lek 1")).getByText("z 60 tabl.")).toBeTruthy();
       expect(document.activeElement).toBe(editButton("Lek 1"));
     });
+
+    it("a date changed in the panel updates the marker and the expiry summary", async () => {
+      const item = kitItem({ expiresOn: "2026-11-30" });
+      const routed = stubPacks(item, () => reply({ item: { ...item, expiresOn: "2028-03-31" } }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+      expect(screen.getByText("Kończy się ważność: 1 opakowanie")).toBeTruthy();
+      expect(within(row("Lek 1")).getByText("Ważny do: 11/2026").textContent).toContain(`· ${EXPIRING}`);
+
+      fireEvent.click(editButton("Lek 1"));
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      await within(panel).findByRole("radio", { name: "30 tabl." });
+      fireEvent.change(within(panel).getByLabelText("Miesiąc"), { target: { value: "3" } });
+      fireEvent.change(within(panel).getByLabelText("Rok"), { target: { value: "2028" } });
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("form")).toBeNull();
+      });
+      expect(routed.kitItemRequests()).toEqual([
+        { method: "PATCH", id: item.id, body: { expiry: { month: 3, year: 2028 } } },
+      ]);
+      expect(within(row("Lek 1")).getByText("Ważny do: 03/2028").textContent).not.toContain(EXPIRING);
+      expect(screen.queryByText(/Kończy się ważność:|Przeterminowane:/)).toBeNull();
+    });
   });
 
   describe("edit to an empty pack", () => {
