@@ -265,12 +265,12 @@ Brak migracji; wdrożenie przez merge (Cloudflare), rollback przez revert.
 
 #### Automated
 
-- [x] 3.1 Testy bazy zielone
-- [x] 3.2 ci-check zielony
-- [x] 3.3 Zrzuty wszystkich stanów
+- [x] 3.1 Testy bazy zielone — dc3f6f8
+- [x] 3.2 ci-check zielony — dc3f6f8
+- [x] 3.3 Zrzuty wszystkich stanów — dc3f6f8
 
 #### Manual
 
-- [x] 3.4 /apteczka: oznaczenia i podsumowanie
-- [x] 3.5 /szukaj: czerwony werdykt, przypadek mieszany, kontrast
+- [x] 3.4 /apteczka: oznaczenia i podsumowanie — dc3f6f8
+- [x] 3.5 /szukaj: czerwony werdykt, przypadek mieszany, kontrast — dc3f6f8
 - [ ] 3.6 Czytnik ekranu (opcjonalnie)
