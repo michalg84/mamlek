@@ -451,15 +451,15 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [ ] 2.1 Lint przechodzi: `npm run lint`
-- [ ] 2.2 Typy przechodzą: `npx astro check`
-- [ ] 2.3 Testy przechodzą: `npm test`
-- [ ] 2.4 Skan `Banner.astro` nie zwraca trafień
+- [x] 2.1 Lint przechodzi: `npm run lint`
+- [x] 2.2 Typy przechodzą: `npx astro check`
+- [x] 2.3 Testy przechodzą: `npm test`
+- [x] 2.4 Skan `Banner.astro` nie zwraca trafień
 
 #### Manual
 
-- [ ] 2.5 Baner bez `SUPABASE_*` na tokenach, link otwiera README MamLek w sekcji „Getting started”
-- [ ] 2.6 Karty przeglądarki na `/auth/signin` i `/szukaj` mają tytuł z „ · MamLek”
+- [x] 2.5 Baner bez `SUPABASE_*` na tokenach, link otwiera README MamLek w sekcji „Getting started”
+- [x] 2.6 Karty przeglądarki na `/auth/signin` i `/szukaj` mają tytuł z „ · MamLek”
 
 ### Phase 3: Widoki auth na tokenach i komponentach (C1/C2/C3)
 
