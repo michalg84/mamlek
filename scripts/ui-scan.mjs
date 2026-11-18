@@ -31,6 +31,7 @@ const GUARDED = [
   "src/pages/apteczka/import.astro",
   "src/components/kit/KitImport.tsx",
   "src/components/kit/KitImportRow.tsx",
+  "src/components/registry/RegistryStateDate.astro",
 ];
 
 const PATTERN = new RegExp(

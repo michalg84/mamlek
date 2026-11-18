@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CircleAlert } from "lucide-react";
 import KitAddForm from "@/components/kit/KitAddForm";
 import KitList from "@/components/kit/KitList";
+import RegistryStateDate from "@/components/registry/RegistryStateDate.astro";
 import { createClient } from "@/lib/supabase";
 import { todayIso } from "@/lib/kit-format";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
@@ -113,6 +114,13 @@ try {
                     W apteczce
                   </h2>
                   <KitList items={items} today={todayIso("Europe/Warsaw")} client:load />
+                  {list && (
+                    <RegistryStateDate
+                      snapshotDate={list.snapshotDate}
+                      today={todayIso("Europe/Warsaw")}
+                      class="mt-4"
+                    />
+                  )}
                 </section>
               </div>
             )}

@@ -218,8 +218,8 @@ Zaktualizować miejsca, które opisują ryzyko 60 dni jako przyjęte, i opisać 
 
 #### Automated
 
-- [x] 1.1 Workflow YAML is valid
-- [x] 1.2 Lint passes
+- [x] 1.1 Workflow YAML is valid — 586a855
+- [x] 1.2 Lint passes — 586a855
 
 #### Manual
 
@@ -229,16 +229,16 @@ Zaktualizować miejsca, które opisują ryzyko 60 dni jako przyjęte, i opisać 
 
 #### Automated
 
-- [ ] 2.1 Unit tests pass
-- [ ] 2.2 Lint passes
-- [ ] 2.3 Type check passes
-- [ ] 2.4 UI scan is clean
-- [ ] 2.5 Build passes
+- [x] 2.1 Unit tests pass
+- [x] 2.2 Lint passes
+- [x] 2.3 Type check passes
+- [x] 2.4 UI scan is clean
+- [x] 2.5 Build passes
 
 #### Manual
 
-- [ ] 2.6 /szukaj and /apteczka show the grey state line with a fresh registry
-- [ ] 2.7 Both pages show the highlighted warning when the snapshot is older than 7 days
+- [x] 2.6 /szukaj and /apteczka show the grey state line with a fresh registry
+- [x] 2.7 Both pages show the highlighted warning when the snapshot is older than 7 days
 
 ### Phase 3: Dokumentacja
 
