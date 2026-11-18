@@ -465,31 +465,31 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Testy przechodzą: `npm test`
-- [x] 3.4 Skan plików auth nie zwraca trafień
+- [x] 3.1 Lint przechodzi: `npm run lint` — 267a299
+- [x] 3.2 Typy przechodzą: `npx astro check` — 267a299
+- [x] 3.3 Testy przechodzą: `npm test` — 267a299
+- [x] 3.4 Skan plików auth nie zwraca trafień — 267a299
 
 #### Manual
 
-- [x] 3.5 Trzy ekrany auth w jasnym motywie, po polsku, z „MamLek” nad kartą (zrzut 1280 i 390 px)
-- [x] 3.6 `?error=invalid_credentials` pokazuje polski błąd serwera na tokenach `destructive`
+- [x] 3.5 Trzy ekrany auth w jasnym motywie, po polsku, z „MamLek” nad kartą (zrzut 1280 i 390 px) — 267a299
+- [x] 3.6 `?error=invalid_credentials` pokazuje polski błąd serwera na tokenach `destructive` — 267a299
 - [ ] 3.7 Testy E2E przechodzą z nowymi selektorami (opcjonalne)
 
 ### Phase 4: Stany i bramka wizualna (C5)
 
 #### Automated
 
-- [ ] 4.1 Lint przechodzi: `npm run lint`
-- [ ] 4.2 Typy przechodzą: `npx astro check`
-- [ ] 4.3 Testy przechodzą, w tym nowe `SignInForm.test.tsx` i `SignUpForm.test.tsx`: `npm test`
-- [ ] 4.4 Skan plików auth nie zwraca trafień
+- [x] 4.1 Lint przechodzi: `npm run lint`
+- [x] 4.2 Typy przechodzą: `npx astro check`
+- [x] 4.3 Testy przechodzą, w tym nowe `SignInForm.test.tsx` i `SignUpForm.test.tsx`: `npm test`
+- [x] 4.4 Skan plików auth nie zwraca trafień
 
 #### Manual
 
-- [ ] 4.5 Zrzuty 1280 i 390 px wszystkich stanów macierzy obejrzane i opisane w raporcie fazy
-- [ ] 4.6 Fokus z klawiatury widoczny na każdej kontrolce, w tym na przełączniku hasła i linku
-- [ ] 4.7 Czytnik ekranu (albo drzewo dostępności) odczytuje błąd pola razem z etykietą
+- [x] 4.5 Zrzuty 1280 i 390 px wszystkich stanów macierzy obejrzane i opisane w raporcie fazy
+- [x] 4.6 Fokus z klawiatury widoczny na każdej kontrolce, w tym na przełączniku hasła i linku
+- [x] 4.7 Czytnik ekranu (albo drzewo dostępności) odczytuje błąd pola razem z etykietą
 
 ### Phase 5: Strażnik — reguła i kontrola
 

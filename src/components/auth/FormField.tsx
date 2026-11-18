@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CircleAlert } from "lucide-react";
+import { FieldError } from "@/components/auth/FieldError";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -55,14 +55,7 @@ export function FormField({
         />
         {endContent}
       </div>
-      {error ? (
-        <p id={errorId} className="text-destructive mt-1 flex items-start gap-1.5 text-sm font-medium break-words">
-          <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-          <span className="min-w-0">{error}</span>
-        </p>
-      ) : (
-        showHint && <div id={hintId}>{hint}</div>
-      )}
+      {error ? <FieldError id={errorId}>{error}</FieldError> : showHint && <div id={hintId}>{hint}</div>}
     </div>
   );
 }

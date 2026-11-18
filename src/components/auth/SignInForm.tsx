@@ -3,6 +3,7 @@ import { LogIn } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { ServerError } from "@/components/auth/ServerError";
 
 interface Props {
@@ -13,6 +14,7 @@ export default function SignInForm({ serverError }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useSubmitting();
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   function validate() {
@@ -36,7 +38,9 @@ export default function SignInForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    setSubmitting(true);
   }
 
   return (
@@ -77,7 +81,8 @@ export default function SignInForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText="Signing in..." icon={<LogIn className="size-4" />}>
+      <SubmitButton pending={submitting} pendingText="Logowanie…">
+        <LogIn />
         Zaloguj się
       </SubmitButton>
     </form>
