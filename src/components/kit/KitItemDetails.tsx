@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
-import { formatExpiry, formatQuantity, isExpired, packLabel } from "@/lib/kit-format";
+import { expiryStatus, formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
 import type { KitItem } from "@/types";
 
 /** The fields of a kit item that both `KitItem` (the list) and `MedicineCheckItem` (the check result) carry. */
@@ -11,7 +11,7 @@ export type KitItemDetailsItem = Pick<
 
 interface KitItemDetailsProps {
   item: KitItemDetailsItem;
-  /** Today as YYYY-MM-DD in the user's time zone; an expiry before it is marked. */
+  /** Today as YYYY-MM-DD in the user's time zone; an expiry before it, or within the next month, is marked. */
   today: string;
   /** Active substances, shown under the strength and form when the caller has them. */
   substances?: string[];
@@ -22,7 +22,7 @@ interface KitItemDetailsProps {
 /** One description of a pack in the kit, shared by the kit list and the medicine check so both read the same. */
 export function KitItemDetails({ item, today, substances, quantitySlot }: KitItemDetailsProps) {
   const details = [item.strength, item.form].filter(Boolean).join(" · ");
-  const expired = isExpired(item.expiresOn, today);
+  const status = expiryStatus(item.expiresOn, today);
   const empty = item.quantity === 0;
   return (
     <>
@@ -40,7 +40,8 @@ export function KitItemDetails({ item, today, substances, quantitySlot }: KitIte
       )}
       <p className="text-foreground text-sm break-words">
         Ważny do: {formatExpiry(item.expiresOn, item.expiryPrecision)}
-        {expired && <span className="text-destructive font-medium"> · przeterminowany</span>}
+        {status === "expired" && <span className="text-destructive font-medium"> · przeterminowany</span>}
+        {status === "expiring" && <span className="text-warning-foreground font-medium"> · kończy się ważność</span>}
       </p>
       {item.withdrawn && <WithdrawnVariantNote as="p" />}
     </>

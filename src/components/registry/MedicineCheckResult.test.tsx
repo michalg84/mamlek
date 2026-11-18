@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MedicineCheckResult } from "@/components/registry/MedicineCheckResult";
 import { reply, stubFetch } from "../../../tests/helpers/fetch";
 import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
@@ -184,6 +184,116 @@ describe("MedicineCheckResult", () => {
 
     expect(await screen.findByText(ERROR, VISIBLE)).toBeTruthy();
     expect(screen.queryByText("Masz lek z tą samą substancją czynną", VISIBLE)).toBeNull();
+  });
+});
+
+describe("MedicineCheckResult and expiry dates", () => {
+  const EXPIRED_TITLE = "Masz ten lek, ale przeterminowany";
+
+  /** A pack with a month-precision date. */
+  function dated(match: MedicineCheckItem["match"], expiresOn: string, overrides: Partial<MedicineCheckItem> = {}) {
+    return item(match, { expiresOn, expiryPrecision: "month", quantity: 3, ...overrides });
+  }
+
+  beforeEach(() => {
+    // Only `Date` is faked: Testing Library and React need the real timers. Today is 18 Nov 2026.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 18, 12, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows a red verdict, never „Masz ten lek · N”, when every pack of the medicine is expired", async () => {
+    stubFetch(() => reply(response([dated("variant", "2026-10-31")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText(EXPIRED_TITLE, VISIBLE)).toBeTruthy();
+    expect(screen.getByText("Termin ważności minął: 10/2026", VISIBLE)).toBeTruthy();
+    expect(screen.queryByText(/Masz ten lek ·/, VISIBLE)).toBeNull();
+    const verdict = document.querySelector("[data-verdict]");
+    expect(verdict?.className).toContain("text-destructive");
+    expect(verdict?.className).not.toContain("bg-success");
+    // The pack stays listed, marked as expired.
+    const section = screen.getByRole("region", { name: "W apteczce" });
+    expect(within(section).getByText("· przeterminowany")).toBeTruthy();
+    const status = screen.getByRole("status").textContent;
+    expect(status).toContain(EXPIRED_TITLE);
+    expect(status).toContain("Termin ważności minął: 10/2026");
+    expect(status).toContain("Przeterminowane opakowania w apteczce: 1");
+  });
+
+  it("counts only the valid packs when some are expired, lists the expired last and announces them", async () => {
+    stubFetch(() =>
+      reply(
+        response([
+          dated("variant", "2026-10-31", { name: "Stary" }),
+          dated("variant", "2027-06-30", { name: "Nowy" }),
+          dated("variant", "2026-09-30", { name: "Najstarszy" }),
+        ]),
+      ),
+    );
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText("Masz ten lek · 1 opakowanie", VISIBLE)).toBeTruthy();
+    expect(document.querySelector("[data-verdict]")?.className).toContain("bg-success");
+    const names = within(screen.getByRole("region", { name: "W apteczce" }))
+      .getAllByRole("listitem")
+      .map((li) => within(li).getAllByText(/./)[0].textContent);
+    expect(names).toEqual(["Nowy", "Stary", "Najstarszy"]);
+    expect(screen.getByRole("status").textContent).toContain("Przeterminowane opakowania w apteczce: 2");
+  });
+
+  it("warns with the date when every valid pack ends this month or the next, on screen and for screen readers", async () => {
+    stubFetch(() => reply(response([dated("variant", "2026-12-31"), dated("variant", "2026-11-30")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText("Masz ten lek · 2 opakowania", VISIBLE)).toBeTruthy();
+    expect(screen.getByText("Ważność kończy się 12/2026", VISIBLE)).toBeTruthy();
+    expect(screen.getAllByText("· kończy się ważność", VISIBLE)).toHaveLength(2);
+    expect(screen.getByRole("status").textContent).toContain("Ważność kończy się 12/2026");
+    expect(screen.getByRole("status").textContent).not.toContain("Przeterminowane");
+  });
+
+  it("does not warn when a valid pack has a later date", async () => {
+    stubFetch(() => reply(response([dated("variant", "2026-12-31"), dated("variant", "2027-06-30")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText("Masz ten lek · 2 opakowania", VISIBLE)).toBeTruthy();
+    expect(screen.queryByText(/Ważność kończy się/, VISIBLE)).toBeNull();
+  });
+
+  it("keeps the substance verdict and says in its detail that every such pack is expired", async () => {
+    stubFetch(() => reply(response([dated("substance", "2026-10-31")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText("Masz lek z tą samą substancją czynną", VISIBLE)).toBeTruthy();
+    expect(screen.getByText("Atoris · wszystkie przeterminowane", VISIBLE)).toBeTruthy();
+    expect(screen.getByText(CAUTION, VISIBLE)).toBeTruthy();
+    expect(document.querySelector("[data-verdict]")?.className).toContain("bg-warning");
+    expect(screen.getByRole("status").textContent).toContain("Przeterminowane opakowania w apteczce: 1");
+  });
+
+  it("announces the expired packs after the empty ones", async () => {
+    stubFetch(() => reply(response([item("variant", { quantity: 0 }), dated("variant", "2026-10-31")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText(EXPIRED_TITLE, VISIBLE)).toBeTruthy();
+    const status = screen.getByRole("status").textContent;
+    const empty = status.indexOf("Puste opakowania w apteczce: 1");
+    const expired = status.indexOf("Przeterminowane opakowania w apteczce: 1");
+    expect(empty).toBeGreaterThan(-1);
+    expect(expired).toBeGreaterThan(empty);
+  });
+
+  it("says nothing about expiry when no matching pack has a date", async () => {
+    stubFetch(() => reply(response([item("variant")])));
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    expect(await screen.findByText("Masz ten lek · 1 opakowanie", VISIBLE)).toBeTruthy();
+    expect(screen.queryByText(/przeterminowan|kończy się/i, VISIBLE)).toBeNull();
+    expect(screen.getByRole("status").textContent).not.toMatch(/przeterminowan|kończy się/i);
   });
 });
 

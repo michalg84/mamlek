@@ -248,18 +248,18 @@ Brak migracji; wdrożenie przez merge (Cloudflare), rollback przez revert.
 
 #### Automated
 
-- [x] 1.1 Nowe testy unit najpierw czerwone, po implementacji zielone
-- [x] 1.2 Lint czysty
-- [x] 1.3 Typy
+- [x] 1.1 Nowe testy unit najpierw czerwone, po implementacji zielone — e24f2ac
+- [x] 1.2 Lint czysty — e24f2ac
+- [x] 1.3 Typy — e24f2ac
 
 ### Phase 2: Ostrzeżenie w widokach (TDD komponentów)
 
 #### Automated
 
-- [ ] 2.1 Testy komponentów najpierw czerwone, potem zielone
-- [ ] 2.2 Pełny zestaw CI
-- [ ] 2.3 Lint i skan UI
-- [ ] 2.4 Typy
+- [x] 2.1 Testy komponentów najpierw czerwone, potem zielone
+- [x] 2.2 Pełny zestaw CI
+- [x] 2.3 Lint i skan UI
+- [x] 2.4 Typy
 
 ### Phase 3: Weryfikacja na zrzutach, bazie i ręcznie
 

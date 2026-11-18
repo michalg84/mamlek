@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { todayIso } from "@/lib/kit-format";
 import { MATCH_LEVEL_TEXTS } from "@/lib/match-level";
-import { checkVerdict, emptyPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
+import { checkVerdict, emptyPacks, expiredPacks, type CheckVerdict } from "@/lib/medicine-check-verdict";
 import type { MatchLevel, MedicineCheckItem, MedicineCheckResponse } from "@/types";
 
 interface MedicineCheckResultProps {
@@ -62,6 +62,11 @@ function EmptyPacks({ items, today }: { items: MedicineCheckItem[]; today: strin
 /** The sentence the live region adds after the verdict when matching packs are empty. */
 function emptyPacksAnnouncement(count: number) {
   return count > 0 ? `Puste opakowania w apteczce: ${count}` : "";
+}
+
+/** The sentence the live region adds after the verdict (and the empty packs) when matching packs are expired. */
+function expiredPacksAnnouncement(count: number) {
+  return count > 0 ? `Przeterminowane opakowania w apteczce: ${count}` : "";
 }
 
 /** Result of checking the picked medicine against the kit: verdict, matching kit items, caution and notes. */
@@ -120,7 +125,13 @@ export function MedicineCheckResult({ productId, level, onSearched }: MedicineCh
       .filter(Boolean)
       .join(". ");
     const empty = emptyPacks(result);
-    announcement = [announcement, emptyPacksAnnouncement(empty.length)].filter(Boolean).join(". ");
+    announcement = [
+      announcement,
+      emptyPacksAnnouncement(empty.length),
+      expiredPacksAnnouncement(expiredPacks(result, today).length),
+    ]
+      .filter(Boolean)
+      .join(". ");
 
     content = (
       <div className="min-w-0 space-y-3">
