@@ -451,29 +451,29 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [x] 2.1 Lint przechodzi: `npm run lint`
-- [x] 2.2 Typy przechodzą: `npx astro check`
-- [x] 2.3 Testy przechodzą: `npm test`
-- [x] 2.4 Skan `Banner.astro` nie zwraca trafień
+- [x] 2.1 Lint przechodzi: `npm run lint` — 74130d6
+- [x] 2.2 Typy przechodzą: `npx astro check` — 74130d6
+- [x] 2.3 Testy przechodzą: `npm test` — 74130d6
+- [x] 2.4 Skan `Banner.astro` nie zwraca trafień — 74130d6
 
 #### Manual
 
-- [x] 2.5 Baner bez `SUPABASE_*` na tokenach, link otwiera README MamLek w sekcji „Getting started”
-- [x] 2.6 Karty przeglądarki na `/auth/signin` i `/szukaj` mają tytuł z „ · MamLek”
+- [x] 2.5 Baner bez `SUPABASE_*` na tokenach, link otwiera README MamLek w sekcji „Getting started” — 74130d6
+- [x] 2.6 Karty przeglądarki na `/auth/signin` i `/szukaj` mają tytuł z „ · MamLek” — 74130d6
 
 ### Phase 3: Widoki auth na tokenach i komponentach (C1/C2/C3)
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Testy przechodzą: `npm test`
-- [ ] 3.4 Skan plików auth nie zwraca trafień
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Testy przechodzą: `npm test`
+- [x] 3.4 Skan plików auth nie zwraca trafień
 
 #### Manual
 
-- [ ] 3.5 Trzy ekrany auth w jasnym motywie, po polsku, z „MamLek” nad kartą (zrzut 1280 i 390 px)
-- [ ] 3.6 `?error=invalid_credentials` pokazuje polski błąd serwera na tokenach `destructive`
+- [x] 3.5 Trzy ekrany auth w jasnym motywie, po polsku, z „MamLek” nad kartą (zrzut 1280 i 390 px)
+- [x] 3.6 `?error=invalid_credentials` pokazuje polski błąd serwera na tokenach `destructive`
 - [ ] 3.7 Testy E2E przechodzą z nowymi selektorami (opcjonalne)
 
 ### Phase 4: Stany i bramka wizualna (C5)
