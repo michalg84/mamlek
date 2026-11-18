@@ -229,23 +229,23 @@ Zaktualizować miejsca, które opisują ryzyko 60 dni jako przyjęte, i opisać 
 
 #### Automated
 
-- [x] 2.1 Unit tests pass
-- [x] 2.2 Lint passes
-- [x] 2.3 Type check passes
-- [x] 2.4 UI scan is clean
-- [x] 2.5 Build passes
+- [x] 2.1 Unit tests pass — eb12c49
+- [x] 2.2 Lint passes — eb12c49
+- [x] 2.3 Type check passes — eb12c49
+- [x] 2.4 UI scan is clean — eb12c49
+- [x] 2.5 Build passes — eb12c49
 
 #### Manual
 
-- [x] 2.6 /szukaj and /apteczka show the grey state line with a fresh registry
-- [x] 2.7 Both pages show the highlighted warning when the snapshot is older than 7 days
+- [x] 2.6 /szukaj and /apteczka show the grey state line with a fresh registry — eb12c49
+- [x] 2.7 Both pages show the highlighted warning when the snapshot is older than 7 days — eb12c49
 
 ### Phase 3: Dokumentacja
 
 #### Automated
 
-- [ ] 3.1 Formatting passes
+- [x] 3.1 Formatting passes
 
 #### Manual
 
-- [ ] 3.2 Author confirms the changed paragraphs match the decisions
+- [x] 3.2 Author confirms the changed paragraphs match the decisions
