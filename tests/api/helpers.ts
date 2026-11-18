@@ -91,13 +91,14 @@ export async function signUpAndSignIn(label: string): Promise<{ email: string; j
     });
   const limit =
     "the limit of 30 sign-ups and sign-ins per 5 minutes (supabase/config.toml; wait a few minutes or restart Supabase)";
-  // With e-mail confirmation on, sign-up still succeeds and only sign-in is refused ("Email not confirmed").
+  // With e-mail confirmation on, sign-up succeeds without a session (it answers /auth/confirm-email) and sign-in is
+  // refused ("Email not confirmed"); with it off, sign-up answers /szukaj.
   const confirmation = "e-mail confirmation being on (enable_confirmations in supabase/config.toml)";
   const signUp = await form("/api/auth/signup");
-  if (signUp.status !== 302 || signUp.location !== "/auth/confirm-email") {
+  if (signUp.status !== 302 || signUp.location !== "/szukaj") {
     throw new Error(
       `Sign-up of ${email} failed (status ${signUp.status}, location "${signUp.location}"). ` +
-        `Locally the cause is usually ${limit}.`,
+        `Locally the cause is usually ${signUp.location === "/auth/confirm-email" ? confirmation : limit}.`,
     );
   }
   const signIn = await form("/api/auth/signin");

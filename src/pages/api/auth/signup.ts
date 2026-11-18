@@ -11,7 +11,7 @@ export const POST: APIRoute = async (context) => {
   if (!supabase) {
     return context.redirect("/auth/signup?error=not_configured");
   }
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
     // The page shows only a message for the code; the original error stays in the server log.
@@ -20,5 +20,6 @@ export const POST: APIRoute = async (context) => {
     return context.redirect(`/auth/signup?error=${authErrorCode(error)}`);
   }
 
-  return context.redirect("/auth/confirm-email");
+  // With e-mail confirmation off Supabase returns a session right away; with it on the user must confirm first.
+  return context.redirect(data.session ? "/szukaj" : "/auth/confirm-email");
 };

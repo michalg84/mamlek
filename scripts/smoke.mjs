@@ -156,7 +156,7 @@ const steps = [
   [
     "signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/auth/confirm-email" },
+    { status: 302, location: "/szukaj" },
   ],
   [
     "signin rejects wrong password",
@@ -169,6 +169,7 @@ const steps = [
     { status: 302, location: "/szukaj" },
   ],
   ["home redirects signed-in user", () => request("/"), { status: 302, location: "/szukaj" }],
+  ["signin page redirects signed-in user", () => request("/auth/signin"), { status: 302, location: "/szukaj" }],
   [
     "search page renders for signed-in user",
     () => request("/szukaj"),
@@ -253,7 +254,7 @@ const steps = [
   [
     "second signup creates account",
     () => request("/api/auth/signup", { method: "POST", form: { email: email2, password }, jar: jar2 }),
-    { status: 302, location: "/auth/confirm-email" },
+    { status: 302, location: "/szukaj" },
   ],
   [
     "second signin accepts correct password",

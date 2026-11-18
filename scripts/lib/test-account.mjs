@@ -1,5 +1,6 @@
 // Throwaway local test account shared by the browser scripts (scripts/perf-search.mjs, scripts/ui-shots.mjs): sign-up
-// through the API (without email confirmation: local Supabase only, like scripts/smoke.mjs) and sign-in through the form.
+// through the API (without email confirmation: local Supabase only, like scripts/smoke.mjs; sign-up then answers
+// /szukaj because it already holds a session) and sign-in through the form.
 
 import { URL } from "node:url";
 
@@ -20,7 +21,7 @@ export async function signUpTestAccount(baseUrl, prefix) {
     body: new URLSearchParams({ email, password }).toString(),
   });
   const location = response.headers.get("location") ?? "";
-  if (response.status !== 302 || !location.startsWith("/auth/confirm-email")) {
+  if (response.status !== 302 || !location.startsWith("/szukaj")) {
     throw new Error(`Could not create the test account: sign-up answered ${response.status} ${location}`);
   }
   return { email, password };

@@ -33,6 +33,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (pathname === "/") {
     return context.redirect(context.locals.user ? "/szukaj" : signIn);
   }
+  // A signed-in user has no use for the sign-in and sign-up forms. When the session check failed, `locals.user` is
+  // null, so the form (with the session_check_failed message) still shows.
+  if ((pathname === "/auth/signin" || pathname === "/auth/signup") && context.locals.user) {
+    return context.redirect("/szukaj");
+  }
   if (PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
     if (!context.locals.user) {
       return context.redirect(signIn);
