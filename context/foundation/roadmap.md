@@ -57,7 +57,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done     |
 | S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done     |
 | S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | proposed |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done     |
 | S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed |
 
 ## Streams
