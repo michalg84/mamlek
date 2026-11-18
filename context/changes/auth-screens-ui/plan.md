@@ -435,16 +435,16 @@ Bez migracji bazy. Zmiana kontraktu przekierowania po rejestracji dotyczy tylko 
 
 #### Automated
 
-- [x] 1.1 Lint przechodzi: `npm run lint`
-- [x] 1.2 Typy przechodzą: `npx astro check`
-- [x] 1.3 Testy jednostkowe i komponentów przechodzą: `npm test`
-- [x] 1.4 Smoke przechodzi lokalnie, z nowym krokiem przekierowania zalogowanego: `npm run smoke`
+- [x] 1.1 Lint przechodzi: `npm run lint` — bfe563d
+- [x] 1.2 Typy przechodzą: `npx astro check` — bfe563d
+- [x] 1.3 Testy jednostkowe i komponentów przechodzą: `npm test` — bfe563d
+- [x] 1.4 Smoke przechodzi lokalnie, z nowym krokiem przekierowania zalogowanego: `npm run smoke` — bfe563d
 - [ ] 1.5 Testy API przechodzą: `npm run test:api`
 
 #### Manual
 
-- [x] 1.6 Zalogowany na `/auth/signin` i `/auth/signup` ląduje na `/szukaj`
-- [x] 1.7 Rejestracja nowego konta kończy się na `/szukaj` bez drugiego logowania
+- [x] 1.6 Zalogowany na `/auth/signin` i `/auth/signup` ląduje na `/szukaj` — bfe563d
+- [x] 1.7 Rejestracja nowego konta kończy się na `/szukaj` bez drugiego logowania — bfe563d
 - [ ] 1.8 Po deployu: rejestracja na produkcji kończy się na `/auth/confirm-email`
 
 ### Phase 2: Rama aplikacji — tytuł, baner, link (C1/C3)
