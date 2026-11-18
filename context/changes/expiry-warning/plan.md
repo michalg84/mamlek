@@ -256,21 +256,21 @@ Brak migracji; wdrożenie przez merge (Cloudflare), rollback przez revert.
 
 #### Automated
 
-- [x] 2.1 Testy komponentów najpierw czerwone, potem zielone
-- [x] 2.2 Pełny zestaw CI
-- [x] 2.3 Lint i skan UI
-- [x] 2.4 Typy
+- [x] 2.1 Testy komponentów najpierw czerwone, potem zielone — 5c194c9
+- [x] 2.2 Pełny zestaw CI — 5c194c9
+- [x] 2.3 Lint i skan UI — 5c194c9
+- [x] 2.4 Typy — 5c194c9
 
 ### Phase 3: Weryfikacja na zrzutach, bazie i ręcznie
 
 #### Automated
 
-- [ ] 3.1 Testy bazy zielone
-- [ ] 3.2 ci-check zielony
-- [ ] 3.3 Zrzuty wszystkich stanów
+- [x] 3.1 Testy bazy zielone
+- [x] 3.2 ci-check zielony
+- [x] 3.3 Zrzuty wszystkich stanów
 
 #### Manual
 
-- [ ] 3.4 /apteczka: oznaczenia i podsumowanie
-- [ ] 3.5 /szukaj: czerwony werdykt, przypadek mieszany, kontrast
+- [x] 3.4 /apteczka: oznaczenia i podsumowanie
+- [x] 3.5 /szukaj: czerwony werdykt, przypadek mieszany, kontrast
 - [ ] 3.6 Czytnik ekranu (opcjonalnie)
