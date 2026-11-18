@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { packLabel, packQuantity, parseQuantityInput, todayIso } from "@/lib/kit-format";
+import { expiryStatus, packCount, packLabel, packQuantity, parseQuantityInput, todayIso } from "@/lib/kit-format";
 import { cn } from "@/lib/utils";
 import type { KitItem } from "@/types";
 
@@ -340,6 +340,19 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
 
 type FocusTarget = { id: number } | "empty";
 
+/** "Kończy się ważność: 2 opakowania · Przeterminowane: 1 opakowanie"; empty when no pack is ending or expired. */
+function expirySummary(items: KitItem[], today: string): string {
+  const statuses = items.map((item) => expiryStatus(item.expiresOn, today));
+  const expiring = statuses.filter((status) => status === "expiring").length;
+  const expired = statuses.filter((status) => status === "expired").length;
+  return [
+    expiring > 0 && `Kończy się ważność: ${packCount(expiring)}`,
+    expired > 0 && `Przeterminowane: ${packCount(expired)}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 /** The kit list, rendered on the server and hydrated as an island. */
 export default function KitList({ items: initialItems, today: serverToday }: KitListProps) {
   const [items, setItems] = useState(initialItems);
@@ -389,24 +402,29 @@ export default function KitList({ items: initialItems, today: serverToday }: Kit
     );
   }
 
+  const summary = expirySummary(items, today);
+
   return (
-    <ul className="divide-border min-w-0 divide-y rounded-lg border">
-      {items.map((item) => (
-        <KitRow
-          key={item.id}
-          item={item}
-          today={today}
-          rowRef={(element) => {
-            if (element) {
-              rowElements.current.set(item.id, element);
-            } else {
-              rowElements.current.delete(item.id);
-            }
-          }}
-          onSaved={handleSaved}
-          onRemoved={handleRemoved}
-        />
-      ))}
-    </ul>
+    <div className="min-w-0 space-y-2">
+      {summary && <p className="text-foreground text-sm font-medium break-words">{summary}</p>}
+      <ul className="divide-border min-w-0 divide-y rounded-lg border">
+        {items.map((item) => (
+          <KitRow
+            key={item.id}
+            item={item}
+            today={today}
+            rowRef={(element) => {
+              if (element) {
+                rowElements.current.set(item.id, element);
+              } else {
+                rowElements.current.delete(item.id);
+              }
+            }}
+            onSaved={handleSaved}
+            onRemoved={handleRemoved}
+          />
+        ))}
+      </ul>
+    </div>
   );
 }
