@@ -49,7 +49,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done        |
 | S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | done        |
 | S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done        |
-| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | in-progress |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | done        |
 | S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done        |
 | S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done        |
 | S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done        |
@@ -57,7 +57,7 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 | S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done        |
 | S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done        |
 | S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | in-progress |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | proposed    |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done        |
 | S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed    |
 
 ## Streams
@@ -213,7 +213,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
   - Co mówi werdykt „Masz ten lek”, gdy wszystkie pasujące opakowania są przeterminowane — dziś (S-03) jest zielony, a „przeterminowany” widać tylko w wierszu pozycji i nie słyszy go czytnik ekranu; przypadek mieszany (część opakowań po terminie) też do rozstrzygnięcia. Źródło: impl-review `medicine-check`, F4. — Owner: autor. Block: no.
   - Co mówi werdykt „Masz ten lek”, gdy pasujące opakowanie jest puste (ilość 0) — rozstrzygnięte w S-12: puste opakowanie nie liczy się do werdyktu (ilość nieznana się liczy), więc same puste pasujące opakowania dają „Nie masz tego leku”; pod wynikiem jest sekcja „Puste opakowania”, a czytnik ekranu ogłasza ich liczbę. Do S-08 zostaje przypadek „wszystkie pasujące opakowania przeterminowane” — reguła S-12 nie przesądza, czy przeterminowane traktować tak samo. Źródło: audyt 2026-11-16, F10. — Owner: autor. Block: no.
 - **Risk:** Wymaganie „miłe do posiadania” i drugorzędne kryterium sukcesu — stoi na końcu i przy braku czasu jako pierwsze przechodzi do kolejnego kamienia milowego; korzysta tylko z danych, które S-02–S-05 już zapisują.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-09: Wydajność wyszukiwania leków na słabym telefonie
 
@@ -318,7 +318,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Unknowns:**
   - Którą opcję wybrać: krok keepalive wołający API workflowu (np. `gautamkrishnar/keepalive-workflow` w trybie API — sprawdzić, czy zeruje licznik), zewnętrzny cron na Cloudflare czy tylko ostrzeżenie przy dacie stanu starszej niż 7 dni (opóźnienia publikacji RPL mogą dawać fałszywe alarmy). — Owner: autor. Block: no.
 - **Risk:** Zastępuje Open Roadmap Question 12 (decyzja autora z audytu 2026-11-16, F7). Przebiegi 13–15.11 zakończone sukcesem, więc dziś nic nie płonie; PRD v3 opisuje NFR świeżości jako cel operacyjny, a ten wycinek jest jego zabezpieczeniem. Poza M-1 — planowany po zamknięciu kamienia milowego. `npm run roadmap:sync` przypisuje wszystkie pozycje do jednego kamienia milowego na GitHubie, więc na tablicy S-16 będzie stał w M-1.
-- **Status:** proposed
+- **Status:** done
 
 ### S-17: Przejścia substancja ↔ lek i dodanie leku z wyszukiwania (po M-1)
 
@@ -414,3 +414,5 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **S-11: użytkownik widzi warianty leku o tej samej nazwie w podpowiedziach w kolejności rosnącej mocy liczbowej — „500 mg” przed „1000 mg” — a nie w kolejności tekstowej.** — Archived 2026-11-17 → `context/archive/2026-11-17-search-numeric-strength-order/`. Lesson: —.
 - **S-12: użytkownik podaje ilość leku tak, jak ją widzi — w tabletkach (sztukach) — także dla opakowań, które rejestr opisuje liczbą jednostek („1 butelka po 90 tabl.”, „2 blistry po 10 tabl.”), a aplikacja pokazuje tę ilość jednoznacznie, bez mieszania „butelek” z „tabletkami”.** — Archived 2026-11-17 → `context/archive/2026-11-17-kit-quantity-semantics/`. Lesson: —.
 - **S-06: użytkownik wybiera poziom dopasowania — precyzyjny, zawiera wszystkie, zawiera jeden — widzi go przy wyszukiwaniu, a wynik sprawdzenia leku złożonego zmienia się zgodnie z wybranym poziomem.** — Archived 2026-11-17 → `context/archive/2026-11-17-substance-match-level/`. Lesson: —.
+- **S-08: użytkownik widzi ostrzeżenie o zbliżającym się końcu ważności leku — razem z datą — na liście apteczki i przy wyniku sprawdzenia, gdy ma dany lek lub lek z tą samą substancją czynną.** — Archived 2026-11-18 → `context/archive/2026-11-18-expiry-warning/`. Lesson: —.
+- **S-16: autor może polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu, gdy GitHub wyłączy harmonogram po 60 dniach bez aktywności w publicznym repozytorium.** — Archived 2026-11-18 → `context/archive/2026-11-18-registry-import-keepalive/`. Lesson: —.

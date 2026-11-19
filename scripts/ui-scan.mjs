@@ -44,6 +44,7 @@ const GUARDED = [
   "src/components/auth/SignUpForm.tsx",
   "src/components/Banner.astro",
   "src/layouts/Layout.astro",
+  "src/components/registry/RegistryStateDate.astro",
 ];
 
 const PATTERN = new RegExp(

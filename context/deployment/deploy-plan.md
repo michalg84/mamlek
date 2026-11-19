@@ -71,5 +71,6 @@ zmiana nie dotyka kodu logowania, middleware ani Supabase).
 
 - Codzienny job GitHub Actions importujący rejestr (PRD FR-001) — wtedy nie
   było jeszcze kodu produktu. Dziś istnieje: `.github/workflows/registry-import.yml`
-  (codziennie 04:17 UTC, opis w README, sekcja CI); keepalive harmonogramu to
-  wycinek S-16 w roadmapie.
+  (codziennie 04:17 UTC, opis w README, sekcja CI); keepalive harmonogramu
+  wdrożony 2026-11-18 w wycinku S-16 (job `keepalive` w tym workflowie,
+  ostrzeżenie przy dacie stanu po 7 dniach).
