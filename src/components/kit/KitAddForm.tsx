@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
+import { useRegistryListWorker } from "@/components/hooks/useRegistryListWorker";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import {
   ExpirySelect,
@@ -291,12 +292,13 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
 
 export default function KitAddForm({ version }: KitAddFormProps) {
   const [variant, setVariant] = useState<RegistryVariant | null>(null);
+  const list = useRegistryListWorker(version);
 
   return (
     <div className="min-w-0 space-y-4">
       {/* Editing the text drops the pick: the name does not identify a variant, so the form must not outlive it. */}
       <MedicineSuggest
-        version={version}
+        list={list}
         onSelect={setVariant}
         onEdit={() => {
           setVariant(null);

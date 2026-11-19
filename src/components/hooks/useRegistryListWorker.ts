@@ -1,15 +1,39 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RegistrySearchWorkerRequest, RegistrySearchWorkerResponse } from "@/types";
 
 export type RegistryListStatus = "loading" | "ready" | "unauthorized" | "error";
 
-/** A worker answer to a `search` or `match` request; load outcomes are handled here. */
-export type RegistryWorkerAnswer = Extract<RegistrySearchWorkerResponse, { type: "results" | "matches" }>;
+/** A worker answer to a request (`search`, `match`, `substance`, `lookup`); load outcomes are handled here. */
+export type RegistryWorkerAnswer = Extract<
+  RegistrySearchWorkerResponse,
+  { type: "results" | "matches" | "substanceResults" | "lookupResult" }
+>;
+
+/** What the hooks that talk to the list worker share: one load, one worker. */
+export interface RegistryListHandle {
+  status: RegistryListStatus;
+  /** Names the current load (version + attempt). */
+  key: string;
+  retry: () => void;
+  /** Sends a request to the current worker; a no-op unless status is "ready". */
+  post: (request: RegistrySearchWorkerRequest) => void;
+  /** Every answer of the current load goes to every listener; returns the unsubscribe function. */
+  subscribe: (listener: (message: RegistryWorkerAnswer, key: string) => void) => () => void;
+}
+
+type RegistryAnswerListener = Parameters<RegistryListHandle["subscribe"]>[0];
 
 interface LoadResult {
   /** Identifies the request (version + attempt) this result belongs to. */
   key: string;
   status: Exclude<RegistryListStatus, "loading">;
+}
+
+let lastRequestId = 0;
+
+/** Module-wide request id, so consumers sharing one worker never collide. */
+export function nextRegistryRequestId(): number {
+  return ++lastRequestId;
 }
 
 /**
@@ -19,21 +43,18 @@ interface LoadResult {
  * gone; anything else that goes wrong (including 404, which may also be an RLS-rejected session, and a failing worker)
  * is a generic error with retry.
  *
- * `key` names the current load (version + attempt); `onAnswer` gets every `results` / `matches` message of the current
- * worker with the key of the load that created it, so the caller can drop answers from an earlier load. `workerRef`
- * holds that worker while it is alive, for sending requests once `status` is "ready".
+ * The returned handle is shared by every hook that needs the list on one page (suggestions, lookup, substance filter,
+ * import matching), so the page downloads and indexes the list once. `key` names the current load (version + attempt);
+ * `subscribe` gets every answer of the current worker with the key of the load that created it, so a consumer can drop
+ * answers from an earlier load; `post` sends a request once `status` is "ready". The handle keeps its identity until
+ * `status` or `key` changes.
  */
-export function useRegistryListWorker(version: number, onAnswer: (message: RegistryWorkerAnswer, key: string) => void) {
+export function useRegistryListWorker(version: number): RegistryListHandle {
   const [attempt, setAttempt] = useState(0);
   const [loaded, setLoaded] = useState<LoadResult | null>(null);
   const workerRef = useRef<Worker | null>(null);
-  const onAnswerRef = useRef(onAnswer);
+  const listenersRef = useRef(new Set<RegistryAnswerListener>());
   const key = `${version}:${attempt}`;
-
-  // The latest callback, without reloading the list when the caller passes a new function.
-  useEffect(() => {
-    onAnswerRef.current = onAnswer;
-  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,7 +101,9 @@ export function useRegistryListWorker(version: number, onAnswer: (message: Regis
           } else if (message.type === "error") {
             finish("error");
           } else if (!controller.signal.aborted) {
-            onAnswerRef.current(message, requestKey);
+            for (const listener of listenersRef.current) {
+              listener(message, requestKey);
+            }
           }
         };
         created.onerror = () => {
@@ -111,5 +134,21 @@ export function useRegistryListWorker(version: number, onAnswer: (message: Regis
     setAttempt((value) => value + 1);
   }, []);
 
-  return { status, key, workerRef, retry };
+  const post = useCallback(
+    (request: RegistrySearchWorkerRequest) => {
+      if (status === "ready") {
+        workerRef.current?.postMessage(request);
+      }
+    },
+    [status],
+  );
+
+  const subscribe = useCallback((listener: RegistryAnswerListener) => {
+    listenersRef.current.add(listener);
+    return () => {
+      listenersRef.current.delete(listener);
+    };
+  }, []);
+
+  return useMemo(() => ({ status, key, retry, post, subscribe }), [status, key, retry, post, subscribe]);
 }

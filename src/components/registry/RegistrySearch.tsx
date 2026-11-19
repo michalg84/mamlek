@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import { useMatchLevel } from "@/components/hooks/useMatchLevel";
+import { useRegistryListWorker } from "@/components/hooks/useRegistryListWorker";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -86,12 +87,13 @@ export default function RegistrySearch({ version }: Props) {
   const [searched, setSearched] = useState<SearchedMedicine | null>(null);
   const shown = selected && searched?.id === selected.id ? searched : selected;
   const [level, setLevel] = useMatchLevel();
+  const list = useRegistryListWorker(version);
 
   return (
     <div className="min-w-0 space-y-6">
       {/* Editing the text drops the pick: the card and the verdict must never sit under a different name. */}
       <MedicineSuggest
-        version={version}
+        list={list}
         onSelect={setSelected}
         onEdit={() => {
           setSelected(null);

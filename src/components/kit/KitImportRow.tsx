@@ -2,7 +2,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle } from "lucide-react";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import { OverPackWarning, WithdrawnPackMark } from "@/components/kit/kit-fields";
-import { MedicineSuggest } from "@/components/registry/MedicineSuggest";
+import { StandaloneMedicineSuggest } from "@/components/registry/MedicineSuggest";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -382,7 +382,12 @@ function RowVariant({
     return (
       <div className="min-w-0 space-y-1">
         {row.variant && <CurrentVariant variant={row.variant} />}
-        <MedicineSuggest version={version} onSelect={onAssign} onEdit={ignoreEdit} label="Szukaj leku w rejestrze" />
+        <StandaloneMedicineSuggest
+          version={version}
+          onSelect={onAssign}
+          onEdit={ignoreEdit}
+          label="Szukaj leku w rejestrze"
+        />
         <Button type="button" variant="ghost" size="sm" onClick={onCancelEdit}>
           Anuluj
         </Button>

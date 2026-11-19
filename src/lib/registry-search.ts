@@ -24,11 +24,21 @@ export interface RegistrySearchEntry {
   haystack: string;
 }
 
+/** Per-index lookups for `variantsWithSubstance` and `findVariant`, computed on first use (see `lookupsOf`). */
+export interface RegistrySearchLookups {
+  /** Normalized whole names of the substances of each entry (words joined by a space), parallel to `entries`. */
+  substanceKeys: string[][];
+  /** Variant of each list id. */
+  byId: Map<number, RegistryVariant>;
+}
+
 /** Search index built once per downloaded list; entries are already in final within-level order. */
 export interface RegistrySearchIndex {
   version: number;
   snapshotDate: string;
   entries: RegistrySearchEntry[];
+  /** Filled lazily by the first substance filter or lookup, so building the index costs what it did before. */
+  lookups?: RegistrySearchLookups;
 }
 
 export interface RegistrySearchResult {
@@ -320,4 +330,61 @@ export function searchVariants(index: RegistrySearchIndex, query: string, limit 
   }
 
   return { results: levels.flat().slice(0, limit), total };
+}
+
+/** Computes the substance keys and the id map once per index and keeps them on it. */
+function lookupsOf(index: RegistrySearchIndex): RegistrySearchLookups {
+  if (!index.lookups) {
+    const substanceKeys: string[][] = [];
+    const byId = new Map<number, RegistryVariant>();
+    for (const entry of index.entries) {
+      substanceKeys.push(
+        entry.variant.substances.map((substance) => wordsOf(substance).join(" ")).filter((key) => key !== ""),
+      );
+      byId.set(entry.variant.id, entry.variant);
+    }
+    index.lookups = { substanceKeys, byId };
+  }
+  return index.lookups;
+}
+
+/**
+ * The variants that have `substance` among their substances, compared as whole names (`sameName`: the same word list
+ * after normalization, so "Paracetamolum" is not "Paracetamolum + Coffeinum" but is one of the substances of a variant
+ * listing both). Variants with exactly one substance come first, then the combinations; inside each group the index
+ * order stays (active before withdrawn, then as for a search). `total` counts every match, `results` holds the first
+ * `limit`. A substance without words (such as "-") matches nothing.
+ */
+export function variantsWithSubstance(
+  index: RegistrySearchIndex,
+  substance: string,
+  limit: number,
+): RegistrySearchResult {
+  const key = wordsOf(substance).join(" ");
+  if (key === "") {
+    return { results: [], total: 0 };
+  }
+  const { substanceKeys } = lookupsOf(index);
+
+  const single: RegistryVariant[] = [];
+  const combined: RegistryVariant[] = [];
+  let total = 0;
+  for (let position = 0; position < index.entries.length; position++) {
+    if (!substanceKeys[position].includes(key)) {
+      continue;
+    }
+    total++;
+    const { variant } = index.entries[position];
+    const group = variant.substances.length === 1 ? single : combined;
+    if (group.length < limit) {
+      group.push(variant);
+    }
+  }
+
+  return { results: [...single, ...combined].slice(0, limit), total };
+}
+
+/** The variant with this list id (the id of the variant's representative), or null for any other id. */
+export function findVariant(index: RegistrySearchIndex, id: number): RegistryVariant | null {
+  return lookupsOf(index).byId.get(id) ?? null;
 }
