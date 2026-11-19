@@ -3,7 +3,7 @@ project: MamLek
 version: 1
 status: draft
 created: 2026-09-29
-updated: 2026-11-18
+updated: 2026-11-19
 prd_version: 3
 main_goal: market-feedback
 top_blocker: time
@@ -39,26 +39,26 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status      |
-| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | ----------- |
-| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done        |
-| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done        |
-| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done        |
-| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done        |
-| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done        |
-| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done        |
-| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | done        |
-| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done        |
-| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | done        |
-| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done        |
-| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done        |
-| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done        |
-| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | done        |
-| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done        |
-| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done        |
-| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | in-progress |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done        |
-| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed    |
+| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status   |
+| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | -------- |
+| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done     |
+| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done     |
+| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
+| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done     |
+| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done     |
+| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done     |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | done     |
+| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done     |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | done     |
+| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done     |
+| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done     |
+| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done     |
+| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | done     |
+| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done     |
+| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done     |
+| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | done     |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done     |
+| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | proposed |
 
 ## Streams
 
@@ -305,7 +305,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Blockers:** —
 - **Unknowns:**
 - **Risk:** Praca zapowiedziana w `context/archive/2026-10-07-search-view-tokens/plan.md` („the auth pages get their own follow-up 10x-ui change”), która nie trafiła do roadmapy (audyt 2026-11-16, F9). Dotyczy `src/pages/auth/{signin,signup,confirm-email}.astro`, `src/components/auth/*.tsx`, tytułu w `src/layouts/Layout.astro`, `src/lib/config-status.ts` i `src/components/Banner.astro`: angielskie teksty, `bg-cosmic` i klasy palety. Przez `/10x-ui`; na końcu pliki trafiają do `GUARDED` w `scripts/ui-scan.mjs`. Nie dotyka plików innych wycinków.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-16: Keepalive dziennego importu rejestru (po M-1)
 
@@ -416,3 +416,4 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **S-06: użytkownik wybiera poziom dopasowania — precyzyjny, zawiera wszystkie, zawiera jeden — widzi go przy wyszukiwaniu, a wynik sprawdzenia leku złożonego zmienia się zgodnie z wybranym poziomem.** — Archived 2026-11-17 → `context/archive/2026-11-17-substance-match-level/`. Lesson: —.
 - **S-08: użytkownik widzi ostrzeżenie o zbliżającym się końcu ważności leku — razem z datą — na liście apteczki i przy wyniku sprawdzenia, gdy ma dany lek lub lek z tą samą substancją czynną.** — Archived 2026-11-18 → `context/archive/2026-11-18-expiry-warning/`. Lesson: —.
 - **S-16: autor może polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu, gdy GitHub wyłączy harmonogram po 60 dniach bez aktywności w publicznym repozytorium.** — Archived 2026-11-18 → `context/archive/2026-11-18-registry-import-keepalive/`. Lesson: —.
+- **S-15: użytkownik loguje się i zakłada konto na ekranach po polsku, w jasnym motywie i na tokenach reszty aplikacji; błędy Supabase widzi po polsku, karta przeglądarki ma tytuł aplikacji, a baner braku konfiguracji nie odsyła do repozytorium startera.** — Archived 2026-11-19 → `context/archive/2026-11-18-auth-screens-ui/`. Lesson: —.
