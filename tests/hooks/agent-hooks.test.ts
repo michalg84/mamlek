@@ -242,6 +242,26 @@ describe("end-of-turn.mjs (Stop)", () => {
     expect(sb.calls()).toContain("vitest run --project unit --project component --project registry");
   });
 
+  it("only lints a changed skill script, without astro check or the suite, and still blocks on its lint error", () => {
+    const sb = sandbox();
+    write(sb.root, ".claude/skills/demo/scripts/tool.mjs", "const unused = 1; // LINT_ERROR\n");
+    write(sb.root, ".claude/skills/demo/SKILL.md", "# demo\n");
+    const r = runHook(sb, "end-of-turn.mjs", stop(sb.root));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain(".claude/skills/demo/scripts/tool.mjs");
+    expect(sb.calls()).toContain("eslint .claude/skills/demo/scripts/tool.mjs");
+    expect(sb.calls()).not.toContain("astro");
+    expect(sb.calls()).not.toContain("vitest");
+
+    // A skill change next to a source change still gets the whole gate.
+    const mixed = sandbox();
+    write(mixed.root, ".claude/skills/demo/scripts/tool.mjs", "export const t = 1;\n");
+    write(mixed.root, "src/ok.ts", "export const ok = 2;\n");
+    expect(runHook(mixed, "end-of-turn.mjs", stop(mixed.root)).code).toBe(0);
+    expect(mixed.calls()).toContain("astro check");
+    expect(mixed.calls()).toContain("vitest run");
+  });
+
   it("checks a changed file with a non-ASCII name", () => {
     const sb = sandbox();
     write(sb.root, "src/żółw.ts", "const unused = 1; // LINT_ERROR\n");
@@ -610,7 +630,7 @@ describe(".claude/settings.json commands", () => {
     const commands = Object.values(settings.hooks).flatMap((groups) => groups.flatMap((g) => g.hooks));
     expect(commands.length).toBeGreaterThan(0);
     for (const { command, timeout } of commands) {
-      expect(timeout).toBeLessThanOrEqual(120); // seconds, not milliseconds
+      expect(timeout).toBeLessThanOrEqual(600); // seconds, not milliseconds
       for (const cwd of [sb.root, wt]) {
         const r = spawnSync(shell(), ["-c", command], {
           cwd,

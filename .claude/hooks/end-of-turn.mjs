@@ -18,10 +18,13 @@ const TYPE_INPUTS = /^(tsconfig.*\.json|package(-lock)?\.json|astro\.config\.[cm
 // source file (the registry parser's XML fixtures are read as files, so no import graph points at them).
 const TEST_INPUTS =
   /^(vitest\.config\.ts|tests\/setup-component\.ts|tests\/(fixtures|helpers)\/.+|scripts\/fixtures\/.+\.xml)$/;
+// Skill files (SKILL.md, bundled scripts) are imported by no app module, test or tsconfig: ESLint is their whole gate,
+// so a skill-only turn skips astro check and the suite (minutes on a machine busy with parallel worker sessions).
+const LINT_ONLY = /^\.claude\/skills\//;
 const ENV = { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" };
-// Claude Code kills the hook at the 120 s timeout in settings.json and lets the agent finish without a word, so the
+// Claude Code kills the hook at the 300 s timeout in settings.json and lets the agent finish without a word, so the
 // checks stop earlier and say so. Override only in the proof tests.
-const BUDGET_MS = Number(process.env.END_OF_TURN_BUDGET_MS) || 100_000;
+const BUDGET_MS = Number(process.env.END_OF_TURN_BUDGET_MS) || 280_000;
 const deadline = Date.now() + BUDGET_MS;
 // astro check colours its output whatever NO_COLOR says; the agent reads plain text.
 const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
@@ -88,6 +91,7 @@ for (const root of roots) {
   const existing = changed.filter((f) => existsSync(path.join(root, f)));
   const linted = existing.filter((f) => LINTED.has(path.extname(f)));
   const scanned = existing.filter((f) => SCANNED.has(path.extname(f)));
+  const project = changed.filter((f) => !LINT_ONLY.test(f));
 
   if (linted.length > 0) {
     // `--`: a file name starting with "-" is a file, not an option.
@@ -102,13 +106,13 @@ for (const root of roots) {
   }
   // Whole-project typecheck, as CI runs it (astro check also covers .astro files and syncs generated types).
   // Deleted source files count too: removing a module breaks the files that import it.
-  if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f))) {
+  if (project.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f))) {
     const check = run(root, "node_modules/astro/bin/astro.mjs", ["check"]);
     if (!check.ok) report.push(`astro check fails (${root}):\n${check.out}`);
   }
   // The whole suite, not only the tests of the changed files: it takes seconds and a deleted or renamed module breaks
   // tests that import it. The hooks project is left to `npm test` and the hook proof itself.
-  if (changed.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f) || TEST_INPUTS.test(f))) {
+  if (project.some((f) => LINTED.has(path.extname(f)) || TYPE_INPUTS.test(f) || TEST_INPUTS.test(f))) {
     const tests = run(root, "node_modules/vitest/vitest.mjs", [
       "run",
       "--project",
