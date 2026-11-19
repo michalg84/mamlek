@@ -305,7 +305,7 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Blockers:** —
 - **Unknowns:**
 - **Risk:** Praca zapowiedziana w `context/archive/2026-10-07-search-view-tokens/plan.md` („the auth pages get their own follow-up 10x-ui change”), która nie trafiła do roadmapy (audyt 2026-11-16, F9). Dotyczy `src/pages/auth/{signin,signup,confirm-email}.astro`, `src/components/auth/*.tsx`, tytułu w `src/layouts/Layout.astro`, `src/lib/config-status.ts` i `src/components/Banner.astro`: angielskie teksty, `bg-cosmic` i klasy palety. Przez `/10x-ui`; na końcu pliki trafiają do `GUARDED` w `scripts/ui-scan.mjs`. Nie dotyka plików innych wycinków.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-16: Keepalive dziennego importu rejestru (po M-1)
 
