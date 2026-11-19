@@ -617,7 +617,14 @@ describe("RegistrySearch: the address, substance links and the list of a substan
   });
 
   /** The worker answers the oldest request for `substance` now. */
-  async function answerSubstance(worker: { deliverSubstance: (substance: string) => void }, substance = SUBSTANCE) {
+  async function answerSubstance(
+    worker: { deliverSubstance: (substance: string) => void; pendingSubstances: () => string[] },
+    substance = SUBSTANCE,
+  ) {
+    // The request is posted from an effect once the list is ready, so wait until it is queued.
+    await waitFor(() => {
+      expect(worker.pendingSubstances()).toContain(substance);
+    });
     await act(async () => {
       worker.deliverSubstance(substance);
       await Promise.resolve();

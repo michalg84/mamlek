@@ -593,30 +593,30 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 #### Automated
 
-- [x] 2.1 Testy unit parsera: `npx vitest run src/lib/search-url.test.ts`
-- [x] 2.2 Testy component ekranu: `npx vitest run src/components/registry`
-- [x] 2.3 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [x] 2.4 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
+- [x] 2.1 Testy unit parsera: `npx vitest run src/lib/search-url.test.ts` — e1c02a6
+- [x] 2.2 Testy component ekranu: `npx vitest run src/components/registry` — e1c02a6
+- [x] 2.3 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry` — e1c02a6
+- [x] 2.4 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan` — e1c02a6
 
 #### Manual
 
-- [x] 2.5 Nawigacja na `/szukaj` (substancja, lista, „Pokaż więcej”, „Wstecz”/„Dalej”, odświeżenie, Ctrl-klik)
-- [x] 2.6 Wygląd na 390 i 1280 px (`ui:shots`), klawiatura i czytnik ekranu
+- [x] 2.5 Nawigacja na `/szukaj` (substancja, lista, „Pokaż więcej”, „Wstecz”/„Dalej”, odświeżenie, Ctrl-klik) — e1c02a6
+- [x] 2.6 Wygląd na 390 i 1280 px (`ui:shots`), klawiatura i czytnik ekranu — e1c02a6
 - [ ] 2.7 `npm run perf` na wolnym profilu bez pogorszenia czasu do gotowej listy
 
 ### Phase 3: `/apteczka?lek=<id>` — lek wybrany w formularzu dodawania
 
 #### Automated
 
-- [ ] 3.1 Testy formularza: `npx vitest run src/components/kit/KitAddForm.test.tsx`
-- [ ] 3.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [ ] 3.3 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
-- [ ] 3.4 Kontrakt API bez zmian: `npm run test:api`
+- [x] 3.1 Testy formularza: `npx vitest run src/components/kit/KitAddForm.test.tsx`
+- [x] 3.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
+- [x] 3.3 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
+- [x] 3.4 Kontrakt API bez zmian: `npm run test:api`
 
 #### Manual
 
-- [ ] 3.5 „Dodaj do apteczki” z karty leku prowadzi do formularza z wybranym lekiem; dodanie czyści formularz
-- [ ] 3.6 Nieznane i błędne `?lek` dają pusty formularz bez błędu
+- [x] 3.5 „Dodaj do apteczki” z karty leku prowadzi do formularza z wybranym lekiem; dodanie czyści formularz
+- [x] 3.6 Nieznane i błędne `?lek` dają pusty formularz bez błędu
 
 ### Phase 4: Substancje na liście apteczki
 

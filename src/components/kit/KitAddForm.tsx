@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
 import { useRegistryListWorker } from "@/components/hooks/useRegistryListWorker";
+import { useRegistryLookup } from "@/components/hooks/useRegistryLookup";
 import { useVariantPackages } from "@/components/hooks/useVariantPackages";
 import {
   ExpirySelect,
@@ -21,6 +22,8 @@ import type { AddKitItemRequest, AddKitItemResponse, RegistryVariant, RegistryVa
 interface KitAddFormProps {
   /** Version of the search list as rendered by the server; addresses the HTTP cache entry of the list. */
   version: number;
+  /** The medicine of `?lek=` as read by the page (`parseSearchState`); shown as picked once the list is loaded. */
+  initialVariantId?: number | null;
 }
 
 interface FieldErrors {
@@ -290,23 +293,45 @@ function PackForm({ variant }: { variant: RegistryVariant }) {
   );
 }
 
-export default function KitAddForm({ version }: KitAddFormProps) {
+export default function KitAddForm({ version, initialVariantId = null }: KitAddFormProps) {
   const [variant, setVariant] = useState<RegistryVariant | null>(null);
+  // The medicine of `?lek=` is preselected once: the first edit or pick by the user ends it for good.
+  const [preselectDone, setPreselectDone] = useState(false);
   const list = useRegistryListWorker(version);
+  const preselecting = initialVariantId !== null && !preselectDone;
+  // An unknown id (`missing`) leaves the form empty, without a message.
+  const lookup = useRegistryLookup(list, preselecting ? initialVariantId : null);
+  const selected = variant ?? lookup.variant;
+
+  function endPreselection() {
+    if (initialVariantId === null || preselectDone) {
+      return;
+    }
+    setPreselectDone(true);
+    // A reload must not bring the abandoned medicine back; the URL hash and other parameters stay.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("lek");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }
 
   return (
     <div className="min-w-0 space-y-4">
       {/* Editing the text drops the pick: the name does not identify a variant, so the form must not outlive it. */}
       <MedicineSuggest
         list={list}
-        onSelect={setVariant}
+        pickedName={selected?.name ?? null}
+        onSelect={(picked) => {
+          endPreselection();
+          setVariant(picked);
+        }}
         onEdit={() => {
+          endPreselection();
           setVariant(null);
         }}
         label="Lek"
       />
       {/* A new medicine remounts the pack form, which resets pack, quantity and expiry. */}
-      {variant && <PackForm key={variant.id} variant={variant} />}
+      {selected && <PackForm key={selected.id} variant={selected} />}
     </div>
   );
 }

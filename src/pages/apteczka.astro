@@ -12,6 +12,7 @@ import { getSearchListVersion } from "@/lib/services/registry-search-list";
 import { countKitItemsWithPackage, listKitItems } from "@/lib/services/kit";
 import { IMPORT_MAX_ROWS } from "@/lib/kit-import";
 import { plural } from "@/lib/plural";
+import { parseSearchState } from "@/lib/search-url";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { KitItem, RegistrySearchListVersion } from "@/types";
@@ -28,6 +29,9 @@ const imported =
   Number(importedParam) <= IMPORT_MAX_ROWS
     ? Number(importedParam)
     : null;
+
+// `?lek=<id>` comes from the "Dodaj do apteczki" link of a medicine card; an invalid value is ignored.
+const { variantId: initialVariantId } = parseSearchState(Astro.url.searchParams);
 
 let list: RegistrySearchListVersion | null = null;
 let items: KitItem[] = [];
@@ -101,7 +105,7 @@ try {
                     Dodaj lek
                   </h2>
                   {list ? (
-                    <KitAddForm version={list.version} client:load />
+                    <KitAddForm version={list.version} initialVariantId={initialVariantId} client:load />
                   ) : (
                     <p class="text-muted-foreground text-sm">Rejestr leków nie jest jeszcze wczytany</p>
                   )}
