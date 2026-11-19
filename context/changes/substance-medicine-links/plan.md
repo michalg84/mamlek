@@ -580,28 +580,28 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 #### Automated
 
-- [x] 1.1 Testy unit filtra i lookupu przechodzą: `npx vitest run src/lib/registry-search.test.ts`
-- [x] 1.2 Istniejące testy component (`RegistrySearch`, `KitAddForm`, `KitImport`, `MedicineCheckResult`, `useRegistryMatch`) przechodzą bez zmian asercji: `npx vitest run --project component`
-- [x] 1.3 Lint, typy i `ui:scan`: `npm run lint`, `npx astro check`, `npm run ui:scan`
-- [x] 1.4 `npm run search:check` nie zgłasza różnic: `searchVariants` się nie zmienia (bez pełnego rejestru lokalnie pominięty z adnotacją, to nie porażka) (skipped: no DATABASE_URL/full registry locally)
+- [x] 1.1 Testy unit filtra i lookupu przechodzą: `npx vitest run src/lib/registry-search.test.ts` — f5715da
+- [x] 1.2 Istniejące testy component (`RegistrySearch`, `KitAddForm`, `KitImport`, `MedicineCheckResult`, `useRegistryMatch`) przechodzą bez zmian asercji: `npx vitest run --project component` — f5715da
+- [x] 1.3 Lint, typy i `ui:scan`: `npm run lint`, `npx astro check`, `npm run ui:scan` — f5715da
+- [x] 1.4 `npm run search:check` nie zgłasza różnic: `searchVariants` się nie zmienia (bez pełnego rejestru lokalnie pominięty z adnotacją, to nie porażka) (skipped: no DATABASE_URL/full registry locally) — f5715da
 
 #### Manual
 
-- [x] 1.5 `/szukaj` i `/apteczka` działają jak przed zmianą, z jednym Workerem na stronę
+- [x] 1.5 `/szukaj` i `/apteczka` działają jak przed zmianą, z jednym Workerem na stronę — f5715da
 
 ### Phase 2: `/szukaj` — stan w URL-u, lista substancji, linki i przycisk dodawania
 
 #### Automated
 
-- [ ] 2.1 Testy unit parsera: `npx vitest run src/lib/search-url.test.ts`
-- [ ] 2.2 Testy component ekranu: `npx vitest run src/components/registry`
-- [ ] 2.3 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [ ] 2.4 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
+- [x] 2.1 Testy unit parsera: `npx vitest run src/lib/search-url.test.ts`
+- [x] 2.2 Testy component ekranu: `npx vitest run src/components/registry`
+- [x] 2.3 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
+- [x] 2.4 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
 
 #### Manual
 
-- [ ] 2.5 Nawigacja na `/szukaj` (substancja, lista, „Pokaż więcej”, „Wstecz”/„Dalej”, odświeżenie, Ctrl-klik)
-- [ ] 2.6 Wygląd na 390 i 1280 px (`ui:shots`), klawiatura i czytnik ekranu
+- [x] 2.5 Nawigacja na `/szukaj` (substancja, lista, „Pokaż więcej”, „Wstecz”/„Dalej”, odświeżenie, Ctrl-klik)
+- [x] 2.6 Wygląd na 390 i 1280 px (`ui:shots`), klawiatura i czytnik ekranu
 - [ ] 2.7 `npm run perf` na wolnym profilu bez pogorszenia czasu do gotowej listy
 
 ### Phase 3: `/apteczka?lek=<id>` — lek wybrany w formularzu dodawania

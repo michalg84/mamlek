@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import RegistrySearch from "@/components/registry/RegistrySearch";
-import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
+import { ID, registrySearchList, substanceFilterList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
 import { stubRoutedFetch } from "../../../tests/helpers/fetch";
 import { forgetUnsavedMatchLevel, MATCH_LEVEL_STORAGE_KEY } from "@/components/hooks/useMatchLevel";
@@ -103,10 +104,13 @@ function checkItem(): MedicineCheckItem {
 }
 
 /** Renders the screen and waits until the search list is loaded and the (fake) worker has built its index. */
-async function openSearch(list: RegistrySearchListPayload = registrySearchList) {
+async function openSearch(
+  list: RegistrySearchListPayload = registrySearchList,
+  props: Partial<ComponentProps<typeof RegistrySearch>> = {},
+) {
   const checks = stubRoutedFetch(list);
   const Worker = stubSearchWorker();
-  render(<RegistrySearch version={list.version} />);
+  render(<RegistrySearch version={list.version} {...props} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
   const created = Worker.last;
   if (!created) {
@@ -168,7 +172,7 @@ async function openSearch(list: RegistrySearchListPayload = registrySearchList) 
     });
   }
 
-  return { checks, worker, input, type, deliver, search, pick, pickOther, answerCheck };
+  return { checks, worker, workers: Worker, input, type, deliver, search, pick, pickOther, answerCheck };
 }
 
 function optionTexts() {
@@ -587,5 +591,401 @@ describe("RegistrySearch", () => {
       expect(levelRadio("Zawiera którykolwiek składnik").getAttribute("aria-checked")).toBe("true");
       expect(checkLevels(screenUnderTest.checks)).toEqual(["exact", "any"]);
     });
+  });
+});
+
+describe("RegistrySearch: the address, substance links and the list of a substance", () => {
+  const SUBSTANCE = "Ibuprofenum";
+  const SUBSTANCE_PATH = "/szukaj?substancja=Ibuprofenum";
+  const A_PATH = `/szukaj?lek=${A_ID}`;
+  const KOMBI_OPTION = "Kombi Ibu A200 mgtabletki";
+
+  /** Path, query and nothing else of the current address. */
+  function address() {
+    return `${window.location.pathname}${window.location.search}`;
+  }
+
+  beforeEach(() => {
+    window.history.replaceState(null, "", "/szukaj");
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    forgetUnsavedMatchLevel();
+    window.localStorage.clear();
+    window.history.replaceState(null, "", "/");
+  });
+
+  /** The worker answers the oldest request for `substance` now. */
+  async function answerSubstance(worker: { deliverSubstance: (substance: string) => void }, substance = SUBSTANCE) {
+    await act(async () => {
+      worker.deliverSubstance(substance);
+      await Promise.resolve();
+    });
+  }
+
+  async function answerLookup(worker: { deliverLookup: () => void; pendingLookupCount: () => number }) {
+    // The request is posted from an effect once the list is ready, so wait until it is queued.
+    await waitFor(() => {
+      expect(worker.pendingLookupCount()).toBeGreaterThan(0);
+    });
+    await act(async () => {
+      worker.deliverLookup();
+      await Promise.resolve();
+    });
+  }
+
+  /** Goes one step back or forward in the history and waits for the `popstate` it causes. */
+  async function travel(direction: "back" | "forward") {
+    await act(async () => {
+      const popped = new Promise<void>((resolve) => {
+        window.addEventListener(
+          "popstate",
+          () => {
+            resolve();
+          },
+          { once: true },
+        );
+      });
+      if (direction === "back") {
+        window.history.back();
+      } else {
+        window.history.forward();
+      }
+      await popped;
+    });
+  }
+
+  function requireCard() {
+    const region = card();
+    if (!region) {
+      throw new Error("No „Wybrany lek” card on the screen");
+    }
+    return region;
+  }
+
+  function substanceHeading(substance = SUBSTANCE) {
+    return screen.getByRole("heading", { name: `Leki z substancją: ${substance}` });
+  }
+
+  /** Names of the medicines in the substance list. */
+  function listedNames() {
+    const section = substanceHeading().closest("section");
+    if (!section) {
+      throw new Error("The substance heading is not inside a section");
+    }
+    return within(section)
+      .getAllByRole("listitem")
+      .map((entry) => entry.querySelector("span")?.textContent);
+  }
+
+  it("links every active substance on the card to its list, and leaves a placeholder name as text", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("kombi");
+    screenUnderTest.pick(KOMBI_OPTION);
+
+    const region = requireCard();
+    expect(within(region).getByRole("link", { name: "Ibuprofenum" }).getAttribute("href")).toBe(SUBSTANCE_PATH);
+    expect(within(region).getByRole("link", { name: "Coffeinum" }).getAttribute("href")).toBe(
+      "/szukaj?substancja=Coffeinum",
+    );
+
+    await screenUnderTest.search("placeholder");
+    screenUnderTest.pick("Placeholder Med");
+    const placeholder = requireCard();
+    expect(within(placeholder).getByText("-")).toBeTruthy();
+    expect(within(placeholder).queryByRole("link", { name: "-" })).toBeNull();
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("shows the add-to-kit link of the picked medicine, with the list id", async () => {
+    const screenUnderTest = await openSearch();
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(B_OPTION);
+
+    expect(screen.getByRole("link", { name: "Dodaj do apteczki" }).getAttribute("href")).toBe(
+      `/apteczka?lek=${B_ID}#add-heading`,
+    );
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("shows the add-to-kit link for a withdrawn medicine too", async () => {
+    const screenUnderTest = await openSearch(withdrawnList);
+    await screenUnderTest.search("crestor");
+    screenUnderTest.pick(CRESTOR_WITHDRAWN_OPTION);
+
+    expect(screen.getByRole("link", { name: "Dodaj do apteczki" }).getAttribute("href")).toBe(
+      `/apteczka?lek=${CRESTOR_WITHDRAWN_ID}#add-heading`,
+    );
+  });
+
+  it("opens the list of a substance from the card without a reload, then shows more on request", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    expect(address()).toBe(A_PATH);
+
+    fireEvent.click(within(requireCard()).getByRole("link", { name: SUBSTANCE }));
+
+    expect(address()).toBe(SUBSTANCE_PATH);
+    expect(window.history.state).toEqual({ shown: 20 });
+    expect(card()).toBeNull();
+    await answerSubstance(screenUnderTest.worker);
+    expect(screen.getByText("Pokazano 20 z 28", VISIBLE)).toBeTruthy();
+    const firstPage = listedNames();
+    expect(firstPage).toHaveLength(20);
+    // The 2 combined medicines come after the 26 single-substance ones, so they are not on the first page.
+    expect(firstPage.some((name) => name?.startsWith("Kombi"))).toBe(false);
+    expect(screen.getAllByRole("status").map((region) => region.textContent)).toContain(
+      `Leki z substancją ${SUBSTANCE}: 28`,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Pokaż więcej" }));
+    expect(window.history.state).toEqual({ shown: 40 });
+    expect(address()).toBe(SUBSTANCE_PATH);
+    await answerSubstance(screenUnderTest.worker);
+
+    expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
+    const all = listedNames();
+    expect(all).toHaveLength(28);
+    expect(all.slice(-2)).toEqual(["Kombi Ibu A", "Kombi Ibu B"]);
+    expect(screen.queryByRole("button", { name: "Pokaż więcej" })).toBeNull();
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("moves focus to the heading of the list after a substance click", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+
+    fireEvent.click(within(requireCard()).getByRole("link", { name: SUBSTANCE }));
+    await answerSubstance(screenUnderTest.worker);
+
+    expect(document.activeElement).toBe(substanceHeading());
+  });
+
+  it("opens the list of a substance from a link in the check result", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    await screenUnderTest.answerCheck(A_ID, A_ANSWER);
+
+    // One link in the card, one in the kit item of the check result (below the card).
+    const links = screen.getAllByRole("link", { name: SUBSTANCE });
+    expect(links).toHaveLength(2);
+    fireEvent.click(links[1]);
+
+    expect(address()).toBe(SUBSTANCE_PATH);
+    await answerSubstance(screenUnderTest.worker);
+    expect(screen.getByText("Pokazano 20 z 28", VISIBLE)).toBeTruthy();
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it.each([
+    ["Ctrl", { ctrlKey: true }],
+    ["Meta", { metaKey: true }],
+    ["Shift", { shiftKey: true }],
+    ["Alt", { altKey: true }],
+    ["middle button", { button: 1 }],
+  ])("leaves a %s-click on a substance link to the browser", async (_label, init) => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    // jsdom cannot navigate: this document listener stops that, after React has had its chance to prevent the default.
+    const preventedByScreen: boolean[] = [];
+    const seen = (event: Event) => {
+      preventedByScreen.push(event.defaultPrevented);
+      event.preventDefault();
+    };
+    document.addEventListener("click", seen);
+    try {
+      fireEvent.click(within(requireCard()).getByRole("link", { name: SUBSTANCE }), init);
+    } finally {
+      document.removeEventListener("click", seen);
+    }
+
+    expect(preventedByScreen).toEqual([false]);
+    expect(address()).toBe(A_PATH);
+    expect(screen.queryByRole("heading", { name: `Leki z substancją: ${SUBSTANCE}` })).toBeNull();
+    expect(card()).not.toBeNull();
+  });
+
+  it("picks a medicine from the list, then goes back to the list with the same number of items", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    fireEvent.click(within(requireCard()).getByRole("link", { name: SUBSTANCE }));
+    await answerSubstance(screenUnderTest.worker);
+    fireEvent.click(screen.getByRole("button", { name: "Pokaż więcej" }));
+    await answerSubstance(screenUnderTest.worker);
+    expect(listedNames()).toHaveLength(28);
+
+    const section = substanceHeading().closest("section");
+    if (!section) {
+      throw new Error("The substance heading is not inside a section");
+    }
+    const target = within(section)
+      .getAllByRole("button")
+      .find((button) => button.textContent === "Ibuprom Max400 mgtabletki powlekane");
+    if (!target) {
+      throw new Error("The medicine is not in the list");
+    }
+    fireEvent.click(target);
+
+    expect(address()).toBe(`/szukaj?lek=${B_ID}`);
+    expect(cardName()).toBe("Ibuprom Max");
+    expect(screenUnderTest.checks.pendingChecks(B_ID)).toBe(1);
+    expect((screenUnderTest.input as HTMLInputElement).value).toBe("Ibuprom Max");
+    await screenUnderTest.answerCheck(B_ID, B_ANSWER);
+    expect(screen.getByText(B_VERDICT, VISIBLE)).toBeTruthy();
+    expect(document.activeElement).toBe(card());
+
+    await travel("back");
+    expect(address()).toBe(SUBSTANCE_PATH);
+    expect(card()).toBeNull();
+    await answerSubstance(screenUnderTest.worker);
+    expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
+    expect(listedNames()).toHaveLength(28);
+
+    // One more step back: the medicine the list was opened from, known from its pick, so no lookup is needed.
+    await travel("back");
+    expect(address()).toBe(A_PATH);
+    expect(cardName()).toBe("Ibuprom");
+
+    await travel("forward");
+    expect(address()).toBe(SUBSTANCE_PATH);
+    await answerSubstance(screenUnderTest.worker);
+    expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("shows the card and the name of the medicine of the address once the list is loaded", async () => {
+    window.history.replaceState(null, "", A_PATH);
+    const screenUnderTest = await openSearch(registrySearchList, { initialVariantId: A_ID });
+    expect(card()).toBeNull();
+
+    await answerLookup(screenUnderTest.worker);
+
+    expect(cardName()).toBe("Ibuprom");
+    expect((screenUnderTest.input as HTMLInputElement).value).toBe("Ibuprom");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    expect(screenUnderTest.checks.pendingChecks(A_ID)).toBe(1);
+    expect(address()).toBe(A_PATH);
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("shows the plain search, with no message and the address kept, for a medicine id the list does not have", async () => {
+    window.history.replaceState(null, "", "/szukaj?lek=999999");
+    const screenUnderTest = await openSearch(registrySearchList, { initialVariantId: 999999 });
+
+    await answerLookup(screenUnderTest.worker);
+
+    expect(card()).toBeNull();
+    expect((screenUnderTest.input as HTMLInputElement).value).toBe("");
+    expect(screen.getByText("Wpisz co najmniej 3 litery")).toBeTruthy();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(address()).toBe("/szukaj?lek=999999");
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("opens the list of the substance of the address once the list is loaded", async () => {
+    window.history.replaceState(null, "", SUBSTANCE_PATH);
+    const screenUnderTest = await openSearch(substanceFilterList, { initialSubstance: SUBSTANCE });
+    expect(substanceHeading()).toBeTruthy();
+
+    await answerSubstance(screenUnderTest.worker);
+
+    expect(screen.getByText("Pokazano 20 z 28", VISIBLE)).toBeTruthy();
+    expect(address()).toBe(SUBSTANCE_PATH);
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("restores the number of items of the list from the history entry after a reload", async () => {
+    window.history.replaceState({ shown: 40 }, "", SUBSTANCE_PATH);
+    const screenUnderTest = await openSearch(substanceFilterList, { initialSubstance: SUBSTANCE });
+
+    // The request for 20 items may still be queued next to the one for 40; the newest answer decides.
+    // Deliver again on every retry: the second request may only be queued after the first delivery.
+    await waitFor(async () => {
+      await act(async () => {
+        screenUnderTest.worker.deliverAll();
+        await Promise.resolve();
+      });
+      expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
+    });
+  });
+
+  it("says there is no medicine with the substance of the address when the registry has none", async () => {
+    window.history.replaceState(null, "", "/szukaj?substancja=Nieistniejaca");
+    const screenUnderTest = await openSearch(registrySearchList, { initialSubstance: "Nieistniejaca" });
+
+    await answerSubstance(screenUnderTest.worker, "Nieistniejaca");
+
+    expect(screen.getByText("Brak leków z substancją „Nieistniejaca” w rejestrze", VISIBLE)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Pokaż więcej" })).toBeNull();
+    expect(screenUnderTest.workers.created).toBe(1);
+  });
+
+  it("lets the medicine win when the page passes both", async () => {
+    window.history.replaceState(null, "", `/szukaj?lek=${A_ID}&substancja=${SUBSTANCE}`);
+    const screenUnderTest = await openSearch(registrySearchList, {
+      initialVariantId: A_ID,
+      initialSubstance: SUBSTANCE,
+    });
+
+    await answerLookup(screenUnderTest.worker);
+
+    expect(cardName()).toBe("Ibuprom");
+    expect(screen.queryByRole("heading", { name: `Leki z substancją: ${SUBSTANCE}` })).toBeNull();
+  });
+
+  it("replaces the address with the plain /szukaj when the text is edited after a pick", async () => {
+    const screenUnderTest = await openSearch();
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    expect(address()).toBe(A_PATH);
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    const pushState = vi.spyOn(window.history, "pushState");
+
+    screenUnderTest.type("Ibuprom 4");
+
+    expect(replaceState).toHaveBeenCalledWith(null, "", "/szukaj");
+    expect(pushState).not.toHaveBeenCalled();
+    expect(address()).toBe("/szukaj");
+    expect(card()).toBeNull();
+  });
+
+  it("leaves the address alone when the text is edited and nothing was picked", async () => {
+    const screenUnderTest = await openSearch();
+    const replaceState = vi.spyOn(window.history, "replaceState");
+
+    screenUnderTest.type("ibu");
+
+    expect(replaceState).not.toHaveBeenCalled();
+  });
+
+  it("leaves the list of a substance when the text is edited", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("ibuprom");
+    screenUnderTest.pick(A_OPTION);
+    fireEvent.click(within(requireCard()).getByRole("link", { name: SUBSTANCE }));
+    await answerSubstance(screenUnderTest.worker);
+
+    screenUnderTest.type("Ibuprom 4");
+
+    expect(screen.queryByRole("heading", { name: `Leki z substancją: ${SUBSTANCE}` })).toBeNull();
+    expect(address()).toBe("/szukaj");
+  });
+
+  it("starts a click on another substance at 20 items", async () => {
+    const screenUnderTest = await openSearch(substanceFilterList);
+    await screenUnderTest.search("kombi");
+    screenUnderTest.pick(KOMBI_OPTION);
+    fireEvent.click(within(requireCard()).getByRole("link", { name: "Coffeinum" }));
+    await answerSubstance(screenUnderTest.worker, "Coffeinum");
+
+    expect(address()).toBe("/szukaj?substancja=Coffeinum");
+    expect(screen.getByText("Pokazano 2 z 2", VISIBLE)).toBeTruthy();
+    expect(window.history.state).toEqual({ shown: 20 });
   });
 });

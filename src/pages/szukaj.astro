@@ -7,8 +7,12 @@ import RegistrySearch from "@/components/registry/RegistrySearch";
 import { createClient } from "@/lib/supabase";
 import { getSearchListVersion } from "@/lib/services/registry-search-list";
 import { todayIso } from "@/lib/kit-format";
+import { parseSearchState } from "@/lib/search-url";
 import RegistryStateDate from "@/components/registry/RegistryStateDate.astro";
 import type { RegistrySearchListVersion } from "@/types";
+
+// The picked medicine or substance of the address; a wrong value is ignored, like `?dodano` on /apteczka.
+const searchState = parseSearchState(Astro.url.searchParams);
 
 let list: RegistrySearchListVersion | null = null;
 let failed = false;
@@ -52,7 +56,12 @@ try {
               </p>
             ) : list ? (
               <>
-                <RegistrySearch version={list.version} client:load />
+                <RegistrySearch
+                  version={list.version}
+                  initialVariantId={searchState.variantId}
+                  initialSubstance={searchState.substance}
+                  client:load
+                />
                 <RegistryStateDate snapshotDate={list.snapshotDate} today={todayIso("Europe/Warsaw")} class="mt-4" />
               </>
             ) : (

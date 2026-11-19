@@ -15,6 +15,8 @@ interface MedicineSuggestProps {
   onSelect: (variant: RegistryVariant) => void;
   /** Called when the user edits the text, so a previous pick no longer matches what the field shows. */
   onEdit: () => void;
+  /** Name of a medicine picked outside the field; a new non-empty name replaces the text. */
+  pickedName?: string | null;
   label?: string;
 }
 
@@ -37,12 +39,23 @@ export function StandaloneMedicineSuggest({
   return <MedicineSuggest list={list} {...rest} />;
 }
 
-export function MedicineSuggest({ list, onSelect, onEdit, label = "Nazwa leku" }: MedicineSuggestProps) {
-  const [query, setQuery] = useState("");
+export function MedicineSuggest({ list, onSelect, onEdit, pickedName, label = "Nazwa leku" }: MedicineSuggestProps) {
+  const [query, setQuery] = useState(pickedName ?? "");
   const { status, results, total, resultsQuery, retry } = useRegistrySearch(list, query);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [focused, setFocused] = useState(false);
+  // A medicine picked from outside the field (address, substance list, "back") shows its name, with the suggestions
+  // closed and without `onEdit`. A null name leaves the text alone.
+  const [seenName, setSeenName] = useState(pickedName ?? null);
+  if ((pickedName ?? null) !== seenName) {
+    setSeenName(pickedName ?? null);
+    if (pickedName) {
+      setQuery(pickedName);
+      setOpen(false);
+      setActiveIndex(-1);
+    }
+  }
 
   const inputId = useId();
   const listboxId = useId();
