@@ -10,10 +10,10 @@ interface SubmitButtonProps {
 
 export function SubmitButton({ pending, pendingText, children }: SubmitButtonProps) {
   return (
-    <Button type="submit" disabled={pending} className="w-full">
+    <Button type="submit" disabled={pending} className="min-h-11 w-full">
       {pending ? (
         <>
-          <Loader2 aria-hidden="true" className="animate-spin" />
+          <Loader2 aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
           {pendingText}
         </>
       ) : (

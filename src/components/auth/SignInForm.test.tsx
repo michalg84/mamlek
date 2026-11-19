@@ -102,6 +102,27 @@ describe("SignInForm", () => {
     expect(screen.getByRole("alert").textContent).toBe("Nieprawidłowy e-mail lub hasło");
   });
 
+  it("rejects a malformed e-mail address with a message tied to the field", () => {
+    render(<SignInForm />);
+    const seen = watchSubmit();
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "ty@przyklad" } });
+    fireEvent.change(screen.getByLabelText("Hasło"), { target: { value: "sekret123" } });
+
+    fireEvent.submit(getForm());
+
+    expect(seen.defaultPrevented).toBe(true);
+    const email = screen.getByLabelText("E-mail");
+    expect(email.getAttribute("aria-invalid")).toBe("true");
+    expect(describedText(email)).toBe("Podaj poprawny adres e-mail");
+  });
+
+  it("names the fields the sign-in endpoint reads", () => {
+    render(<SignInForm />);
+
+    expect(screen.getByLabelText("E-mail").getAttribute("name")).toBe("email");
+    expect(screen.getByLabelText("Hasło").getAttribute("name")).toBe("password");
+  });
+
   it("toggles the password visibility label", () => {
     render(<SignInForm />);
 

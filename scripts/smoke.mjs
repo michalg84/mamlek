@@ -158,6 +158,8 @@ const steps = [
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
     { status: 302, location: "/szukaj" },
   ],
+  // The session must come from the sign-up itself, not only from a later sign-in.
+  ["signup page redirects the new session", () => request("/auth/signup"), { status: 302, location: "/szukaj" }],
   [
     "signin rejects wrong password",
     () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong" } }),
@@ -170,6 +172,11 @@ const steps = [
   ],
   ["home redirects signed-in user", () => request("/"), { status: 302, location: "/szukaj" }],
   ["signin page redirects signed-in user", () => request("/auth/signin"), { status: 302, location: "/szukaj" }],
+  [
+    "signin page with a trailing slash redirects signed-in user",
+    () => request("/auth/signin/"),
+    { status: 302, location: "/szukaj" },
+  ],
   [
     "search page renders for signed-in user",
     () => request("/szukaj"),

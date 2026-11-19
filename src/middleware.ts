@@ -35,7 +35,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   // A signed-in user has no use for the sign-in and sign-up forms. When the session check failed, `locals.user` is
   // null, so the form (with the session_check_failed message) still shows.
-  if ((pathname === "/auth/signin" || pathname === "/auth/signup") && context.locals.user) {
+  // Astro ignores a trailing slash, so `/auth/signin/` renders the same form.
+  const formPath = pathname.replace(/\/$/, "");
+  if ((formPath === "/auth/signin" || formPath === "/auth/signup") && context.locals.user) {
     return context.redirect("/szukaj");
   }
   if (PROTECTED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {

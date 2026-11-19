@@ -61,6 +61,9 @@ describe("SignUpForm", () => {
     expect(password.getAttribute("aria-invalid")).toBe("true");
     expect(describedText(email)).toBe("Podaj adres e-mail");
     expect(describedText(password)).toBe("Podaj hasło");
+    const confirm = screen.getByLabelText("Powtórz hasło");
+    expect(confirm.getAttribute("aria-invalid")).toBe("true");
+    expect(describedText(confirm)).toBe("Powtórz hasło");
   });
 
   it("disables the button with the pending text after a valid submit", () => {
@@ -120,6 +123,42 @@ describe("SignUpForm", () => {
     const confirm = screen.getByLabelText("Powtórz hasło");
     expect(confirm.getAttribute("aria-invalid")).toBe("true");
     expect(describedText(confirm)).toBe("Hasła się różnią");
+  });
+
+  it("rejects a malformed e-mail address with a message tied to the field", () => {
+    render(<SignUpForm />);
+    const seen = watchSubmit();
+    fillValid();
+    type("E-mail", "ty@przyklad");
+
+    fireEvent.submit(getForm());
+
+    expect(seen.defaultPrevented).toBe(true);
+    const email = screen.getByLabelText("E-mail");
+    expect(email.getAttribute("aria-invalid")).toBe("true");
+    expect(describedText(email)).toBe("Podaj poprawny adres e-mail");
+  });
+
+  it("rejects a password shorter than the minimum", () => {
+    render(<SignUpForm />);
+    const seen = watchSubmit();
+    fillValid();
+    type("Hasło", "12345");
+    type("Powtórz hasło", "12345");
+
+    fireEvent.submit(getForm());
+
+    expect(seen.defaultPrevented).toBe(true);
+    const password = screen.getByLabelText("Hasło");
+    expect(password.getAttribute("aria-invalid")).toBe("true");
+    expect(describedText(password)).toBe("Hasło musi mieć co najmniej 6 znaków");
+  });
+
+  it("names the fields the sign-up endpoint reads", () => {
+    render(<SignUpForm />);
+
+    expect(screen.getByLabelText("E-mail").getAttribute("name")).toBe("email");
+    expect(screen.getByLabelText("Hasło").getAttribute("name")).toBe("password");
   });
 
   it("toggles the password visibility label", () => {

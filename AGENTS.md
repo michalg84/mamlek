@@ -26,7 +26,7 @@ Setup, scripts, CI and deployment: see @README.md.
 - Both env vars are **optional**: when unset, `createClient()` returns `null`, auth is silently disabled (`locals.user` is always `null`), and `src/lib/config-status.ts` drives a warning banner. Every caller must handle the `null` client.
 - `src/middleware.ts` — runs on every request, resolves the current user, attaches to `context.locals.user`. Redirects unauthenticated users away from routes listed in `PROTECTED_ROUTES`, and signed-in users from `/auth/signin` and `/auth/signup` to `/szukaj`.
 - API endpoints: `src/pages/api/auth/{signin,signup,signout}.ts`. `signup.ts` redirects by `data.session`: a session (e-mail confirmation off) goes to `/szukaj`, none to `/auth/confirm-email`.
-- Auth pages: `src/pages/auth/{signin,signup,confirm-email}.astro`, built on `src/components/auth/AuthShell.astro` and the forms in `src/components/auth/` (Polish texts, role tokens, `ui/*` components; guarded by `ui:scan`)
+- Auth pages: `src/pages/auth/{signin,signup,confirm-email}.astro`, built on `src/components/auth/AuthShell.astro` and the forms in `src/components/auth/` (Polish texts, role tokens, `ui/*` components; guarded by `ui:scan`). `confirm-email` has one content ("Sprawdź skrzynkę"), with no `import.meta.env.DEV` branch.
 - Protected page example: `src/pages/szukaj.astro`
 
 ## Command tripwires

@@ -18,7 +18,8 @@ setup("sign in once and save the session", async ({ page }) => {
     await page.getByLabel("E-mail").fill(username);
     await page.getByLabel("Hasło", { exact: true }).fill("");
     await page.getByLabel("Hasło", { exact: true }).fill(password);
-    await page.getByRole("button", { name: "Zaloguj się" }).click();
+    // By type, not by name: after a submit the button is called "Logowanie…" and is disabled.
+    await page.locator('button[type="submit"]').click();
     await page.waitForURL((url) => !url.pathname.startsWith("/auth/signin"), { timeout: 5_000 });
   }).toPass();
   // Only a signed-in user reaches the search.
