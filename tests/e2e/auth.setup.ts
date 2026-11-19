@@ -14,11 +14,12 @@ setup("sign in once and save the session", async ({ page }) => {
   // submit. Retry fill + submit until the submit leaves the sign-in page; signing in twice changes nothing.
   // Clear before filling: re-filling the same value fires no change event in a controlled input.
   await expect(async () => {
-    await page.getByLabel("Email").fill("");
-    await page.getByLabel("Email").fill(username);
-    await page.getByLabel("Password", { exact: true }).fill("");
-    await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByLabel("E-mail").fill("");
+    await page.getByLabel("E-mail").fill(username);
+    await page.getByLabel("Hasło", { exact: true }).fill("");
+    await page.getByLabel("Hasło", { exact: true }).fill(password);
+    // By type, not by name: after a submit the button is called "Logowanie…" and is disabled.
+    await page.locator('button[type="submit"]').click();
     await page.waitForURL((url) => !url.pathname.startsWith("/auth/signin"), { timeout: 5_000 });
   }).toPass();
   // Only a signed-in user reaches the search.

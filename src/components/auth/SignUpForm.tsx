@@ -1,11 +1,19 @@
 import React, { useState } from "react";
-import { Mail, Lock, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
+import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { ServerError } from "@/components/auth/ServerError";
 
 const MIN_PASSWORD_LENGTH = 6;
+
+/** Polish noun form after a count: 1 znak, 2-4 znaki, 5 and more znaków. */
+function charactersWord(count: number) {
+  if (count === 1) return "znak";
+  if (count >= 2 && count <= 4) return "znaki";
+  return "znaków";
+}
 
 interface Props {
   serverError?: string | null;
@@ -17,27 +25,28 @@ export default function SignUpForm({ serverError }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useSubmitting();
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
 
   function validate() {
     const next: typeof errors = {};
 
     if (!email.trim()) {
-      next.email = "Email is required";
+      next.email = "Podaj adres e-mail";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      next.email = "Enter a valid email address";
+      next.email = "Podaj poprawny adres e-mail";
     }
 
     if (!password) {
-      next.password = "Password is required";
+      next.password = "Podaj hasło";
     } else if (password.length < MIN_PASSWORD_LENGTH) {
-      next.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+      next.password = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków`;
     }
 
     if (!confirmPassword) {
-      next.confirmPassword = "Please confirm your password";
+      next.confirmPassword = "Powtórz hasło";
     } else if (password !== confirmPassword) {
-      next.confirmPassword = "Passwords do not match";
+      next.confirmPassword = "Hasła się różnią";
     }
 
     setErrors(next);
@@ -51,14 +60,16 @@ export default function SignUpForm({ serverError }: Props) {
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     if (!validate()) {
       e.preventDefault();
+      return;
     }
+    setSubmitting(true);
   }
 
+  const remaining = MIN_PASSWORD_LENGTH - password.length;
   const passwordHint =
-    !errors.password && password.length > 0 && password.length < MIN_PASSWORD_LENGTH ? (
-      <p className="mt-1 text-xs text-blue-100/50">
-        {MIN_PASSWORD_LENGTH - password.length} more character
-        {MIN_PASSWORD_LENGTH - password.length !== 1 ? "s" : ""} needed
+    !errors.password && password.length > 0 && remaining > 0 ? (
+      <p className="text-muted-foreground mt-1 text-sm">
+        Jeszcze {remaining} {charactersWord(remaining)}
       </p>
     ) : undefined;
 
@@ -67,30 +78,28 @@ export default function SignUpForm({ serverError }: Props) {
       <FormField
         id="email"
         type="email"
-        label="Email"
+        label="E-mail"
         value={email}
         onChange={(v) => {
           setEmail(v);
           clearError("email");
         }}
-        placeholder="you@example.com"
+        placeholder="ty@przyklad.pl"
         error={errors.email}
-        icon={<Mail className="size-4" />}
       />
 
       <FormField
         id="password"
-        label="Password"
+        label="Hasło"
         type={showPassword ? "text" : "password"}
         value={password}
         onChange={(v) => {
           setPassword(v);
           clearError("password");
         }}
-        placeholder="Min. 6 characters"
+        placeholder="Co najmniej 6 znaków"
         error={errors.password}
         hint={passwordHint}
-        icon={<Lock className="size-4" />}
         endContent={
           <PasswordToggle
             visible={showPassword}
@@ -104,16 +113,15 @@ export default function SignUpForm({ serverError }: Props) {
       <FormField
         id="confirmPassword"
         name="confirmPassword"
-        label="Confirm password"
+        label="Powtórz hasło"
         type={showConfirmPassword ? "text" : "password"}
         value={confirmPassword}
         onChange={(v) => {
           setConfirmPassword(v);
           clearError("confirmPassword");
         }}
-        placeholder="Re-enter your password"
+        placeholder="Wpisz hasło jeszcze raz"
         error={errors.confirmPassword}
-        icon={<Lock className="size-4" />}
         endContent={
           <PasswordToggle
             visible={showConfirmPassword}
@@ -126,8 +134,9 @@ export default function SignUpForm({ serverError }: Props) {
 
       <ServerError message={serverError} />
 
-      <SubmitButton pendingText="Creating account..." icon={<UserPlus className="size-4" />}>
-        Create account
+      <SubmitButton pending={submitting} pendingText="Zakładanie konta…">
+        <UserPlus />
+        Załóż konto
       </SubmitButton>
     </form>
   );

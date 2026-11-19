@@ -1,0 +1,33 @@
+---
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+
+interface Props {
+  /** Heading of the view (the page's `h1`). */
+  title: string;
+}
+
+const { title } = Astro.props;
+const hasFooter = Astro.slots.has("footer");
+---
+
+<main class="flex min-h-screen items-center justify-center p-4">
+  <div class="w-full max-w-sm">
+    <div class="mb-6 text-center">
+      <p class="text-primary text-2xl font-bold">MamLek</p>
+      <p class="text-muted-foreground mt-1 text-sm">Sprawdź, czy lek jest już w domowej apteczce.</p>
+    </div>
+    <Card>
+      <CardHeader>
+        <h1 class="text-foreground text-xl leading-none font-semibold">{title}</h1>
+      </CardHeader>
+      <CardContent>
+        <slot />
+      </CardContent>
+      {hasFooter && (
+        <CardFooter className="flex-wrap justify-center gap-x-1">
+          <slot name="footer" />
+        </CardFooter>
+      )}
+    </Card>
+  </div>
+</main>

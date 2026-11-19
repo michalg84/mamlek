@@ -10,7 +10,7 @@ test("anonymous visitor to /szukaj is sent to sign-in and does not see the searc
   await page.goto("/szukaj");
 
   await page.waitForURL("**/auth/signin");
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Zaloguj się" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Szukaj leku" })).toBeHidden();
 
   // No cleanup: the test creates no data and does not touch the shared test user's session.
