@@ -50,3 +50,10 @@
 - **Problem**: lista faz do zatwierdzenia była tylko w treści pytania, które w oknie użytkownika się nie wyświetliło, więc użytkownik nie wiedział, co zatwierdza (2026-10-29, `/10x-plan`); wcześniej zdarzało się to częściej.
 - **Rule**: Zanim zadasz pytanie z prośbą o zatwierdzenie albo wybór, wypisz jego przedmiot jako zwykły tekst w tej samej odpowiedzi (numerowana lista faz, opcje z krótkim opisem, podsumowanie), a dopiero potem wywołaj narzędzie pytań. Treść pytania powtarza krótko ten sam przedmiot, ale nigdy nie jest jedynym miejscem, w którym on stoi. Nie proś o zgodę na coś, czego użytkownik nie ma na ekranie.
 - **Applies to**: all
+
+## Re-invoke the skill when continuing a skill step
+
+- **Context**: any multi-step 10x skill (/10x-implement phases, /10x-tdd, /10x-plan, /10x-impl-review) resumed after the user says "tak" / "kontynuuj" / "idź dalej", or after a context compaction.
+- **Problem**: a skill sets its model and effort only when it is invoked. Continuing by hand runs the step on whatever model the session has, not the one in .claude/skill-models.json (S-16 incident).
+- **Rule**: when continuing a skill step on a short user confirmation or after compaction, re-invoke the skill (e.g. /10x-implement <id> phase N) instead of carrying on manually; if you cannot, say so and ask the user before working.
+- **Applies to**: implement, plan, impl-review
