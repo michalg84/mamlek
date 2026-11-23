@@ -608,15 +608,15 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 #### Automated
 
-- [x] 3.1 Testy formularza: `npx vitest run src/components/kit/KitAddForm.test.tsx`
-- [x] 3.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [x] 3.3 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
-- [x] 3.4 Kontrakt API bez zmian: `npm run test:api`
+- [x] 3.1 Testy formularza: `npx vitest run src/components/kit/KitAddForm.test.tsx` — bfeeea2
+- [x] 3.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry` — bfeeea2
+- [x] 3.3 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan` — bfeeea2
+- [x] 3.4 Kontrakt API bez zmian: `npm run test:api` — bfeeea2
 
 #### Manual
 
-- [x] 3.5 „Dodaj do apteczki” z karty leku prowadzi do formularza z wybranym lekiem; dodanie czyści formularz
-- [x] 3.6 Nieznane i błędne `?lek` dają pusty formularz bez błędu
+- [x] 3.5 „Dodaj do apteczki” z karty leku prowadzi do formularza z wybranym lekiem; dodanie czyści formularz — bfeeea2
+- [x] 3.6 Nieznane i błędne `?lek` dają pusty formularz bez błędu — bfeeea2
 
 ### Phase 4: Substancje na liście apteczki
 
