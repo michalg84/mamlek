@@ -622,22 +622,22 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 #### Automated
 
-- [x] 4.1 Testy listy i edycji: `npx vitest run src/components/kit/KitList.test.tsx src/components/kit/KitItemEdit.test.tsx`
-- [x] 4.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [x] 4.3 Testy API: `npm run test:api`
-- [x] 4.4 Izolacja apteczki bez zmian: `npm run test:db`
-- [x] 4.5 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
+- [x] 4.1 Testy listy i edycji: `npx vitest run src/components/kit/KitList.test.tsx src/components/kit/KitItemEdit.test.tsx` — e4d6ee9
+- [x] 4.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry` — e4d6ee9
+- [x] 4.3 Testy API: `npm run test:api` — e4d6ee9
+- [x] 4.4 Izolacja apteczki bez zmian: `npm run test:db` — e4d6ee9
+- [x] 4.5 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan` — e4d6ee9
 
 #### Manual
 
-- [x] 4.6 Substancje na liście apteczki są linkami do `/szukaj` (dla pozycji z produktem-reprezentantem lista zawiera jej wariant) i nie znikają po edycji
+- [x] 4.6 Substancje na liście apteczki są linkami do `/szukaj` (dla pozycji z produktem-reprezentantem lista zawiera jej wariant) i nie znikają po edycji — e4d6ee9
 
 ### Phase 5: Dokumentacja
 
 #### Automated
 
-- [ ] 5.1 Formatowanie dokumentów: `npx prettier --check AGENTS.md context/foundation/prd.md`
+- [x] 5.1 Formatowanie dokumentów: `npx prettier --check AGENTS.md context/foundation/prd.md`
 
 #### Manual
 
-- [ ] 5.2 Przegląd dopisków w PRD i AGENTS.md przez użytkownika
+- [x] 5.2 Przegląd dopisków w PRD i AGENTS.md przez użytkownika
