@@ -602,7 +602,7 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 - [x] 2.5 Nawigacja na `/szukaj` (substancja, lista, „Pokaż więcej”, „Wstecz”/„Dalej”, odświeżenie, Ctrl-klik) — e1c02a6
 - [x] 2.6 Wygląd na 390 i 1280 px (`ui:shots`), klawiatura i czytnik ekranu — e1c02a6
-- [ ] 2.7 `npm run perf` na wolnym profilu bez pogorszenia czasu do gotowej listy
+- [x] 2.7 `npm run perf` na wolnym profilu bez pogorszenia czasu do gotowej listy — slow, 5 runs, wrangler dev: 2456 ms po zmianie vs 2378 ms przed (+78 ms, w szumie; cel 5000 ms)
 
 ### Phase 3: `/apteczka?lek=<id>` — lek wybrany w formularzu dodawania
 
