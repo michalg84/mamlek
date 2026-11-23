@@ -69,6 +69,8 @@ export interface KitItem {
   strength: string | null;
   form: string | null;
   holder: string | null;
+  /** Active substances of the pack's product in registry position order (possibly empty). */
+  substances: string[];
   units: RegistryPackageUnit[];
   quantity: number | null;
   /** ISO date (YYYY-MM-DD); for month precision the last day of the month. */

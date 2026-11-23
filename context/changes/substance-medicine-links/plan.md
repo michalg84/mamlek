@@ -622,15 +622,15 @@ Brak migracji bazy i zmian formatu listy. Odpowiedź `GET`/`PATCH` pozycji aptec
 
 #### Automated
 
-- [ ] 4.1 Testy listy i edycji: `npx vitest run src/components/kit/KitList.test.tsx src/components/kit/KitItemEdit.test.tsx`
-- [ ] 4.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
-- [ ] 4.3 Testy API: `npm run test:api`
-- [ ] 4.4 Izolacja apteczki bez zmian: `npm run test:db`
-- [ ] 4.5 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
+- [x] 4.1 Testy listy i edycji: `npx vitest run src/components/kit/KitList.test.tsx src/components/kit/KitItemEdit.test.tsx`
+- [x] 4.2 Pełny zestaw CI: `npx vitest run --project unit --project component --project registry`
+- [x] 4.3 Testy API: `npm run test:api`
+- [x] 4.4 Izolacja apteczki bez zmian: `npm run test:db`
+- [x] 4.5 Lint, typy i skan widoków: `npm run lint`, `npx astro check`, `npm run ui:scan`
 
 #### Manual
 
-- [ ] 4.6 Substancje na liście apteczki są linkami do `/szukaj` (dla pozycji z produktem-reprezentantem lista zawiera jej wariant) i nie znikają po edycji
+- [x] 4.6 Substancje na liście apteczki są linkami do `/szukaj` (dla pozycji z produktem-reprezentantem lista zawiera jej wariant) i nie znikają po edycji
 
 ### Phase 5: Dokumentacja
 

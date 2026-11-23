@@ -690,6 +690,30 @@ describe("PATCH /api/kit/[id]: an item on a withdrawn pack", () => {
   });
 });
 
+describe("PATCH /api/kit/[id]: the substances of the item", () => {
+  // Typed by hand from scripts/fixtures/rpl-sample-v1.xml and -v2.xml (same in both), not read back from the app: the
+  // package id is the XML `opakowanie@id`, the names are the `nazwaSubstancji` of the product in XML order.
+  const PANADOL_FEMINA_PACK = 18703;
+  const PANADOL_FEMINA_SUBSTANCES = ["Paracetamolum", "Hyoscini butylbromidum"];
+  // Smecta has an empty `substancjeCzynne`.
+  const SMECTA_PACK = 72840;
+
+  async function substancesAfterPatch(packageId: number): Promise<unknown> {
+    const id = await addRow({ packageId, quantity: 1 });
+    const reply = await patch(id, { quantity: 2 });
+    expect(reply.status, reply.body.slice(0, 200)).toBe(200);
+    return (JSON.parse(reply.body) as { item: { substances?: unknown } }).item.substances;
+  }
+
+  it("answers with the names of the product's substances in the order of the registry", async () => {
+    expect(await substancesAfterPatch(PANADOL_FEMINA_PACK)).toEqual(PANADOL_FEMINA_SUBSTANCES);
+  });
+
+  it("answers with an empty array for a product without substances", async () => {
+    expect(await substancesAfterPatch(SMECTA_PACK)).toEqual([]);
+  });
+});
+
 describe("DELETE /api/kit/[id]", () => {
   function del(id: number | string): Promise<Reply> {
     return send(`${KIT}/${id}`, { method: "DELETE", jar });

@@ -41,6 +41,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     strength: "3 g",
     form: "proszek do sporządzania zawiesiny doustnej",
     holder: null,
+    substances: [],
     units: sachets("10"),
     quantity: 4,
     expiresOn: "2027-12-31",
