@@ -67,6 +67,8 @@ Kolejność i równoległość (lessons.md „Planuj i deleguj fazy równolegle�
 
 **Czas zalogowania bez dodatkowego żądania.** Middleware działa na każdym żądaniu (także po listę wyszukiwania), a `getClaims()` przy kluczu symetrycznym woła `getUser()` drugi raz. Faza 4 czyta więc `amr` z tokenu dostępu z `getSession()`, dekodując jego payload, zawsze po udanym `getUser()`, które ten token właśnie zweryfikowało — bez drugiego wywołania sieciowego.
 
+**Znacznik to zalecenie, nie twarda bramka (impl-review fazy 3, F1).** `user_metadata` jest zapisywalne przez użytkownika kluczem publishable (`supabase.auth.updateUser({ data })` z konsoli przeglądarki), a `app_metadata` nie da się ustawić z aplikacji bez klucza serwisowego. Zalogowany może więc zdjąć znacznik bez zmiany hasła. Ryzyko jest ograniczone: szkodzi tylko własnemu kontu, a następne logowanie słabym hasłem ustawia znacznik na nowo. Przyjęta luka; dokumenty (faza 5) opisują bramkę jako wymuszenie w aplikacji, nie jako gwarancję.
+
 **Brak czasu zalogowania w tokenie.** Jeśli token nie ma `amr` z `timestamp` (inny format Supabase, błąd), middleware loguje błąd z przyczyną i traktuje sesję jako wygasłą (fail closed), zamiast po cichu pomijać limit. Pierwszy krok fazy 4 to sprawdzenie kształtu `amr` na lokalnym Supabase (`password`, po odświeżeniu tokenu `timestamp` się nie zmienia).
 
 ## Phase 1: Reguła hasła i lista popularnych haseł
@@ -209,6 +211,8 @@ Logowanie wykrywa słabe hasło i ustawia znacznik; middleware blokuje aplikacj�
 
 **Contract**: `/konto` dopisane do `PROTECTED_ROUTES`. Gdy `locals.user?.user_metadata?.password_change_required === true`: ścieżki `/konto/haslo`, `/api/auth/password`, `/api/auth/signout` przechodzą; `/api/kit*` (i inne `/api/*` poza auth) → 403 JSON `{ "error": "Password change required" }`; każda inna strona → przekierowanie `/konto/haslo?wymagana=1`. Strony publiczne (`/auth/*`) zachowują obecne przekierowania.
 
+**Addendum (impl-review fazy 3, F2)**: przepuszczane jest całe `/api/auth/*` (także `signin` i `signup`), nie tylko trzy ścieżki z listy, żeby sesję dało się wymienić przez logowanie na inne konto.
+
 #### 3. Ekran zmiany hasła
 
 **File**: `src/pages/konto/haslo.astro` (nowy), `src/components/auth/ChangePasswordForm.tsx` (nowy), `src/components/auth/ChangePasswordForm.test.tsx` (nowy)
@@ -340,7 +344,7 @@ PRD, roadmapa i AGENTS.md opisują nowy stan; kolejność wdrożenia na produkcj
 
 **Intent**: Następny agent zna regułę, bramkę, limity sesji, testy i kolejność wdrożenia.
 
-**Contract**: AGENTS.md „Auth flow”: `password-policy.ts` / `password-check.ts` (lista tylko serwerowa, generator), znacznik `password_change_required` i bramka w middleware (wyjątki), `/konto/haslo` i `/api/auth/password`, limity sesji (`session-age.ts`, `maxAge`). „Command tripwires”: nowe pliki testów w opisie `npm test`, w `test:api` nowe pliki i wyjątek od „read-only” (`setWeakPassword`), liczba kont na przebieg. Notatka o kolejności w stylu notatek o migracjach: merge, potem panel Supabase (Authentication → Policies/Providers: minimum 12, wymagania puste; sprawdzić `secure_password_change`). README: krok ręczny dla konta E2E (`E2E_PASSWORD` musi spełniać regułę, inaczej `auth.setup.ts` trafi na `/konto/haslo`).
+**Contract**: AGENTS.md „Auth flow”: `password-policy.ts` / `password-check.ts` (lista tylko serwerowa, generator), znacznik `password_change_required` i bramka w middleware (wyjątki), `/konto/haslo` i `/api/auth/password`, limity sesji (`session-age.ts`, `maxAge`). „Command tripwires”: nowe pliki testów w opisie `npm test`, w `test:api` nowe pliki i wyjątek od „read-only” (`setWeakPassword`), liczba kont na przebieg. Notatka o kolejności w stylu notatek o migracjach: merge, potem panel Supabase (Authentication → Policies/Providers: minimum 12, wymagania puste; sprawdzić `secure_password_change`). Opis bramki zawiera lukę: znacznik w `user_metadata` użytkownik może zdjąć sam (patrz „Znacznik to zalecenie”). README: krok ręczny dla konta E2E (`E2E_PASSWORD` musi spełniać regułę, inaczej `auth.setup.ts` trafi na `/konto/haslo`).
 
 ### Success Criteria:
 

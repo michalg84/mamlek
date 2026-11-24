@@ -3,7 +3,7 @@
 // current password and the rule. The rule itself is covered by the unit tests; this proves the gate, the marker and the
 // endpoint together. Accounts come from sign-up with a good password; `setWeakPassword` then makes the password the
 // kind an old account has. Two accounts per run, and every sign-up, sign-in and re-check of the current password counts
-// against the 30 per 5 minutes of the local limit (13 in this file).
+// against the 30 per 5 minutes of the local limit (18 in this file).
 import { beforeAll, describe, expect, it } from "vitest";
 import { ACCOUNT_PASSWORD, send, setWeakPassword, signUpAndSignIn, type Jar } from "./helpers";
 
@@ -112,6 +112,26 @@ describe("forced password change", () => {
 });
 
 describe("password change without the marker", () => {
+  it("changes the password of an account that was not asked to, keeping the screen in its voluntary form", async () => {
+    const { email, jar } = await signUpAndSignIn("pw-free");
+
+    const page = await send("/konto/haslo", { jar });
+    expect(page.status).toBe(200);
+    expect(page.body).toContain("Szukaj leku");
+    expect(page.body).not.toContain("Twoje hasło nie spełnia nowych zasad");
+
+    const wrong = await change(jar, "to-nie-jest-haslo", GOOD);
+    expect(wrong.location).toBe("/konto/haslo?error=current_password_invalid");
+
+    const reply = await change(jar, ACCOUNT_PASSWORD, GOOD);
+    expect(reply.status).toBe(302);
+    expect(reply.location).toBe("/konto/haslo?zmieniono=1");
+    expect((await send("/szukaj", { jar })).status).toBe(200);
+
+    const fresh = await signIn(email, GOOD, new Map());
+    expect(fresh.location).toBe("/szukaj");
+  });
+
   it("sends a request without a session to the sign-in page", async () => {
     const reply = await change(new Map(), ACCOUNT_PASSWORD, GOOD);
 
