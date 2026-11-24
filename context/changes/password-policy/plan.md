@@ -410,11 +410,11 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Automated
 
-- [x] 1.1 Testy jednostkowe reguły długości (code pointy, bajty, spacje)
-- [x] 1.2 Testy sprawdzenia serwerowego (lista bez wielkości liter, e-mail)
-- [x] 1.3 Test strażnik danych listy (z przykładem z podpowiedzi)
-- [x] 1.4 Testy nowych kodów w auth-errors
-- [x] 1.5 npm test, lint i astro check zielone
+- [x] 1.1 Testy jednostkowe reguły długości (code pointy, bajty, spacje) — a96fd32
+- [x] 1.2 Testy sprawdzenia serwerowego (lista bez wielkości liter, e-mail) — a96fd32
+- [x] 1.3 Test strażnik danych listy (z przykładem z podpowiedzi) — a96fd32
+- [x] 1.4 Testy nowych kodów w auth-errors — a96fd32
+- [x] 1.5 npm test, lint i astro check zielone — a96fd32
 
 #### Manual
 
