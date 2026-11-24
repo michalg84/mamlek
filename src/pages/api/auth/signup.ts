@@ -1,11 +1,24 @@
 import type { APIRoute } from "astro";
+import { z } from "astro/zod";
 import { authErrorCode } from "@/lib/auth-errors";
+import { passwordProblem } from "@/lib/services/password-check";
 import { createClient } from "@/lib/supabase";
+
+const SignUpInput = z.object({ email: z.string(), password: z.string() });
 
 export const POST: APIRoute = async (context) => {
   const form = await context.request.formData();
-  const email = form.get("email") as string;
-  const password = form.get("password") as string;
+  const input = SignUpInput.safeParse({ email: form.get("email"), password: form.get("password") });
+  if (!input.success) {
+    return context.redirect("/auth/signup?error=validation_failed");
+  }
+  const { email, password } = input.data;
+
+  // The whole password rule before Supabase is called: the form checks only the length, the server is the last gate.
+  const problem = passwordProblem(password, email);
+  if (problem) {
+    return context.redirect(`/auth/signup?error=${problem}`);
+  }
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {

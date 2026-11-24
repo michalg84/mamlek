@@ -391,6 +391,12 @@ export async function userIdOf(email: string): Promise<string> {
   return row.id;
 }
 
+/** How many accounts have this e-mail (0 or 1): the proof that a refused sign-up created nothing. */
+export async function accountCount(email: string): Promise<number> {
+  const [row] = await query<{ n: number }>("select count(*)::int as n from auth.users where email = $1", [email]);
+  return row.n;
+}
+
 // --- Checks ------------------------------------------------------------------------------------------------------
 
 // Traces of the server's inside: table names, database error text, stack frames. The `issues` of a 400 (field path and

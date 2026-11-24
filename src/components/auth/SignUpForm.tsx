@@ -5,8 +5,8 @@ import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { ServerError } from "@/components/auth/ServerError";
-
-const MIN_PASSWORD_LENGTH = 6;
+import { authErrorMessage } from "@/lib/auth-errors";
+import { EXAMPLE_PASSPHRASE, MIN_PASSWORD_LENGTH, passwordLength, passwordLengthProblem } from "@/lib/password-policy";
 
 /** Polish noun form after a count: 1 znak, 2-4 znaki, 5 and more znaków. */
 function charactersWord(count: number) {
@@ -39,8 +39,11 @@ export default function SignUpForm({ serverError }: Props) {
 
     if (!password) {
       next.password = "Podaj hasło";
-    } else if (password.length < MIN_PASSWORD_LENGTH) {
-      next.password = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków`;
+    } else {
+      const problem = passwordLengthProblem(password);
+      if (problem) {
+        next.password = authErrorMessage(problem) ?? undefined;
+      }
     }
 
     if (!confirmPassword) {
@@ -65,13 +68,20 @@ export default function SignUpForm({ serverError }: Props) {
     setSubmitting(true);
   }
 
-  const remaining = MIN_PASSWORD_LENGTH - password.length;
-  const passwordHint =
-    !errors.password && password.length > 0 && remaining > 0 ? (
+  // The length counts code points, as the server and Supabase do; the example is a phrase to imitate, not to copy.
+  const remaining = MIN_PASSWORD_LENGTH - passwordLength(password);
+  const passwordHint = (
+    <>
+      {password.length > 0 && remaining > 0 && (
+        <p className="text-muted-foreground mt-1 text-sm">
+          Jeszcze {remaining} {charactersWord(remaining)}
+        </p>
+      )}
       <p className="text-muted-foreground mt-1 text-sm">
-        Jeszcze {remaining} {charactersWord(remaining)}
+        Najłatwiej zapamiętać kilka słów, np. „{EXAMPLE_PASSPHRASE}”. Wymyśl własne, nie to samo.
       </p>
-    ) : undefined;
+    </>
+  );
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-4" onSubmit={handleSubmit} noValidate>
@@ -97,7 +107,7 @@ export default function SignUpForm({ serverError }: Props) {
           setPassword(v);
           clearError("password");
         }}
-        placeholder="Co najmniej 6 znaków"
+        placeholder={`Co najmniej ${MIN_PASSWORD_LENGTH} znaków`}
         error={errors.password}
         hint={passwordHint}
         endContent={

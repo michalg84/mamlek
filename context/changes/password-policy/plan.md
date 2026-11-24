@@ -418,17 +418,17 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Manual
 
-- [ ] 1.6 Przegląd początku listy i słów kontekstowych
+- [x] 1.6 Przegląd początku listy i słów kontekstowych
 
 ### Phase 2: Rejestracja
 
 #### Automated
 
-- [ ] 2.1 Testy komponentu SignUpForm z nową regułą
-- [ ] 2.2 Testy API rejestracji (odrzucenia bez konta)
-- [ ] 2.3 npm run smoke zielone
-- [ ] 2.4 Lokalny Supabase odrzuca 11 znaków z pominięciem aplikacji
-- [ ] 2.5 npm test, lint, astro check i ui:scan zielone
+- [x] 2.1 Testy komponentu SignUpForm z nową regułą
+- [x] 2.2 Testy API rejestracji (odrzucenia bez konta)
+- [x] 2.3 npm run smoke zielone
+- [x] 2.4 Lokalny Supabase odrzuca 11 znaków z pominięciem aplikacji
+- [x] 2.5 npm test, lint, astro check i ui:scan zielone
 
 #### Manual
 
