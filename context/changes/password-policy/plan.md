@@ -424,11 +424,11 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Automated
 
-- [x] 2.1 Testy komponentu SignUpForm z nową regułą
-- [x] 2.2 Testy API rejestracji (odrzucenia bez konta)
-- [x] 2.3 npm run smoke zielone
-- [x] 2.4 Lokalny Supabase odrzuca 11 znaków z pominięciem aplikacji
-- [x] 2.5 npm test, lint, astro check i ui:scan zielone
+- [x] 2.1 Testy komponentu SignUpForm z nową regułą — 5bd1772
+- [x] 2.2 Testy API rejestracji (odrzucenia bez konta) — 5bd1772
+- [x] 2.3 npm run smoke zielone — 5bd1772
+- [x] 2.4 Lokalny Supabase odrzuca 11 znaków z pominięciem aplikacji — 5bd1772
+- [x] 2.5 npm test, lint, astro check i ui:scan zielone — 5bd1772
 
 #### Manual
 
