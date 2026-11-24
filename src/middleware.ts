@@ -2,7 +2,13 @@ import { defineMiddleware } from "astro:middleware";
 import { sessionCheckFailure } from "@/lib/auth-errors";
 import { createClient } from "@/lib/supabase";
 
-const PROTECTED_ROUTES = ["/szukaj", "/apteczka"];
+const PROTECTED_ROUTES = ["/szukaj", "/apteczka", "/konto"];
+
+// What a user whose password breaks the rule (marker `password_change_required` in `user_metadata`, set at sign-in)
+// may still reach: the change screen, its endpoint and the sign-out. Sign-in and sign-up endpoints stay open too, so a
+// session can be replaced.
+const PASSWORD_CHANGE_PATHS = ["/konto/haslo", "/api/auth/password", "/api/auth/signout"];
+const PASSWORD_CHANGE_URL = "/konto/haslo?wymagana=1";
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
@@ -44,6 +50,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (!context.locals.user) {
       return context.redirect(signIn);
     }
+  }
+
+  // The marker is read from the user the auth server just returned, not from a cookie the browser could edit.
+  if (
+    context.locals.user?.user_metadata.password_change_required === true &&
+    !PASSWORD_CHANGE_PATHS.includes(formPath) &&
+    !formPath.startsWith("/api/auth/")
+  ) {
+    if (formPath.startsWith("/api/")) {
+      return Response.json({ error: "Password change required" }, { status: 403 });
+    }
+    // `/auth/signin` and `/auth/signup` were already sent to `/szukaj` above, which ends up here.
+    return context.redirect(PASSWORD_CHANGE_URL);
   }
 
   return next();

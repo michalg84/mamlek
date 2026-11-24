@@ -438,10 +438,10 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Automated
 
-- [ ] 3.1 Testy komponentu ChangePasswordForm
-- [ ] 3.2 Testy API zmiany i wymuszenia (scenariusze a–d)
-- [ ] 3.3 Istniejące test:api i smoke zielone
-- [ ] 3.4 npm test, lint, astro check i ui:scan zielone
+- [x] 3.1 Testy komponentu ChangePasswordForm
+- [x] 3.2 Testy API zmiany i wymuszenia (scenariusze a–d)
+- [x] 3.3 Istniejące test:api i smoke zielone
+- [x] 3.4 npm test, lint, astro check i ui:scan zielone
 
 #### Manual
 

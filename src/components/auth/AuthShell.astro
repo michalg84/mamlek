@@ -1,17 +1,21 @@
 ---
+import Topbar from "@/components/Topbar.astro";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 
 interface Props {
   /** Heading of the view (the page's `h1`). */
   title: string;
+  /** Signed-in views carry the top bar above the card (and sit at the top instead of centered). */
+  topbar?: boolean;
 }
 
-const { title } = Astro.props;
+const { title, topbar = false } = Astro.props;
 const hasFooter = Astro.slots.has("footer");
 ---
 
-<main class="flex min-h-screen items-center justify-center p-4">
+<main class:list={["flex justify-center p-4", !topbar && "min-h-screen items-center"]}>
   <div class="w-full max-w-sm">
+    {topbar && <Topbar />}
     <div class="mb-6 text-center">
       <p class="text-primary text-2xl font-bold">MamLek</p>
       <p class="text-muted-foreground mt-1 text-sm">Sprawdź, czy lek jest już w domowej apteczce.</p>

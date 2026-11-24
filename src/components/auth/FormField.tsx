@@ -9,6 +9,8 @@ interface FormFieldProps {
   name?: string;
   label: string;
   type?: string;
+  /** The `autocomplete` token, so a password manager can tell the current password from a new one. */
+  autoComplete?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -23,6 +25,7 @@ export function FormField({
   name,
   label,
   type = "text",
+  autoComplete,
   value,
   onChange,
   placeholder,
@@ -44,6 +47,7 @@ export function FormField({
           id={id}
           name={name ?? id}
           type={type}
+          autoComplete={autoComplete}
           value={value}
           onChange={(e) => {
             onChange(e.target.value);
