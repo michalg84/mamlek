@@ -34,7 +34,8 @@ describe("passwordProblem", () => {
     expect(passwordProblem("kot pije mleko", "kot@example.com")).toBeNull();
   });
 
-  it("checks the length before the list", () => {
+  it("checks the length first, also before the e-mail", () => {
+    expect(passwordProblem("kot", "kot@example.com")).toBe("password_too_short");
     expect(passwordProblem("qwerty", EMAIL)).toBe("password_too_short");
     expect(passwordProblem("", EMAIL)).toBe("password_too_short");
     expect(passwordProblem("a".repeat(73), EMAIL)).toBe("password_too_long");
