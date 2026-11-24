@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
+import { SubstanceLink } from "@/components/registry/SubstanceLink";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { expiryStatus, formatExpiry, formatQuantity, packLabel } from "@/lib/kit-format";
 import type { KitItem } from "@/types";
@@ -29,7 +30,14 @@ export function KitItemDetails({ item, today, substances, quantitySlot }: KitIte
       <p className="text-foreground font-bold break-words">{item.name}</p>
       {details && <p className="text-muted-foreground text-sm break-words">{details}</p>}
       {substances && substances.length > 0 && (
-        <p className="text-muted-foreground text-sm break-words">{substances.join(", ")}</p>
+        <p className="text-muted-foreground text-sm break-words">
+          {substances.map((substance, position) => (
+            <Fragment key={`${position}-${substance}`}>
+              {position > 0 && ", "}
+              <SubstanceLink substance={substance} />
+            </Fragment>
+          ))}
+        </p>
       )}
       <p className="text-foreground mt-1 text-sm break-words">{packLabel(item.units)}</p>
       {quantitySlot ?? (

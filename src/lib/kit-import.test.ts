@@ -376,6 +376,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     strength: "400 mg",
     form: "tabletki powlekane",
     holder: null,
+    substances: [],
     units: [],
     quantity: null,
     expiresOn: null,

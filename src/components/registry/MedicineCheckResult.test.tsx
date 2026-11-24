@@ -362,3 +362,22 @@ describe("MedicineCheckResult on each match level", () => {
     },
   );
 });
+
+describe("MedicineCheckResult and substance links", () => {
+  it("shows the substances of a kit item as links to their lists, and a name without words as text", async () => {
+    stubFetch(() =>
+      reply(response([item("variant", { substances: ["Atorvastatinum calcicum", "Łącznik + 1", "-"] })])),
+    );
+    render(<MedicineCheckResult productId={1} level="exact" />);
+
+    const first = await screen.findByRole("link", { name: "Atorvastatinum calcicum" });
+    expect(first.getAttribute("href")).toBe("/szukaj?substancja=Atorvastatinum%20calcicum");
+    expect(first.getAttribute("data-substance-link")).toBe("Atorvastatinum calcicum");
+    expect(screen.getByRole("link", { name: "Łącznik + 1" }).getAttribute("href")).toBe(
+      "/szukaj?substancja=%C5%81%C4%85cznik%20%2B%201",
+    );
+    expect(screen.queryByRole("link", { name: "-" })).toBeNull();
+    // The names stay one comma-separated line, like before they were links.
+    expect(first.parentElement?.textContent).toBe("Atorvastatinum calcicum, Łącznik + 1, -");
+  });
+});

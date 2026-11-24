@@ -41,6 +41,7 @@ interface KitItemRow {
       pharmaceutical_form: string | null;
       marketing_authorization_holder: string | null;
       removed_at: string | null;
+      registry_product_substances: { name: string; position: number }[] | null;
     };
   };
 }
@@ -173,11 +174,15 @@ export async function addKitItems(supabase: SupabaseClient, items: NewKitItem[])
 
 // One select for every read of a kit item, so the list, the single read and the update return the same shape.
 const KIT_ITEM_SELECT =
-  "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(product_id, units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at))";
+  "id, package_id, quantity, expires_on, expiry_precision, created_at, registry_packages!inner(product_id, units, removed_at, registry_products!inner(name, strength, pharmaceutical_form, marketing_authorization_holder, removed_at, registry_product_substances(name, position)))";
 
 function toKitItem(row: KitItemRow): KitItem {
   const pack = row.registry_packages;
   const product = pack.registry_products;
+  // The registry order is the `position` column; PostgREST does not promise any order for an embedded resource.
+  const substances = [...(product.registry_product_substances ?? [])]
+    .sort((a, b) => a.position - b.position)
+    .map((substance) => substance.name);
   return {
     id: row.id,
     packageId: row.package_id,
@@ -186,6 +191,7 @@ function toKitItem(row: KitItemRow): KitItem {
     strength: product.strength,
     form: product.pharmaceutical_form,
     holder: product.marketing_authorization_holder,
+    substances,
     units: pack.units ?? [],
     quantity: row.quantity,
     expiresOn: row.expires_on,

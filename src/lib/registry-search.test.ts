@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildSearchIndex, isQueryLongEnough, searchVariants } from "@/lib/registry-search";
+import {
+  buildSearchIndex,
+  findVariant,
+  isQueryLongEnough,
+  searchVariants,
+  variantsWithSubstance,
+} from "@/lib/registry-search";
 import type { RegistrySearchListPayload } from "@/types";
 import { ID, registrySearchList } from "../../tests/fixtures/registry-search-list";
 
@@ -383,6 +389,188 @@ describe("searchVariants strength order", () => {
     const { results, total } = searchVariants(buildSearchIndex(ordoList), "ordo");
 
     expect({ ids: results.map((variant) => variant.id), total }).toEqual({ ids: [203, 202, 201], total: 3 });
+  });
+});
+
+// S-17 substance filter and id lookup (context/changes/substance-medicine-links/plan.md, phase 1). Agreed rule: a
+// variant has the substance when one of its substances is the same name (the same word list after normalization, as
+// `sameName`), not just a name that starts with it; variants with exactly one substance come before combinations, and
+// inside each group the index order stays (active before withdrawn, then shorter name, Polish name order). `total`
+// counts every match. Expected values are derived by hand from the rows below, never from a run of the code.
+describe("substance filter and lookup", () => {
+  const SUB_ID = {
+    // One substance, active, shortest name (4).
+    apap: 401,
+    // One substance, active, 10 characters.
+    efferalgan: 402,
+    // One substance, withdrawn, 7 characters.
+    panadol: 403,
+    // Two substances, active, 7 characters.
+    coldrex: 404,
+    // Two substances (the sought one second), active, 4 characters.
+    pabi: 405,
+    // One substance whose whole name is "Paracetamolum + Coffeinum".
+    zolpar: 406,
+    // Another substance.
+    ibuprom: 407,
+    // Two substances, withdrawn, 7 characters.
+    lekadol: 408,
+    // Polish letters in the substance names.
+    mydlex: 411,
+    weglan: 412,
+    // A substance made of punctuation only.
+    placebo: 413,
+  } as const;
+
+  const substanceList: RegistrySearchListPayload = {
+    version: 1,
+    snapshotDate: "2026-11-19",
+    variants: [
+      [SUB_ID.apap, "Apap", "500 mg", "tabletki", "Paracetamolum", ["Paracetamolum"]],
+      [SUB_ID.efferalgan, "Efferalgan", "500 mg", "tabletki musujące", "Paracetamolum", ["Paracetamolum"]],
+      [SUB_ID.panadol, "Panadol", "500 mg", "tabletki", "Paracetamolum", ["Paracetamolum"], true],
+      [SUB_ID.coldrex, "Coldrex", "500 mg", "tabletki", null, ["Paracetamolum", "Coffeinum"]],
+      [SUB_ID.pabi, "Pabi", "500 mg", "tabletki", null, ["Coffeinum", "Paracetamolum"]],
+      [SUB_ID.zolpar, "Zolpar", "500 mg", "tabletki", null, ["Paracetamolum + Coffeinum"]],
+      [SUB_ID.ibuprom, "Ibuprom", "400 mg", "tabletki", "Ibuprofenum", ["Ibuprofenum"]],
+      [SUB_ID.lekadol, "Lekadol", "500 mg", "tabletki", null, ["Paracetamolum", "Coffeinum"], true],
+      [SUB_ID.mydlex, "Mydlex", null, "mydło", null, ["Mydło szare"]],
+      [SUB_ID.weglan, "Weglan", null, "tabletki", null, ["Węgiel aktywowany"]],
+      [SUB_ID.placebo, "Placebo", null, null, null, ["-"]],
+    ],
+  };
+  const substanceIndex = buildSearchIndex(substanceList);
+
+  function withSubstance(substance: string, limit = 20) {
+    const { results, total } = variantsWithSubstance(substanceIndex, substance, limit);
+    return { ids: results.map((variant) => variant.id), total };
+  }
+
+  // Index order of the paracetamol variants: active by name length then name (Apap and Pabi 4, Coldrex 7,
+  // Efferalgan 10), then withdrawn (Lekadol and Panadol 7, Polish order L < P).
+  // Singles: Apap, Efferalgan, Panadol (withdrawn). Combinations: Pabi, Coldrex, Lekadol (withdrawn).
+  it("puts variants with one substance first, then combinations, each in index order", () => {
+    expect(withSubstance("Paracetamolum")).toEqual({
+      ids: [SUB_ID.apap, SUB_ID.efferalgan, SUB_ID.panadol, SUB_ID.pabi, SUB_ID.coldrex, SUB_ID.lekadol],
+      total: 6,
+    });
+  });
+
+  // The withdrawn single (Panadol) stands before the active combinations (Pabi, Coldrex).
+  it("puts a withdrawn variant with one substance before an active combination", () => {
+    const { ids } = withSubstance("Paracetamolum");
+
+    expect(ids.indexOf(SUB_ID.panadol)).toBeLessThan(ids.indexOf(SUB_ID.pabi));
+  });
+
+  // The substance as one whole name is not a prefix match and not a part of a longer name.
+  it("matches whole names, not prefixes", () => {
+    expect(withSubstance("Paracet")).toEqual({ ids: [], total: 0 });
+    expect(withSubstance("Paracetamol")).toEqual({ ids: [], total: 0 });
+  });
+
+  it("does not take a combined name for its parts, nor the parts for the combined name", () => {
+    // Zolpar lists "Paracetamolum + Coffeinum" as one substance: it has the combined name only.
+    expect(withSubstance("Paracetamolum + Coffeinum")).toEqual({ ids: [SUB_ID.zolpar], total: 1 });
+    // "Coffeinum" is a substance of the three combinations, not of Zolpar. Combinations keep index order.
+    expect(withSubstance("Coffeinum")).toEqual({ ids: [SUB_ID.pabi, SUB_ID.coldrex, SUB_ID.lekadol], total: 3 });
+  });
+
+  it.each([
+    // ł -> l
+    ["mydlo szare", [SUB_ID.mydlex]],
+    ["MYDŁO SZARE", [SUB_ID.mydlex]],
+    ["  mydło   szare  ", [SUB_ID.mydlex]],
+    // diacritics: ę -> e
+    ["wegiel aktywowany", [SUB_ID.weglan]],
+    ["WĘGIEL aktywowany", [SUB_ID.weglan]],
+    // case only
+    ["IBUPROFENUM", [SUB_ID.ibuprom]],
+  ])("ignores case, diacritics and ł for „%s”", (substance, expected) => {
+    expect(withSubstance(substance)).toEqual({ ids: expected, total: expected.length });
+  });
+
+  // R6-like: `total` counts every match, `results` is the first `limit` of the ordered list.
+  it.each([
+    [2, [SUB_ID.apap, SUB_ID.efferalgan]],
+    [4, [SUB_ID.apap, SUB_ID.efferalgan, SUB_ID.panadol, SUB_ID.pabi]],
+    [6, [SUB_ID.apap, SUB_ID.efferalgan, SUB_ID.panadol, SUB_ID.pabi, SUB_ID.coldrex, SUB_ID.lekadol]],
+    [20, [SUB_ID.apap, SUB_ID.efferalgan, SUB_ID.panadol, SUB_ID.pabi, SUB_ID.coldrex, SUB_ID.lekadol]],
+  ])("cuts „Paracetamolum” at limit %i and still reports the total", (limit, expected) => {
+    expect(withSubstance("Paracetamolum", limit)).toEqual({ ids: expected, total: 6 });
+  });
+
+  it("keeps counting when the limit is reached inside the first group", () => {
+    // Limit 1 fills with the first single; the rest of the singles and every combination still count.
+    expect(withSubstance("Paracetamolum", 1)).toEqual({ ids: [SUB_ID.apap], total: 6 });
+  });
+
+  it.each([["-"], [""], ["   "], ["+"], ["Nieznanum"]])("gives nothing for „%s”", (substance) => {
+    expect(withSubstance(substance)).toEqual({ ids: [], total: 0 });
+  });
+
+  it("returns the variants unchanged", () => {
+    const [first] = variantsWithSubstance(substanceIndex, "Paracetamolum", 1).results;
+
+    expect(first).toEqual({
+      id: SUB_ID.apap,
+      name: "Apap",
+      strength: "500 mg",
+      form: "tabletki",
+      commonName: "Paracetamolum",
+      substances: ["Paracetamolum"],
+      withdrawn: false,
+    });
+  });
+
+  it("gives the same answer when asked again", () => {
+    expect(withSubstance("Paracetamolum")).toEqual(withSubstance("Paracetamolum"));
+  });
+
+  it("finds the variant of a list id", () => {
+    expect(findVariant(substanceIndex, SUB_ID.apap)).toEqual({
+      id: SUB_ID.apap,
+      name: "Apap",
+      strength: "500 mg",
+      form: "tabletki",
+      commonName: "Paracetamolum",
+      substances: ["Paracetamolum"],
+      withdrawn: false,
+    });
+    expect(findVariant(substanceIndex, SUB_ID.mydlex)).toEqual({
+      id: SUB_ID.mydlex,
+      name: "Mydlex",
+      strength: null,
+      form: "mydło",
+      commonName: null,
+      substances: ["Mydło szare"],
+      withdrawn: false,
+    });
+  });
+
+  it("returns null for an id that is not in the list", () => {
+    expect(findVariant(substanceIndex, 999)).toBeNull();
+    expect(findVariant(substanceIndex, 0)).toBeNull();
+    expect(findVariant(substanceIndex, -401)).toBeNull();
+  });
+
+  it("returns a withdrawn variant with its flag", () => {
+    expect(findVariant(substanceIndex, SUB_ID.panadol)).toEqual({
+      id: SUB_ID.panadol,
+      name: "Panadol",
+      strength: "500 mg",
+      form: "tabletki",
+      commonName: "Paracetamolum",
+      substances: ["Paracetamolum"],
+      withdrawn: true,
+    });
+  });
+
+  it("finds nothing in an empty list", () => {
+    const empty = buildSearchIndex({ version: 1, snapshotDate: "2026-11-19", variants: [] });
+
+    expect(variantsWithSubstance(empty, "Paracetamolum", 20)).toEqual({ results: [], total: 0 });
+    expect(findVariant(empty, 1)).toBeNull();
   });
 });
 

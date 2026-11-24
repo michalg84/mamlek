@@ -218,6 +218,7 @@ function KitRow({ item, today, rowRef, onSaved, onRemoved }: KitRowProps) {
       <KitItemDetails
         item={item}
         today={today}
+        substances={item.substances}
         quantitySlot={
           editing ? undefined : (
             <QuantityField

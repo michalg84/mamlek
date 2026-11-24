@@ -95,3 +95,41 @@ export const registrySearchList: RegistrySearchListPayload = {
   snapshotDate: "2026-10-01",
   variants,
 };
+
+/** Ids of the extra rows of `substanceFilterList`. */
+export const SUBSTANCE_ID = {
+  /** First of 22 single-substance rows "Ibuprofen Test 01" … "22" (ids count up from here). */
+  firstExtraIbuprofen: 1000,
+  kombiA: 1100,
+  kombiB: 1101,
+  /** Only the placeholder substance "-", which is not a name and must not become a link. */
+  placeholder: 1200,
+} as const;
+
+const EXTRA_IBUPROFEN_COUNT = 22;
+
+/**
+ * `registrySearchList` plus rows for the substance list: 26 single-substance variants with Ibuprofenum (4 above, 22
+ * here) and 2 combined ones, so "Ibuprofenum" has 28 variants (more than one page of 20), and a row whose only
+ * substance is "-".
+ */
+export const substanceFilterList: RegistrySearchListPayload = {
+  ...registrySearchList,
+  variants: [
+    ...registrySearchList.variants,
+    ...Array.from({ length: EXTRA_IBUPROFEN_COUNT }, (_, position): RegistryVariantTuple => {
+      const number = String(position + 1).padStart(2, "0");
+      return [
+        SUBSTANCE_ID.firstExtraIbuprofen + position,
+        `Ibuprofen Test ${number}`,
+        "100 mg",
+        "tabletki",
+        "Ibuprofenum",
+        ["Ibuprofenum"],
+      ];
+    }),
+    [SUBSTANCE_ID.kombiA, "Kombi Ibu A", "200 mg", "tabletki", null, ["Ibuprofenum", "Coffeinum"]],
+    [SUBSTANCE_ID.kombiB, "Kombi Ibu B", "200 mg", "tabletki", null, ["Ibuprofenum", "Coffeinum"]],
+    [SUBSTANCE_ID.placeholder, "Placeholder Med", null, null, null, ["-"]],
+  ],
+};

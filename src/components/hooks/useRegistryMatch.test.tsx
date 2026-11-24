@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { useRegistryListWorker } from "@/components/hooks/useRegistryListWorker";
 import { useRegistryMatch } from "@/components/hooks/useRegistryMatch";
 import { registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
@@ -54,6 +55,12 @@ const NO_SPA_MATCH: RowMatch = { kind: "auto", variant: NO_SPA_TABLET };
 const UNKNOWN_MATCH: RowMatch = { kind: "none" };
 const IBUPROM_MATCH: RowMatch = { kind: "choices", variants: [IBUPROM_400, IBUPROM_MAX_400], total: 2 };
 
+/** The hook as a screen uses it: one list handle, passed to the match hook. */
+function useMatchOnList(rows: RowMatchRequest[] | null) {
+  const list = useRegistryListWorker(registrySearchList.version);
+  return useRegistryMatch(list, rows);
+}
+
 function createdWorker(Worker: ReturnType<typeof stubSearchWorker>) {
   const worker = Worker.last;
   if (!worker) {
@@ -68,7 +75,7 @@ describe("useRegistryMatch", () => {
     stubSearchWorker({ autoDeliver: true });
     const rows = [NO_SPA_ROW, UNKNOWN_ROW, IBUPROM_ROW];
 
-    const { result } = renderHook(() => useRegistryMatch(registrySearchList.version, rows));
+    const { result } = renderHook(() => useMatchOnList(rows));
     expect(result.current.status).toBe("loading");
     expect(result.current.matches).toBeNull();
 
@@ -84,7 +91,7 @@ describe("useRegistryMatch", () => {
     const first = [IBUPROM_ROW];
     const second = [UNKNOWN_ROW, NO_SPA_ROW];
 
-    const { result, rerender } = renderHook(({ rows }) => useRegistryMatch(registrySearchList.version, rows), {
+    const { result, rerender } = renderHook(({ rows }) => useMatchOnList(rows), {
       initialProps: { rows: first },
     });
     await waitFor(() => {
@@ -119,7 +126,7 @@ describe("useRegistryMatch", () => {
     const Worker = stubSearchWorker({ autoDeliver: true });
     const rows = [NO_SPA_ROW];
 
-    const { result } = renderHook(() => useRegistryMatch(registrySearchList.version, rows));
+    const { result } = renderHook(() => useMatchOnList(rows));
     await waitFor(() => {
       expect(result.current.status).toBe("error");
     });
@@ -144,7 +151,7 @@ describe("useRegistryMatch", () => {
     stubSearchWorker({ autoDeliver: true });
     const rows = [NO_SPA_ROW];
 
-    const { result } = renderHook(() => useRegistryMatch(registrySearchList.version, rows));
+    const { result } = renderHook(() => useMatchOnList(rows));
     await waitFor(() => {
       expect(result.current.status).toBe("unauthorized");
     });

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import KitAddForm from "@/components/kit/KitAddForm";
 import { ID, registrySearchList } from "../../../tests/fixtures/registry-search-list";
 import { stubSearchWorker } from "../../../tests/helpers/fake-search-worker";
@@ -41,14 +41,16 @@ async function openForm({
     [ID.ibupromMax400]: [pack(1002, ID.ibupromMax400)],
   },
   list = registrySearchList,
+  initialVariantId,
   ...options
 }: RoutedFetchOptions & {
   packages?: Partial<Record<number, RegistryVariantPackage[]>>;
   list?: RegistrySearchListPayload;
+  initialVariantId?: number | null;
 } = {}) {
   const routed = stubRoutedFetch(list, packages, options);
   const Worker = stubSearchWorker();
-  render(<KitAddForm version={list.version} />);
+  render(<KitAddForm version={list.version} initialVariantId={initialVariantId ?? null} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
   const created = Worker.last;
   if (!created) {
@@ -97,7 +99,18 @@ async function openForm({
     await screen.findByLabelText(QUANTITY_LABEL);
   }
 
-  return { routed, input, type, search, pick, choose, chooseMedicine };
+  /** The worker answers the oldest lookup now (the request is posted from an effect, so wait until it is queued). */
+  async function answerLookup() {
+    await waitFor(() => {
+      expect(worker.pendingLookupCount()).toBeGreaterThan(0);
+    });
+    await act(async () => {
+      worker.deliverLookup();
+      await Promise.resolve();
+    });
+  }
+
+  return { routed, input, worker, Worker, type, search, pick, choose, chooseMedicine, answerLookup };
 }
 
 /** Text of the „Wybrano: …” line of the pack form; null when there is no pack form. */
@@ -125,6 +138,123 @@ function addPosts(routed: { fetchMock: { mock: { calls: Parameters<typeof fetch>
 }
 
 describe("KitAddForm", () => {
+  describe("with a medicine from the address (?lek=)", () => {
+    const PRESELECT_PATH = `/apteczka?lek=${ID.ibuprom400}#add-heading`;
+
+    beforeEach(() => {
+      window.history.replaceState(null, "", PRESELECT_PATH);
+    });
+
+    afterEach(() => {
+      window.history.replaceState(null, "", "/");
+    });
+
+    it("shows the name in the field and loads the packs once the list is loaded", async () => {
+      const form = await openForm({ initialVariantId: ID.ibuprom400 });
+      expect(chosen()).toBeNull();
+
+      await form.answerLookup();
+
+      expect((form.input as HTMLInputElement).value).toBe("Ibuprom");
+      expect(screen.queryByRole("listbox")).toBeNull();
+      expect(await screen.findByLabelText(QUANTITY_LABEL)).toBeTruthy();
+      expect(chosen()).toBe(A_CHOSEN);
+      expect(form.routed.packageRequests()).toEqual([ID.ibuprom400]);
+      expect(window.location.search).toBe(`?lek=${ID.ibuprom400}`);
+      expect(form.Worker.created).toBe(1);
+    });
+
+    it("shows the withdrawn note for a withdrawn medicine", async () => {
+      const list: RegistrySearchListPayload = {
+        ...registrySearchList,
+        variants: registrySearchList.variants.map((tuple) =>
+          tuple[0] === ID.ibuprom400 ? [...tuple.slice(0, 6), true] : tuple,
+        ) as RegistrySearchListPayload["variants"],
+      };
+      const form = await openForm({
+        list,
+        initialVariantId: ID.ibuprom400,
+        packages: { [ID.ibuprom400]: [pack(1003, ID.ibuprom400, { withdrawn: true })] },
+      });
+
+      await form.answerLookup();
+
+      await screen.findByLabelText(QUANTITY_LABEL);
+      expect(chosen()).toBe(A_CHOSEN + "wycofany z rejestru");
+    });
+
+    it("leaves the form empty, without a message, for an unknown id", async () => {
+      const form = await openForm({ initialVariantId: 999999 });
+
+      await form.answerLookup();
+
+      expect(chosen()).toBeNull();
+      expect((form.input as HTMLInputElement).value).toBe("");
+      expect(screen.getByText("Wpisz co najmniej 3 litery")).toBeTruthy();
+      expect(screen.queryByRole("alert")).toBeNull();
+      expect(form.routed.packageRequests()).toEqual([]);
+      expect(form.Worker.created).toBe(1);
+    });
+
+    it("drops the selection on the first edit, keeps the hash and does not come back", async () => {
+      const form = await openForm({ initialVariantId: ID.ibuprom400 });
+      await form.answerLookup();
+      await screen.findByLabelText(QUANTITY_LABEL);
+
+      form.type("Paracetamol");
+
+      expect(chosen()).toBeNull();
+      expect(addButton()).toBeNull();
+      expect(window.location.search).toBe("");
+      expect(window.location.hash).toBe("#add-heading");
+
+      // Typing the name back does not restore it, and no second lookup is sent.
+      form.type("Ibuprom");
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(chosen()).toBeNull();
+      expect(form.worker.pendingLookupCount()).toBe(0);
+      expect(form.Worker.created).toBe(1);
+    });
+
+    it("drops the address parameter and the preselection when another medicine is picked", async () => {
+      const form = await openForm({ initialVariantId: ID.ibuprom400 });
+      await form.answerLookup();
+      await screen.findByLabelText(QUANTITY_LABEL);
+
+      form.type("ibuprom");
+      await act(async () => {
+        form.worker.deliver("ibuprom");
+        await Promise.resolve();
+      });
+      form.pick(B_OPTION);
+
+      await waitFor(() => {
+        expect(chosen()).toBe(B_CHOSEN);
+      });
+      expect(window.location.search).toBe("");
+      expect(window.location.hash).toBe("#add-heading");
+    });
+
+    it("ignores a lookup answer that arrives after the user edited the field", async () => {
+      const form = await openForm({ initialVariantId: ID.ibuprom400 });
+      await waitFor(() => {
+        expect(form.worker.pendingLookupCount()).toBeGreaterThan(0);
+      });
+
+      form.type("Paracetamol");
+      await act(async () => {
+        form.worker.deliverLookup();
+        await Promise.resolve();
+      });
+
+      expect(chosen()).toBeNull();
+      expect((form.input as HTMLInputElement).value).toBe("Paracetamol");
+      expect(window.location.search).toBe("");
+    });
+  });
+
   it("shows the pack form of the picked medicine with the add button", async () => {
     const form = await openForm();
 

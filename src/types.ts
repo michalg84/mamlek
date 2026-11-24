@@ -69,6 +69,8 @@ export interface KitItem {
   strength: string | null;
   form: string | null;
   holder: string | null;
+  /** Active substances of the pack's product in registry position order (possibly empty). */
+  substances: string[];
   units: RegistryPackageUnit[];
   quantity: number | null;
   /** ISO date (YYYY-MM-DD); for month precision the last day of the month. */
@@ -189,19 +191,25 @@ export interface RowMatchRequest {
 
 /**
  * Page -> search worker: the raw list bytes (transferred, not copied), then queries. `match` carries the match
- * request of each kit-import row (`rowMatchRequest`), in row order.
+ * request of each kit-import row (`rowMatchRequest`), in row order. `substance` asks for the variants that have this
+ * substance (the first `limit` of them), `lookup` for the variant with this list id.
  */
 export type RegistrySearchWorkerRequest =
   | { type: "load"; buffer: ArrayBuffer }
   | { type: "search"; id: number; query: string }
-  | { type: "match"; id: number; rows: RowMatchRequest[] };
+  | { type: "match"; id: number; rows: RowMatchRequest[] }
+  | { type: "substance"; id: number; substance: string; limit: number }
+  | { type: "lookup"; id: number; variantId: number };
 
 /**
  * Search worker -> page. `results` echo the `id` and `query` of the request they answer; `matches` echo the `id` and
- * hold one match per requested row, in row order.
+ * hold one match per requested row, in row order; `substanceResults` echo the `id` and `substance`; `lookupResult`
+ * echoes the `id` and holds the variant, or null for an id that is not in the list.
  */
 export type RegistrySearchWorkerResponse =
   | { type: "ready"; variantCount: number; buildMs: number }
   | { type: "error" }
   | { type: "results"; id: number; query: string; results: RegistryVariant[]; total: number }
-  | { type: "matches"; id: number; matches: RowMatch[] };
+  | { type: "matches"; id: number; matches: RowMatch[] }
+  | { type: "substanceResults"; id: number; substance: string; results: RegistryVariant[]; total: number }
+  | { type: "lookupResult"; id: number; variant: RegistryVariant | null };

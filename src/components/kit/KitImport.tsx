@@ -1,5 +1,6 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
+import { useRegistryListWorker } from "@/components/hooks/useRegistryListWorker";
 import { useRegistryMatch } from "@/components/hooks/useRegistryMatch";
 import { KitImportRow } from "@/components/kit/KitImportRow";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -524,7 +525,8 @@ function ImportReview({
 export default function KitImport({ version, kitVariantKeys }: KitImportProps) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
   const requests = useMemo(() => (parsed ? parsed.map(rowMatchRequest) : null), [parsed]);
-  const { status, matches, retry } = useRegistryMatch(version, requests);
+  const list = useRegistryListWorker(version);
+  const { status, matches, retry } = useRegistryMatch(list, requests);
   const matchedRows = useMemo(
     () => (parsed && matches ? parsed.map((row, index) => createImportRow(row, matches[index])) : null),
     [parsed, matches],

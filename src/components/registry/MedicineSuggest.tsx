@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type ReactNode } from "react";
 import { CircleAlert, LoaderCircle } from "lucide-react";
+import { useRegistryListWorker, type RegistryListHandle } from "@/components/hooks/useRegistryListWorker";
 import { useRegistrySearch } from "@/components/hooks/useRegistrySearch";
 import { WithdrawnVariantNote } from "@/components/registry/WithdrawnVariantNote";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -9,11 +10,13 @@ import { isQueryLongEnough, MIN_QUERY_LENGTH } from "@/lib/registry-search";
 import type { RegistryVariant } from "@/types";
 
 interface MedicineSuggestProps {
-  /** Version of the search list as rendered by the server; addresses the HTTP cache entry of the list. */
-  version: number;
+  /** The registry list this field searches; created once by the screen and shared with its other hooks. */
+  list: RegistryListHandle;
   onSelect: (variant: RegistryVariant) => void;
   /** Called when the user edits the text, so a previous pick no longer matches what the field shows. */
   onEdit: () => void;
+  /** Name of a medicine picked outside the field; a new non-empty name replaces the text. */
+  pickedName?: string | null;
   label?: string;
 }
 
@@ -24,12 +27,35 @@ function countText(count: number) {
   return `${count} ${count === 1 ? "podpowiedź" : "podpowiedzi"}`;
 }
 
-export function MedicineSuggest({ version, onSelect, onEdit, label = "Nazwa leku" }: MedicineSuggestProps) {
-  const [query, setQuery] = useState("");
-  const { status, results, total, resultsQuery, retry } = useRegistrySearch(version, query);
+/** `MedicineSuggest` with a registry list of its own, for a field that is not part of a screen that shares one. */
+export function StandaloneMedicineSuggest({
+  version,
+  ...rest
+}: Omit<MedicineSuggestProps, "list"> & {
+  /** Version of the search list as rendered by the server; addresses the HTTP cache entry of the list. */
+  version: number;
+}) {
+  const list = useRegistryListWorker(version);
+  return <MedicineSuggest list={list} {...rest} />;
+}
+
+export function MedicineSuggest({ list, onSelect, onEdit, pickedName, label = "Nazwa leku" }: MedicineSuggestProps) {
+  const [query, setQuery] = useState(pickedName ?? "");
+  const { status, results, total, resultsQuery, retry } = useRegistrySearch(list, query);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [focused, setFocused] = useState(false);
+  // A medicine picked from outside the field (address, substance list, "back") shows its name, with the suggestions
+  // closed and without `onEdit`. A null name leaves the text alone.
+  const [seenName, setSeenName] = useState(pickedName ?? null);
+  if ((pickedName ?? null) !== seenName) {
+    setSeenName(pickedName ?? null);
+    if (pickedName) {
+      setQuery(pickedName);
+      setOpen(false);
+      setActiveIndex(-1);
+    }
+  }
 
   const inputId = useId();
   const listboxId = useId();

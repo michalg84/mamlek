@@ -32,6 +32,7 @@ function kitItem(overrides: Partial<KitItem> = {}): KitItem {
     strength: "20 mg",
     form: "tabletki powlekane",
     holder: null,
+    substances: [],
     units: [{ count: null, kind: null, capacity: "30", capacity_unit: "tabl.", info: null }],
     quantity: 10,
     expiresOn: "2027-12-31",
@@ -104,6 +105,45 @@ describe("KitList", () => {
     expect(quantityField("Smecta").value).toBe("");
     expect(quantityField("Smecta").placeholder).toBe("nieznane");
     expect(within(rows[2]).getByText("Ważny do: nieznane")).toBeTruthy();
+  });
+
+  it("shows the substances of an item as links to the substance list, in the given order", () => {
+    render(
+      <KitList
+        items={[
+          kitItem({ name: "Panadol Femina", substances: ["Paracetamolum", "Łącznik + 1"] }),
+          kitItem({ name: "Smecta", substances: [] }),
+        ]}
+        today="2026-11-04"
+      />,
+    );
+
+    const links = within(row("Panadol Femina")).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Paracetamolum", "Łącznik + 1"]);
+    expect(links.map((link) => link.getAttribute("href"))).toEqual([
+      "/szukaj?substancja=Paracetamolum",
+      "/szukaj?substancja=%C5%81%C4%85cznik%20%2B%201",
+    ]);
+    // The names stay one comma-separated line.
+    expect(links[0].parentElement?.textContent).toBe("Paracetamolum, Łącznik + 1");
+  });
+
+  it("gives an item without substances no substance paragraph and no link", () => {
+    render(
+      <KitList
+        items={[
+          kitItem({ name: "Smecta", substances: [] }),
+          kitItem({ name: "Sortis", substances: ["Atorvastatinum"] }),
+        ]}
+        today="2026-11-04"
+      />,
+    );
+
+    const smecta = row("Smecta");
+    expect(within(smecta).queryAllByRole("link")).toEqual([]);
+    expect(Array.from(smecta.querySelectorAll("p")).filter((paragraph) => !paragraph.textContent)).toEqual([]);
+    // The substances are the only paragraph a row with substances has more.
+    expect(row("Sortis").querySelectorAll("p").length - smecta.querySelectorAll("p").length).toBe(1);
   });
 
   it("marks an expired pack and leaves a valid one unmarked", () => {
@@ -595,6 +635,27 @@ describe("KitList", () => {
       expect(quantityField("Lek 1").value).toBe("45");
       expect(within(row("Lek 1")).getByText("z 60 tabl.")).toBeTruthy();
       expect(document.activeElement).toBe(editButton("Lek 1"));
+    });
+
+    it("keeps the substance links of the row after a saved edit (the answer carries them)", async () => {
+      const item = kitItem({ substances: ["Paracetamolum", "Coffeinum"] });
+      const stored: KitItem = { ...item, packageId: item.packageId + 500, quantity: 45 };
+      stubPacks(item, () => reply({ item: stored }));
+      render(<KitList items={[item]} today="2026-11-04" />);
+
+      fireEvent.click(editButton("Lek 1"));
+      const panel = screen.getByRole("form", { name: "Edycja: Lek 1" });
+      fireEvent.click(await within(panel).findByRole("radio", { name: "60 tabl." }));
+      fireEvent.click(within(panel).getByRole("button", { name: SAVE }));
+
+      await waitFor(() => {
+        expect(screen.queryByRole("form")).toBeNull();
+      });
+      expect(
+        within(row("Lek 1"))
+          .getAllByRole("link")
+          .map((link) => link.getAttribute("href")),
+      ).toEqual(["/szukaj?substancja=Paracetamolum", "/szukaj?substancja=Coffeinum"]);
     });
 
     it("a date changed in the panel updates the marker and the expiry summary", async () => {

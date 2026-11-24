@@ -1,6 +1,13 @@
 import { vi } from "vitest";
 import { matchRow } from "@/lib/kit-import";
-import { buildSearchIndex, MAX_RESULTS, searchVariants, type RegistrySearchIndex } from "@/lib/registry-search";
+import {
+  buildSearchIndex,
+  findVariant,
+  MAX_RESULTS,
+  searchVariants,
+  variantsWithSubstance,
+  type RegistrySearchIndex,
+} from "@/lib/registry-search";
 import type {
   RegistrySearchListPayload,
   RegistrySearchWorkerRequest,
@@ -10,6 +17,8 @@ import type {
 
 type ResultsMessage = Extract<RegistrySearchWorkerResponse, { type: "results" }>;
 type MatchesMessage = Extract<RegistrySearchWorkerResponse, { type: "matches" }>;
+type SubstanceMessage = Extract<RegistrySearchWorkerResponse, { type: "substanceResults" }>;
+type LookupMessage = Extract<RegistrySearchWorkerResponse, { type: "lookupResult" }>;
 
 interface QueuedMatches {
   message: MatchesMessage;
@@ -17,30 +26,41 @@ interface QueuedMatches {
   rows: RowMatchRequest[];
 }
 
-type Queued = ResultsMessage | QueuedMatches;
-
-function isResults(entry: Queued): entry is ResultsMessage {
-  return "type" in entry;
-}
+type Queued = ResultsMessage | SubstanceMessage | LookupMessage | QueuedMatches;
 
 function isMatches(entry: Queued): entry is QueuedMatches {
-  return !isResults(entry);
+  return "message" in entry;
+}
+
+function isResults(entry: Queued): entry is ResultsMessage {
+  return !isMatches(entry) && entry.type === "results";
+}
+
+function isSubstance(entry: Queued): entry is SubstanceMessage {
+  return !isMatches(entry) && entry.type === "substanceResults";
+}
+
+function isLookup(entry: Queued): entry is LookupMessage {
+  return !isMatches(entry) && entry.type === "lookupResult";
 }
 
 function messageOf(entry: Queued): RegistrySearchWorkerResponse {
-  return isResults(entry) ? entry : entry.message;
+  return isMatches(entry) ? entry.message : entry;
 }
 
 /**
  * Stand-in for the search Web Worker (`src/lib/registry-search.worker.ts`), same protocol (`src/types.ts`) and the real
- * `buildSearchIndex` / `searchVariants` / `matchRow`. It never answers inside `postMessage`, like the real worker:
- * `ready` arrives in a microtask, and answers to `search` and `match` are queued until the test delivers them (or at
- * once, in a microtask, with `autoDeliver`). Deliver inside `await act(async () => { ... })` so React sees the state
- * change.
+ * `buildSearchIndex` / `searchVariants` / `matchRow` / `variantsWithSubstance` / `findVariant`. It never answers inside
+ * `postMessage`, like the real worker: `ready` arrives in a microtask, and answers to `search`, `match`, `substance`
+ * and `lookup` are queued until the test delivers them (or at once, in a microtask, with `autoDeliver`). Deliver inside
+ * `await act(async () => { ... })` so React sees the state change.
  */
 export class FakeSearchWorker {
   /** The most recently created instance (the hook creates one per list load). */
   static last: FakeSearchWorker | null = null;
+
+  /** How many instances were created since `stubSearchWorker` (a page must create exactly one). */
+  static created = 0;
 
   /** When true, answers are delivered in a microtask after the request instead of waiting for the test. */
   static autoDeliver = false;
@@ -54,6 +74,7 @@ export class FakeSearchWorker {
 
   constructor(_url?: URL | string, _options?: WorkerOptions) {
     FakeSearchWorker.last = this;
+    FakeSearchWorker.created++;
   }
 
   postMessage(message: RegistrySearchWorkerRequest, _transfer?: Transferable[]) {
@@ -76,6 +97,11 @@ export class FakeSearchWorker {
     if (message.type === "match") {
       const matches = message.rows.map((request) => matchRow(index, request));
       this.queue.push({ message: { type: "matches", id: message.id, matches }, rows: message.rows });
+    } else if (message.type === "substance") {
+      const { results, total } = variantsWithSubstance(index, message.substance, message.limit);
+      this.queue.push({ type: "substanceResults", id: message.id, substance: message.substance, results, total });
+    } else if (message.type === "lookup") {
+      this.queue.push({ type: "lookupResult", id: message.id, variant: findVariant(index, message.variantId) });
     } else {
       const { results, total } = searchVariants(index, message.query, MAX_RESULTS);
       this.queue.push({ type: "results", id: message.id, query: message.query, results, total });
@@ -102,6 +128,16 @@ export class FakeSearchWorker {
     return this.queue.filter(isMatches).map((entry) => entry.rows);
   }
 
+  /** Substances of the substance requests whose answers are waiting, oldest first. */
+  pendingSubstances(): string[] {
+    return this.queue.filter(isSubstance).map((message) => message.substance);
+  }
+
+  /** How many lookup answers are waiting. */
+  pendingLookupCount(): number {
+    return this.queue.filter(isLookup).length;
+  }
+
   /**
    * Delivers the oldest queued answer to the query with this exact text, and every older answer before it: the real
    * worker answers in order, so a newer answer can never overtake an older one. Throws when none is queued.
@@ -119,6 +155,26 @@ export class FakeSearchWorker {
     const position = this.queue.findIndex(isMatches);
     if (position < 0) {
       throw new Error("No queued worker answer for a match request");
+    }
+    this.deliverThrough(position);
+  }
+
+  /** Delivers the oldest queued answer for this substance, and every older answer before it. Throws when none is queued. */
+  deliverSubstance(substance: string) {
+    const position = this.queue.findIndex((entry) => isSubstance(entry) && entry.substance === substance);
+    if (position < 0) {
+      throw new Error(
+        `No queued worker answer for substance "${substance}" (queued: ${this.pendingSubstances().join(", ")})`,
+      );
+    }
+    this.deliverThrough(position);
+  }
+
+  /** Delivers the oldest queued answer to a lookup, and every older answer before it. Throws when none is queued. */
+  deliverLookup() {
+    const position = this.queue.findIndex(isLookup);
+    if (position < 0) {
+      throw new Error("No queued worker answer for a lookup");
     }
     this.deliverThrough(position);
   }
@@ -145,6 +201,7 @@ export class FakeSearchWorker {
 /** Puts `FakeSearchWorker` in place of `Worker` for one test (`tests/setup-component.ts` unstubs it afterwards). */
 export function stubSearchWorker({ autoDeliver = false }: { autoDeliver?: boolean } = {}) {
   FakeSearchWorker.last = null;
+  FakeSearchWorker.created = 0;
   FakeSearchWorker.autoDeliver = autoDeliver;
   vi.stubGlobal("Worker", FakeSearchWorker);
   return FakeSearchWorker;

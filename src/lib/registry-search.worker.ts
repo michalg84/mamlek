@@ -1,5 +1,12 @@
 import { matchRow } from "@/lib/kit-import";
-import { buildSearchIndex, MAX_RESULTS, searchVariants, type RegistrySearchIndex } from "@/lib/registry-search";
+import {
+  buildSearchIndex,
+  findVariant,
+  MAX_RESULTS,
+  searchVariants,
+  variantsWithSubstance,
+  type RegistrySearchIndex,
+} from "@/lib/registry-search";
 import type {
   RegistrySearchListPayload,
   RegistrySearchWorkerRequest,
@@ -53,6 +60,28 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
       }
     });
     reply({ type: "matches", id: message.id, matches });
+    return;
+  }
+  if (message.type === "substance") {
+    try {
+      const { results, total } = variantsWithSubstance(built, message.substance, message.limit);
+      reply({ type: "substanceResults", id: message.id, substance: message.substance, results, total });
+    } catch (error) {
+      // Like a failing query: an empty answer, the index is still good for the next request.
+      // eslint-disable-next-line no-console -- the only trace of the failure; the screen shows an empty list
+      console.error("Substance filter failed", error);
+      reply({ type: "substanceResults", id: message.id, substance: message.substance, results: [], total: 0 });
+    }
+    return;
+  }
+  if (message.type === "lookup") {
+    try {
+      reply({ type: "lookupResult", id: message.id, variant: findVariant(built, message.variantId) });
+    } catch (error) {
+      // eslint-disable-next-line no-console -- the only trace of the failure; the screen treats the id as unknown
+      console.error(`Lookup of variant ${message.variantId} failed`, error);
+      reply({ type: "lookupResult", id: message.id, variant: null });
+    }
     return;
   }
   try {

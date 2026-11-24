@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  useRegistryListWorker,
+  nextRegistryRequestId,
+  type RegistryListHandle,
   type RegistryListStatus,
-  type RegistryWorkerAnswer,
 } from "@/components/hooks/useRegistryListWorker";
 import { isQueryLongEnough } from "@/lib/registry-search";
-import type { RegistrySearchWorkerRequest, RegistryVariant } from "@/types";
+import type { RegistryVariant } from "@/types";
 
 export type RegistrySearchStatus = RegistryListStatus;
 
@@ -20,19 +20,24 @@ interface Answer {
 const NO_RESULTS: RegistryVariant[] = [];
 
 /**
- * Loads the registry search list into a Web Worker (`useRegistryListWorker`) and answers queries through it.
+ * Answers queries through the registry search list worker of `list` (`useRegistryListWorker`).
  * `results` and `total` belong to `resultsQuery`; until the worker answers a new query they keep the previous answer.
  */
-export function useRegistrySearch(version: number, query: string) {
+export function useRegistrySearch(list: RegistryListHandle, query: string) {
+  const { status, key, post, subscribe, retry } = list;
   const [answer, setAnswer] = useState<Answer | null>(null);
   /** Id of the last query sent to the worker; answers with any other id are stale. */
   const lastIdRef = useRef(0);
-  const onAnswer = useCallback((message: RegistryWorkerAnswer, requestKey: string) => {
-    if (message.type === "results" && message.id === lastIdRef.current) {
-      setAnswer({ key: requestKey, query: message.query, results: message.results, total: message.total });
-    }
-  }, []);
-  const { status, key, workerRef, retry } = useRegistryListWorker(version, onAnswer);
+
+  useEffect(
+    () =>
+      subscribe((message, requestKey) => {
+        if (message.type === "results" && message.id === lastIdRef.current) {
+          setAnswer({ key: requestKey, query: message.query, results: message.results, total: message.total });
+        }
+      }),
+    [subscribe],
+  );
 
   const longEnough = isQueryLongEnough(query);
   // A too-short query ends the previous search: its answer must not come back while the next query is on its way.
@@ -42,17 +47,16 @@ export function useRegistrySearch(version: number, query: string) {
 
   // Sends the current query as soon as the index is ready (text typed while loading) and on every change after that.
   useEffect(() => {
-    const worker = workerRef.current;
-    if (status !== "ready" || !worker) {
+    if (status !== "ready") {
       return;
     }
-    // Bumped even without a send, so an answer still in flight for an earlier query is dropped.
-    const id = ++lastIdRef.current;
+    // Taken even without a send, so an answer still in flight for an earlier query is dropped.
+    const id = nextRegistryRequestId();
+    lastIdRef.current = id;
     if (longEnough) {
-      const request: RegistrySearchWorkerRequest = { type: "search", id, query };
-      worker.postMessage(request);
+      post({ type: "search", id, query });
     }
-  }, [status, longEnough, query, key, workerRef]);
+  }, [status, longEnough, query, key, post]);
 
   if (status !== "ready") {
     return { status, results: NO_RESULTS, total: 0, resultsQuery: null, retry };
