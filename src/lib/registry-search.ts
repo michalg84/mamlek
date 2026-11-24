@@ -24,12 +24,15 @@ export interface RegistrySearchEntry {
   haystack: string;
 }
 
-/** Per-index lookups for `variantsWithSubstance` and `findVariant`, computed on first use (see `lookupsOf`). */
+/**
+ * Per-index lookups for `variantsWithSubstance` and `findVariant`. Each one is computed on first use by its own
+ * function, so an id lookup never pays for the substance keys and the other way round.
+ */
 export interface RegistrySearchLookups {
   /** Normalized whole names of the substances of each entry (words joined by a space), parallel to `entries`. */
-  substanceKeys: string[][];
+  substanceKeys?: string[][];
   /** Variant of each list id. */
-  byId: Map<number, RegistryVariant>;
+  byId?: Map<number, RegistryVariant>;
 }
 
 /** Search index built once per downloaded list; entries are already in final within-level order. */
@@ -332,20 +335,20 @@ export function searchVariants(index: RegistrySearchIndex, query: string, limit 
   return { results: levels.flat().slice(0, limit), total };
 }
 
-/** Computes the substance keys and the id map once per index and keeps them on it. */
-function lookupsOf(index: RegistrySearchIndex): RegistrySearchLookups {
-  if (!index.lookups) {
-    const substanceKeys: string[][] = [];
-    const byId = new Map<number, RegistryVariant>();
-    for (const entry of index.entries) {
-      substanceKeys.push(
-        entry.variant.substances.map((substance) => wordsOf(substance).join(" ")).filter((key) => key !== ""),
-      );
-      byId.set(entry.variant.id, entry.variant);
-    }
-    index.lookups = { substanceKeys, byId };
-  }
-  return index.lookups;
+/** The substance keys of every entry, computed once per index and kept on it. */
+function substanceKeysOf(index: RegistrySearchIndex): string[][] {
+  const lookups = (index.lookups ??= {});
+  lookups.substanceKeys ??= index.entries.map((entry) =>
+    entry.variant.substances.map((substance) => wordsOf(substance).join(" ")).filter((key) => key !== ""),
+  );
+  return lookups.substanceKeys;
+}
+
+/** The variant of each list id, computed once per index and kept on it. */
+function variantsById(index: RegistrySearchIndex): Map<number, RegistryVariant> {
+  const lookups = (index.lookups ??= {});
+  lookups.byId ??= new Map(index.entries.map((entry) => [entry.variant.id, entry.variant]));
+  return lookups.byId;
 }
 
 /**
@@ -364,7 +367,7 @@ export function variantsWithSubstance(
   if (key === "") {
     return { results: [], total: 0 };
   }
-  const { substanceKeys } = lookupsOf(index);
+  const substanceKeys = substanceKeysOf(index);
 
   const single: RegistryVariant[] = [];
   const combined: RegistryVariant[] = [];
@@ -386,5 +389,5 @@ export function variantsWithSubstance(
 
 /** The variant with this list id (the id of the variant's representative), or null for any other id. */
 export function findVariant(index: RegistrySearchIndex, id: number): RegistryVariant | null {
-  return lookupsOf(index).byId.get(id) ?? null;
+  return variantsById(index).get(id) ?? null;
 }

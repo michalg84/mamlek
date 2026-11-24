@@ -66,8 +66,10 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
     try {
       const { results, total } = variantsWithSubstance(built, message.substance, message.limit);
       reply({ type: "substanceResults", id: message.id, substance: message.substance, results, total });
-    } catch {
+    } catch (error) {
       // Like a failing query: an empty answer, the index is still good for the next request.
+      // eslint-disable-next-line no-console -- the only trace of the failure; the screen shows an empty list
+      console.error("Substance filter failed", error);
       reply({ type: "substanceResults", id: message.id, substance: message.substance, results: [], total: 0 });
     }
     return;
@@ -75,7 +77,9 @@ self.addEventListener("message", (event: MessageEvent<RegistrySearchWorkerReques
   if (message.type === "lookup") {
     try {
       reply({ type: "lookupResult", id: message.id, variant: findVariant(built, message.variantId) });
-    } catch {
+    } catch (error) {
+      // eslint-disable-next-line no-console -- the only trace of the failure; the screen treats the id as unknown
+      console.error(`Lookup of variant ${message.variantId} failed`, error);
       reply({ type: "lookupResult", id: message.id, variant: null });
     }
     return;

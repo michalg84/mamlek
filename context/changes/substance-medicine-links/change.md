@@ -1,9 +1,9 @@
 ---
 change_id: substance-medicine-links
 title: Przejścia substancja ↔ lek i dodanie leku z wyszukiwania
-status: implementing
+status: impl_reviewed
 created: 2026-11-19
-updated: 2026-11-23
+updated: 2026-11-24
 archived_at: null
 ---
 

@@ -103,6 +103,9 @@ function checkItem(): MedicineCheckItem {
   };
 }
 
+/** The Worker stub of the screen the running test opened; the address tests assert its count after each test. */
+let workersOfTest: { created: number } | null = null;
+
 /** Renders the screen and waits until the search list is loaded and the (fake) worker has built its index. */
 async function openSearch(
   list: RegistrySearchListPayload = registrySearchList,
@@ -110,6 +113,7 @@ async function openSearch(
 ) {
   const checks = stubRoutedFetch(list);
   const Worker = stubSearchWorker();
+  workersOfTest = Worker;
   render(<RegistrySearch version={list.version} {...props} />);
   await screen.findByText("Wpisz co najmniej 3 litery");
   const created = Worker.last;
@@ -610,10 +614,14 @@ describe("RegistrySearch: the address, substance links and the list of a substan
   });
 
   afterEach(() => {
+    // Every path of the screen (address, links, back and forward) shares the one Worker of the page.
+    const created = workersOfTest?.created ?? 0;
+    workersOfTest = null;
     vi.restoreAllMocks();
     forgetUnsavedMatchLevel();
     window.localStorage.clear();
     window.history.replaceState(null, "", "/");
+    expect(created).toBe(1);
   });
 
   /** The worker answers the oldest request for `substance` now. */
@@ -850,9 +858,11 @@ describe("RegistrySearch: the address, substance links and the list of a substan
     await travel("back");
     expect(address()).toBe(SUBSTANCE_PATH);
     expect(card()).toBeNull();
-    await answerSubstance(screenUnderTest.worker);
+    // The list is back at once from the kept answer, before the worker answers the repeated request.
     expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
     expect(listedNames()).toHaveLength(28);
+    await answerSubstance(screenUnderTest.worker);
+    expect(screen.getByText("Pokazano 28 z 28", VISIBLE)).toBeTruthy();
 
     // One more step back: the medicine the list was opened from, known from its pick, so no lookup is needed.
     await travel("back");

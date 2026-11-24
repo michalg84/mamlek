@@ -291,7 +291,7 @@ Ekran wyszukiwania pamięta stan w adresie, pokazuje leki z wybraną substancją
   - komunikat „Brak leków z substancją „<nazwa>” w rejestrze”, gdy `Y = 0`;
   - stany wczytywania listy, sesji wygasłej i błędu jak w `MedicineSuggest`.
 - Tryb substancji zastępuje kartę leku i wynik sprawdzenia. Pole podpowiedzi zostaje nad listą i jego użycie wychodzi z trybu substancji.
-- Ogłoszenie dla czytników ekranu (`role="status"`) podaje liczbę leków po wczytaniu listy substancji. Fokus po kliknięciu substancji przechodzi na nagłówek listy, a po wyborze leku na kartę.
+- Ogłoszenie dla czytników ekranu (`role="status"`) podaje liczbę leków po wczytaniu listy substancji. Fokus po kliknięciu substancji przechodzi na nagłówek listy, a po wyborze leku z listy na kartę (wybór z pola podpowiedzi zostawia fokus w polu).
 
 #### 5. Nazwa w polu z zewnątrz
 
