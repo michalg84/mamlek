@@ -445,9 +445,9 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Manual
 
-- [ ] 3.5 Wymuszona zmiana hasła w przeglądarce
-- [ ] 3.6 Dobrowolna zmiana z Topbar, także na telefonie
-- [ ] 3.7 Stany ekranu /konto/haslo
+- [x] 3.5 Wymuszona zmiana hasła w przeglądarce
+- [x] 3.6 Dobrowolna zmiana z Topbar, także na telefonie
+- [x] 3.7 Stany ekranu /konto/haslo
 
 ### Phase 4: Limity sesji
 
