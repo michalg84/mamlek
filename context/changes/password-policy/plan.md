@@ -432,7 +432,7 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Manual
 
-- [ ] 2.6 Rejestracja w przeglądarce (licznik, lista, podpowiedź, telefon)
+- [x] 2.6 Rejestracja w przeglądarce (licznik, lista, podpowiedź, telefon)
 
 ### Phase 3: Zmiana hasła i wymuszenie
 
