@@ -1,6 +1,6 @@
 // Open pull requests of the current user that need attention, for two readers:
 //   --hook  SessionStart hook: asks GitHub now, caches the answer and prints the PRs with a red check (or green but
-//           not set to auto-merge) to stdout, which Claude Code adds to the agent's context. /ship turns on auto-merge
+//           not set to auto-merge) to stdout, which Claude Code adds to the agent's context. /ship-pr turns on auto-merge
 //           and does not wait for CI, so this is how a red PR reaches the next session (also after /clear).
 //   --line  status line: prints a short summary ("PR:1❌ 1⏳") from the cache only, so it never waits on the network;
 //           a cache older than 60 s is refreshed by a detached --refresh run.

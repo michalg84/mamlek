@@ -1,5 +1,5 @@
 ---
-name: ship
+name: ship-pr
 description: Commit the current changes, push the branch and open a GitHub pull request in one go (offering to split unrelated changes into separate PRs), then turn on GitHub auto-merge and return without waiting for CI. Use whenever the user wants to ship work out of the working tree — "commit", "push", "zrób commit", "wypchnij", "zrób PR", "otwórz PR", "commit i push", "ship it", "wrzuć to na GitHuba", "zmerguj" — even if they only name one of the steps. Not for the phase commits inside /10x-implement, /10x-tdd or /10x-e2e, which have their own commit ritual.
 model: haiku
 effort: low

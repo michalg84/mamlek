@@ -77,7 +77,7 @@ Answer each request in "Coordinator notes" and nudge the worker with a short pin
 
 ## 7. Models: verify, do not assume
 
-`/10x-research`, `/10x-plan`, `/10x-plan-review`, `/10x-impl-review`: opus/high. `/10x-implement`, `/10x-tdd`: sonnet/high. `/10x-ui`, `/10x-e2e`: sonnet/medium. `/10x-new`, `/10x-archive`, `/10x-status`: haiku/low. `/ship`: haiku/low. The source is `.claude/skill-models.json`; change models there, never in a SKILL.md.
+`/10x-research`, `/10x-plan`, `/10x-plan-review`, `/10x-impl-review`: opus/high. `/10x-implement`, `/10x-tdd`: sonnet/high. `/10x-ui`, `/10x-e2e`: sonnet/medium. `/10x-new`, `/10x-archive`, `/10x-status`: haiku/low. `/ship-pr`: haiku/low. The source is `.claude/skill-models.json`; change models there, never in a SKILL.md.
 
 A skill sets its model only when it is invoked: a worker that resumes on "kontynuuj" or after a context compaction stays on the session model (S-08 and S-16 both ran implement steps on Opus that way). The board rule "Model after continue" makes workers re-invoke the skill; watch the `model:` field after every resume. When a worker reaches `/10x-implement`, run `worker-status.mjs`. If its last replies are `claude-opus-*`, tell the user right away and propose `/model sonnet` in that pane. It takes effect from the next turn, so the current turn still finishes on Opus. The skill files can be present and the model still not switch, so the transcript is the only proof. Every Status log line carries `skill:` and `model:` (board rule) because the user reads the log to see how the workers work; those fields are the worker's own claim, so check them against `worker-status.mjs` when they matter.
 
@@ -85,7 +85,7 @@ A skill sets its model only when it is invoked: a worker that resumes on "kontyn
 
 When the user asks "co robią agenci": run `worker-status.mjs`, read the board tail and `git log main..HEAD` per worktree, and answer in a short table (slice, phase, model, waits for). Admit stale information plainly when you find it.
 
-After each PR merges (the worker ships with `/ship`, auto-merge on): `git pull` in main, production `npx supabase db push` (dry-run first) if the slice has a migration and the user agreed, `npm run roadmap:sync` from main, then ask the other workers to merge `origin/main`. When a slice is archived, close its workspace (`herdr worktree remove --workspace <ws>`). On "Permission denied", the user runs `rm -rf` on the leftover directory. Update the project memory with the group's lessons.
+After each PR merges (the worker ships with `/ship-pr`, auto-merge on): `git pull` in main, production `npx supabase db push` (dry-run first) if the slice has a migration and the user agreed, `npm run roadmap:sync` from main, then ask the other workers to merge `origin/main`. When a slice is archived, close its workspace (`herdr worktree remove --workspace <ws>`). On "Permission denied", the user runs `rm -rf` on the leftover directory. Update the project memory with the group's lessons.
 
 ## Files
 
