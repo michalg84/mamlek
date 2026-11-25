@@ -466,15 +466,15 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Manual
 
-- [x] 4.6 Cookie sesji z wygaśnięciem ~30 dni
-- [x] 4.7 Wylogowanie po limicie z obniżoną stałą
+- [x] 4.6 Cookie sesji z wygaśnięciem ~30 dni — 943faa0
+- [x] 4.7 Wylogowanie po limicie z obniżoną stałą — 943faa0
 
 ### Phase 5: Dokumenty i wdrożenie
 
 #### Automated
 
-- [ ] 5.1 /ci-check zielone
-- [ ] 5.2 roadmap:sync dry-run bez błędów
+- [x] 5.1 /ci-check zielone
+- [x] 5.2 roadmap:sync dry-run bez błędów
 
 #### Manual
 

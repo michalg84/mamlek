@@ -344,11 +344,11 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 - **Prerequisites:** S-15
 - **Parallel with:** każdy wycinek (nie dotyka ekranu wyszukiwania ani apteczki)
 - **Blockers:** —
-- **Unknowns:**
-  - Jak wykryć konto ze słabym hasłem: Supabase nie przechowuje hasła w postaci jawnej, więc regułę da się sprawdzić tylko w chwili logowania, na haśle z formularza. Wymuszenie przy logowaniu i blokada reszty aplikacji do czasu zmiany (middleware + znacznik w metadanych użytkownika), czy samo przekierowanie. — Owner: autor. Block: no.
-  - Wymuszona zmiana hasła wymaga ekranu zmiany hasła w aplikacji, a PRD v3 ma „Zmiana i reset hasła w aplikacji” w Non-Goals. Zakres: tylko wymuszona zmiana po logowaniu (bez „zapomniałem hasła”); PRD (Non-Goals, Access Control) trzeba zaktualizować razem z tą zmianą. — Owner: autor. Block: no.
-  - Czy reguła obejmuje też ręczny reset hasła przez autora w panelu Supabase, czy tylko ścieżki w aplikacji. — Owner: autor. Block: no.
-- **Risk:** Decyzja autora z 2026-11-19: 6 znaków to za mało, wymagane co najmniej 10 znaków oraz małe i wielkie litery, cyfry i znak specjalny, także dla istniejących kont. Reguła stoi w dwóch miejscach, które muszą się zgadzać: formularz rejestracji (`MIN_PASSWORD_LENGTH = 6` w `src/components/auth/SignUpForm.tsx`, komunikaty po polsku w `src/lib/auth-errors.ts`) i ustawienie Supabase (`minimum_password_length` i `password_requirements` w `supabase/config.toml` lokalnie; na produkcji w panelu projektu, ręcznie jak `db push`, więc kolejność: merge, potem ustawienie panelu). Konta testowe w `npm run smoke`, `npm run test:api`, `npm run perf`, `npm run ui:shots` i E2E (`tests/e2e/auth.setup.ts`) zakładają hasła według starej reguły — trzeba je zmienić razem z regułą, inaczej CI się zawali. Wymuszona zmiana dotyka też kont testowych autora na produkcji. W M-1, bo dotyczy progu wejścia do aplikacji.
+- **Unknowns:** (rozstrzygnięte w planie `context/changes/password-policy/plan.md`)
+  - Jak wykryć konto ze słabym hasłem: reguła sprawdzana przy logowaniu na haśle z formularza; wynik zapisuje znacznik `password_change_required` w `user_metadata`, a middleware blokuje resztę aplikacji do czasu zmiany. Znacznik użytkownik może zdjąć sam (przyjęta luka, opisana w PRD i AGENTS.md).
+  - Zakres zmiany hasła: wymuszona zmiana po logowaniu oraz dobrowolna z menu (`/konto/haslo`, `POST /api/auth/password`); bez „zapomniałem hasła” (zostaje w Non-Goals PRD, zaktualizowanym).
+  - Hasło ustawione ręcznie w panelu Supabase: poza regułą, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
+- **Risk:** Reguła stoi w dwóch miejscach, które muszą się zgadzać: aplikacja (`src/lib/password-policy.ts`, serwerowe `password-check.ts` z listą) i ustawienie Supabase (`minimum_password_length = 12` w `supabase/config.toml` lokalnie; na produkcji w panelu projektu, ręcznie jak `db push`, więc kolejność: merge, potem panel). Konta testowe w `npm run smoke`, `npm run test:api`, `npm run perf`, `npm run ui:shots` i E2E (`tests/e2e/auth.setup.ts`) muszą mieć hasła zgodne z regułą. Wymuszona zmiana dotyka też kont testowych autora na produkcji. W M-1, bo dotyczy progu wejścia do aplikacji.
 - **Status:** in-progress
 
 ## Backlog Handoff
