@@ -482,5 +482,5 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Manual
 
-- [ ] 5.3 Przegląd PRD, roadmapy i AGENTS.md
-- [ ] 5.4 Panel Supabase produkcji i konta testowe po merge'u
+- [x] 5.3 Przegląd PRD, roadmapy i AGENTS.md
+- [x] 5.4 Panel Supabase produkcji i konta testowe po merge'u
