@@ -1,10 +1,10 @@
 ---
 change_id: password-policy
 title: Password policy
-status: impl_reviewed
+status: archived
 created: 2026-11-24
 updated: 2026-11-25
-archived_at: null
+archived_at: 2026-11-25T13:01:20Z
 ---
 
 ## Notes
