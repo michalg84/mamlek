@@ -62,10 +62,13 @@ describe("passwordLengthProblem", () => {
     expect(passwordLengthProblem("ą".repeat(35) + "a".repeat(3))).toBe("password_too_long"); // 73 bytes
   });
 
-  it("does not trim spaces: they are characters of the password", () => {
-    expect(passwordLengthProblem(" ".repeat(12))).toBeNull();
-    expect(passwordLengthProblem("   abcdefgh  ")).toBeNull(); // 13 characters, only 8 of them letters
-    expect(passwordLengthProblem("abcdefghijk ")).toBeNull(); // 11 letters and a trailing space
+  it("counts spaces between words but not leading or trailing whitespace", () => {
+    expect(passwordLengthProblem("kot pije mleko")).toBeNull();
+    expect(passwordLengthProblem("a b c d e f g")).toBeNull(); // 13 characters, 7 letters, spaces inside count
+    expect(passwordLengthProblem(" ".repeat(12))).toBe("password_too_short");
+    expect(passwordLengthProblem("   abcdefgh  ")).toBe("password_too_short"); // 8 characters once trimmed
+    expect(passwordLengthProblem("abcdefghijk ")).toBe("password_too_short"); // 11 letters and a trailing space
+    expect(passwordLengthProblem("  abcdefghijkl  ")).toBeNull(); // 12 characters once trimmed
   });
 
   it("treats the example passphrase as a valid length", () => {

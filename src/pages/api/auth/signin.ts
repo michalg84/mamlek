@@ -2,12 +2,16 @@ import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import { authErrorCode } from "@/lib/auth-errors";
 import { passwordProblem } from "@/lib/services/password-check";
+import { readForm } from "@/lib/read-form";
 import { createClient } from "@/lib/supabase";
 
 const SignInInput = z.object({ email: z.string(), password: z.string() });
 
 export const POST: APIRoute = async (context) => {
-  const form = await context.request.formData();
+  const form = await readForm(context.request);
+  if (!form) {
+    return context.redirect("/auth/signin?error=validation_failed");
+  }
   const input = SignInInput.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!input.success) {
     return context.redirect("/auth/signin?error=validation_failed");
@@ -38,7 +42,11 @@ export const POST: APIRoute = async (context) => {
       console.error("Password change marker not saved", markerError);
       if (required) {
         // A weak password that could not be marked would pass the gate: fail closed and end the session.
-        await supabase.auth.signOut({ scope: "local" });
+        const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+        if (signOutError) {
+          // eslint-disable-next-line no-console -- a session that stayed open after the fail-closed branch must reach the log
+          console.error("Sign-out after failed password marker write failed", signOutError);
+        }
         return context.redirect("/auth/signin?error=password_check_failed");
       }
     }

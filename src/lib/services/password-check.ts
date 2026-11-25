@@ -14,15 +14,19 @@ let commonPasswords: Set<string> | null = null;
 // Built on the first call, once per isolate.
 function isCommon(password: string): boolean {
   commonPasswords ??= new Set(blocklist.entries);
-  return commonPasswords.has(password.toLowerCase());
+  // The list is lowercase NFC without padding: compare the plain form and the trimmed, normalised one (NIST SP 800-63B-4).
+  const lower = password.toLowerCase();
+  return commonPasswords.has(lower) || commonPasswords.has(lower.normalize("NFC").trim());
 }
 
 /** True for the whole address or for the part before the "@", ignoring case. */
 function isEmail(password: string, email: string): boolean {
-  const lower = password.toLowerCase();
   const address = email.toLowerCase();
   const at = address.indexOf("@");
-  return lower === address || (at > 0 && lower === address.slice(0, at));
+  // The plain form and the trimmed, NFC-normalised one, like the list check.
+  return [password.toLowerCase(), password.toLowerCase().normalize("NFC").trim()].some(
+    (lower) => lower === address || (at > 0 && lower === address.slice(0, at)),
+  );
 }
 
 /**

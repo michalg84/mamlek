@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import { authErrorCode, type AuthErrorCode } from "@/lib/auth-errors";
 import { passwordProblem } from "@/lib/services/password-check";
+import { readForm } from "@/lib/read-form";
 import { createClient } from "@/lib/supabase";
 
 const ChangePasswordInput = z.object({ current: z.string(), password: z.string(), confirm: z.string() });
@@ -16,7 +17,10 @@ export const POST: APIRoute = async (context) => {
   const forced = user.user_metadata.password_change_required === true;
   const fail = (code: AuthErrorCode) => context.redirect(`/konto/haslo?error=${code}${forced ? "&wymagana=1" : ""}`);
 
-  const form = await context.request.formData();
+  const form = await readForm(context.request);
+  if (!form) {
+    return fail("validation_failed");
+  }
   const input = ChangePasswordInput.safeParse({
     current: form.get("current"),
     password: form.get("password"),
@@ -55,6 +59,14 @@ export const POST: APIRoute = async (context) => {
     // eslint-disable-next-line no-console -- the cause of a failed password change must reach the log
     console.error("Password change failed", error);
     return fail(authErrorCode(error));
+  }
+
+  // The password was changed because it may be known to someone else: end every other session of the account. The
+  // change itself succeeded, so a failure here is logged and does not turn the answer into an error.
+  const { error: othersError } = await supabase.auth.signOut({ scope: "others" });
+  if (othersError) {
+    // eslint-disable-next-line no-console -- other sessions that stayed open after a password change must reach the log
+    console.error("Sign-out of other sessions after a password change failed", othersError);
   }
 
   return context.redirect("/konto/haslo?zmieniono=1");

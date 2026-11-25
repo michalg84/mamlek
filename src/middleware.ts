@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase";
 const PROTECTED_ROUTES = ["/szukaj", "/apteczka", "/konto"];
 
 // What a user whose password breaks the rule (marker `password_change_required` in `user_metadata`, set at sign-in)
-// may still reach: the change screen, its endpoint and the sign-out. Sign-in and sign-up endpoints stay open too, so a
-// session can be replaced.
+// may still reach: the change screen, its endpoint and the sign-out. Nothing else under `/api/auth/` (a marked user
+// signs out first to sign in again).
 const PASSWORD_CHANGE_PATHS = ["/konto/haslo", "/api/auth/password", "/api/auth/signout"];
 const PASSWORD_CHANGE_URL = "/konto/haslo?wymagana=1";
 
@@ -88,8 +88,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // The marker is read from the user the auth server just returned, not from a cookie the browser could edit.
   if (
     context.locals.user?.user_metadata.password_change_required === true &&
-    !PASSWORD_CHANGE_PATHS.includes(formPath) &&
-    !formPath.startsWith("/api/auth/")
+    !PASSWORD_CHANGE_PATHS.includes(formPath)
   ) {
     if (formPath.startsWith("/api/")) {
       return Response.json({ error: "Password change required" }, { status: 403 });

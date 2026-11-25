@@ -58,7 +58,7 @@ export function selectEntries(text, size = LIST_SIZE) {
   const seen = new Set();
   const entries = [];
   for (const line of text.split(/\r?\n/)) {
-    const word = line.toLowerCase();
+    const word = line.trim().normalize("NFC").toLowerCase();
     if (Array.from(word).length < MIN_LENGTH || encoder.encode(word).length > MAX_BYTES || seen.has(word)) continue;
     seen.add(word);
     entries.push(word);

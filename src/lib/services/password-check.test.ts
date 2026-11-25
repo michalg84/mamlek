@@ -18,11 +18,27 @@ describe("passwordProblem", () => {
     expect(passwordProblem("123456789012", EMAIL)).toBe("password_common");
   });
 
+  it("rejects a common password padded with spaces", () => {
+    expect(passwordProblem("qwerty123456 ", EMAIL)).toBe("password_common");
+    expect(passwordProblem("  qwerty123456", EMAIL)).toBe("password_common");
+  });
+
   it("rejects the whole e-mail address and the part before the @, whatever its case", () => {
     expect(passwordProblem("jan.kowalski@example.com", EMAIL)).toBe("password_common");
     expect(passwordProblem("JAN.KOWALSKI@EXAMPLE.COM", EMAIL)).toBe("password_common");
     expect(passwordProblem("jan.kowalski", EMAIL)).toBe("password_common"); // 12 characters
     expect(passwordProblem("Jan.Kowalski", "jan.kowalski@example.com")).toBe("password_common");
+  });
+
+  it("rejects a short common password padded with spaces to the minimum length", () => {
+    expect(passwordProblem("password123   ", EMAIL)).toBe("password_too_short"); // 14 characters, 11 once trimmed
+    expect(passwordProblem("   password123", EMAIL)).toBe("password_too_short");
+  });
+
+  it("rejects the e-mail address and its local part padded with spaces", () => {
+    expect(passwordProblem(" jan.kowalski@example.com", EMAIL)).toBe("password_common");
+    expect(passwordProblem("jan.kowalski ", EMAIL)).toBe("password_common"); // 13 characters
+    expect(passwordProblem("  Jan.Kowalski  ", EMAIL)).toBe("password_common");
   });
 
   it("does not reject a password that only contains the e-mail", () => {

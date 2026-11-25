@@ -57,9 +57,6 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage("password_mismatch")).toBe("Hasła nie są takie same.");
     expect(authErrorMessage("current_password_invalid")).toBe("Obecne hasło jest nieprawidłowe.");
     expect(authErrorMessage("same_password")).toBe("Nowe hasło musi się różnić od obecnego.");
-    expect(authErrorMessage("password_change_required")).toBe(
-      "Twoje hasło nie spełnia nowych zasad. Ustaw nowe, zanim przejdziesz dalej.",
-    );
     expect(authErrorMessage("password_check_failed")).toBe("Nie udało się sprawdzić hasła, zaloguj się ponownie.");
     expect(authErrorMessage("session_expired")).toBe("Sesja wygasła, zaloguj się ponownie.");
   });
@@ -72,7 +69,6 @@ describe("authErrorMessage", () => {
       "password_mismatch",
       "current_password_invalid",
       "same_password",
-      "password_change_required",
       "password_check_failed",
       "session_expired",
     ]) {

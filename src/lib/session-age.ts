@@ -30,7 +30,10 @@ export function decodeTokenClaims(token: string | undefined): Record<string, unk
     return typeof claims === "object" && claims !== null && !Array.isArray(claims)
       ? (claims as Record<string, unknown>)
       : null;
-  } catch {
+  } catch (error) {
+    // A payload that cannot be decoded is not the same as a token without `amr`: keep the cause for the log.
+    // eslint-disable-next-line no-console -- the cause of an undecodable access token must reach the log
+    console.error("Access token payload could not be decoded", error);
     return null;
   }
 }

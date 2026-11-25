@@ -3,7 +3,7 @@
 // current password and the rule. The rule itself is covered by the unit tests; this proves the gate, the marker and the
 // endpoint together. Accounts come from sign-up with a good password; `setWeakPassword` then makes the password the
 // kind an old account has. Two accounts per run, and every sign-up, sign-in and re-check of the current password counts
-// against the 30 per 5 minutes of the local limit (18 in this file).
+// against the 30 per 5 minutes of the local limit (19 in this file).
 import { beforeAll, describe, expect, it } from "vitest";
 import { ACCOUNT_PASSWORD, send, setWeakPassword, signUpAndSignIn, type Jar } from "./helpers";
 
@@ -55,6 +55,14 @@ describe("forced password change", () => {
     expect(JSON.parse(data.body)).toEqual({ error: "Password change required" });
     const write = await send("/api/kit", { method: "POST", body: "{}", contentType: "application/json", jar });
     expect(write.status).toBe(403);
+  });
+
+  it("keeps the marked account away from the sign-in and sign-up endpoints", async () => {
+    for (const path of ["/api/auth/signin", "/api/auth/signup"]) {
+      const reply = await post(path, { email, password: GOOD }, jar);
+      expect(reply.status, path).toBe(403);
+      expect(JSON.parse(reply.body), path).toEqual({ error: "Password change required" });
+    }
   });
 
   it("shows the change screen in its forced form, with a way out and no navigation", async () => {
@@ -123,10 +131,16 @@ describe("password change without the marker", () => {
     const wrong = await change(jar, "to-nie-jest-haslo", GOOD);
     expect(wrong.location).toBe("/konto/haslo?error=current_password_invalid");
 
+    // A second session of the same account, as on another device: the change must end it and keep this one.
+    const other: Jar = new Map();
+    expect((await signIn(email, ACCOUNT_PASSWORD, other)).location).toBe("/szukaj");
+    expect((await send("/szukaj", { jar: other })).status).toBe(200);
+
     const reply = await change(jar, ACCOUNT_PASSWORD, GOOD);
     expect(reply.status).toBe(302);
     expect(reply.location).toBe("/konto/haslo?zmieniono=1");
     expect((await send("/szukaj", { jar })).status).toBe(200);
+    expect((await send("/szukaj", { jar: other })).status).toBe(302);
 
     const fresh = await signIn(email, GOOD, new Map());
     expect(fresh.location).toBe("/szukaj");

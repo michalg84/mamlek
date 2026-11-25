@@ -2,12 +2,16 @@ import type { APIRoute } from "astro";
 import { z } from "astro/zod";
 import { authErrorCode } from "@/lib/auth-errors";
 import { passwordProblem } from "@/lib/services/password-check";
+import { readForm } from "@/lib/read-form";
 import { createClient } from "@/lib/supabase";
 
 const SignUpInput = z.object({ email: z.string(), password: z.string() });
 
 export const POST: APIRoute = async (context) => {
-  const form = await context.request.formData();
+  const form = await readForm(context.request);
+  if (!form) {
+    return context.redirect("/auth/signup?error=validation_failed");
+  }
   const input = SignUpInput.safeParse({ email: form.get("email"), password: form.get("password") });
   if (!input.success) {
     return context.redirect("/auth/signup?error=validation_failed");

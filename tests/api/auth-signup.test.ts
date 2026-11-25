@@ -66,6 +66,20 @@ describe("POST /api/auth/signup password rule", () => {
     expect(await accountCount(email)).toBe(0);
   });
 
+  it("answers a body that is not a form with validation_failed instead of a 500", async () => {
+    const email = `${uniqueLocalPart("json")}@example.com`;
+
+    const reply = await send(SIGN_UP, {
+      method: "POST",
+      body: JSON.stringify({ email, password: "kot pije mleko" }),
+      contentType: "application/json",
+    });
+
+    expect(reply.status).toBe(302);
+    expect(reply.location).toBe("/auth/signup?error=validation_failed");
+    expect(await accountCount(email)).toBe(0);
+  });
+
   it("accepts a passphrase of a few words and creates the account", async () => {
     const email = `${uniqueLocalPart("ok")}@example.com`;
 

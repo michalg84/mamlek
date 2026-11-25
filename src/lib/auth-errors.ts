@@ -18,7 +18,6 @@ const MESSAGES = {
   password_mismatch: "Hasła nie są takie same.",
   current_password_invalid: "Obecne hasło jest nieprawidłowe.",
   same_password: "Nowe hasło musi się różnić od obecnego.",
-  password_change_required: "Twoje hasło nie spełnia nowych zasad. Ustaw nowe, zanim przejdziesz dalej.",
   password_check_failed: "Nie udało się sprawdzić hasła, zaloguj się ponownie.",
   session_expired: "Sesja wygasła, zaloguj się ponownie.",
   email_address_invalid: "Ten adres e-mail jest nieprawidłowy.",

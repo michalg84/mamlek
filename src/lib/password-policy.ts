@@ -33,11 +33,12 @@ export function passwordBytes(password: string): number {
 }
 
 /**
- * The length problem of a password, `null` when its length is fine. Spaces are characters of the password: nothing is
- * trimmed.
+ * The length problem of a password, `null` when its length is fine. Spaces between words are characters of the password,
+ * but leading and trailing whitespace is not counted (and the form is NFC-normalised first): padding a short password
+ * such as `password123` with spaces must not get it past the minimum and past the list, which holds no entry that short.
  */
 export function passwordLengthProblem(password: string): PasswordLengthProblem | null {
-  if (passwordLength(password) < MIN_PASSWORD_LENGTH) {
+  if (passwordLength(password.normalize("NFC").trim()) < MIN_PASSWORD_LENGTH) {
     return "password_too_short";
   }
   if (passwordBytes(password) > MAX_PASSWORD_BYTES) {

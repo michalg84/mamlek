@@ -29,6 +29,10 @@ describe("password-blocklist.json", () => {
     expect(entries.filter((entry) => entry !== entry.toLowerCase())).toEqual([]);
   });
 
+  it("holds trimmed, NFC-normalised entries, as the lookup compares them", () => {
+    expect(entries.filter((entry) => entry !== entry.trim() || entry !== entry.normalize("NFC"))).toEqual([]);
+  });
+
   it("holds no duplicates", () => {
     expect(new Set(entries).size).toBe(entries.length);
   });
