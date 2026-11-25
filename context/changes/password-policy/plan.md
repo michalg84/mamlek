@@ -43,6 +43,7 @@ Pierwotna propozycja autora (wielka litera, cyfra, znak specjalny; w roadmapie �
 - Unieważnianie innych sesji po zmianie hasła i natychmiastowe wylogowanie wszystkich przy wdrożeniu (stare sesje łapie limit 90 dni).
 - Limity sesji w ustawieniach Supabase (`[auth.sessions]`, płatne) — limity są w aplikacji.
 - Reguła dla hasła ustawionego ręcznie przez autora w panelu Supabase — takie konto złapie wymuszona zmiana przy następnym logowaniu.
+- Informacja o prywatności i cookies (strona, link w stopce) — osobny wycinek z roadmapy (pytanie 13, PRD Open Question 6). Aplikacja ustawia tylko cookie sesji Supabase, ściśle niezbędne, więc zgoda ani baner nie są wymagane (art. 173 Prawa telekomunikacyjnego); informację wymaga RODO (art. 13, lista leków to dane o zdrowiu). Ta zmiana skraca życie cookie z 400 do 30 dni; przyszła informacja ma podać: cookie sesji, 30 dni od ostatniej aktywności, najwyżej 90 dni od logowania.
 
 ## Implementation Approach
 
@@ -457,16 +458,16 @@ Oczekiwane wartości w testach wpisane ręcznie (np. konkretne hasła z listy), 
 
 #### Automated
 
-- [ ] 4.1 Kształt amr potwierdzony na lokalnym Supabase
-- [ ] 4.2 Testy jednostkowe session-age
-- [ ] 4.3 smoke i test:api zielone
-- [ ] 4.4 npm run perf przed i po bez pogorszenia
-- [ ] 4.5 npm test, lint i astro check zielone
+- [x] 4.1 Kształt amr potwierdzony na lokalnym Supabase
+- [x] 4.2 Testy jednostkowe session-age
+- [x] 4.3 smoke i test:api zielone
+- [x] 4.4 npm run perf przed i po bez pogorszenia
+- [x] 4.5 npm test, lint i astro check zielone
 
 #### Manual
 
-- [ ] 4.6 Cookie sesji z wygaśnięciem ~30 dni
-- [ ] 4.7 Wylogowanie po limicie z obniżoną stałą
+- [x] 4.6 Cookie sesji z wygaśnięciem ~30 dni
+- [x] 4.7 Wylogowanie po limicie z obniżoną stałą
 
 ### Phase 5: Dokumenty i wdrożenie
 

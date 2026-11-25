@@ -1,5 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 import { sessionCheckFailure } from "@/lib/auth-errors";
+import { authTimeFromClaims, decodeTokenClaims, sessionExpired } from "@/lib/session-age";
 import { createClient } from "@/lib/supabase";
 
 const PROTECTED_ROUTES = ["/szukaj", "/apteczka", "/konto"];
@@ -13,6 +14,7 @@ const PASSWORD_CHANGE_URL = "/konto/haslo?wymagana=1";
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
   let outage = false;
+  let expired = false;
 
   if (supabase) {
     const {
@@ -27,12 +29,43 @@ export const onRequest = defineMiddleware(async (context, next) => {
       console.error(`Session check failed (${failure})`, error);
     }
     outage = failure === "outage";
+
+    // The 90-day limit counts from the password sign-in (`amr`), which a token refresh does not move. The token was
+    // just verified by `getUser()`, so its payload is read here without another call to the auth server. This also
+    // reaches sessions opened before the limit existed.
+    if (context.locals.user) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const authTime = authTimeFromClaims(decodeTokenClaims(session?.access_token));
+      if (sessionExpired(authTime, Math.floor(Date.now() / 1000))) {
+        if (authTime === null) {
+          // A token without a sign-in time is an anomaly, not an old session: it must reach the log.
+          // eslint-disable-next-line no-console -- a session that cannot be dated is signed out, and the reason must be visible
+          console.error("Session has no sign-in time in the access token (amr), signing it out", {
+            userId: context.locals.user.id,
+          });
+        }
+        const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+        if (signOutError) {
+          // eslint-disable-next-line no-console -- the cookie is cleared locally either way; the failure must not vanish
+          console.error("Sign-out of an expired session failed", signOutError);
+        }
+        context.locals.user = null;
+        expired = true;
+      }
+    }
   } else {
     context.locals.user = null;
   }
 
   // During an outage the user may well be signed in: the sign-in page says the session could not be checked.
-  const signIn = outage ? "/auth/signin?error=session_check_failed" : "/auth/signin";
+  let signIn = "/auth/signin";
+  if (outage) {
+    signIn = "/auth/signin?error=session_check_failed";
+  } else if (expired) {
+    signIn = "/auth/signin?error=session_expired";
+  }
   const { pathname } = context.url;
   // `/` has no page of its own: the search is the entry point, sign-in for anonymous users
   // (and always when Supabase is not configured, where the sign-in page shows the config banner).
