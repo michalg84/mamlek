@@ -1,4 +1,4 @@
-import { EXAMPLE_PASSPHRASE, MIN_PASSWORD_LENGTH, passwordLength } from "@/lib/password-policy";
+import { EXAMPLE_PASSPHRASE, MIN_PASSWORD_LENGTH, effectivePasswordLength } from "@/lib/password-policy";
 
 /** Polish noun form after a count: 1 znak, 2-4 znaki, 5 and more znaków. */
 function charactersWord(count: number) {
@@ -13,10 +13,10 @@ interface Props {
 
 /**
  * The hint under a field for a new password: how many characters are still missing and an example phrase. The length
- * counts code points, as the server and Supabase do; the example is a phrase to imitate, not to copy.
+ * is the one the rule checks (code points, trimmed, as the server and Supabase count it); the example is a phrase to imitate, not to copy.
  */
 export function NewPasswordHint({ password }: Props) {
-  const remaining = MIN_PASSWORD_LENGTH - passwordLength(password);
+  const remaining = MIN_PASSWORD_LENGTH - effectivePasswordLength(password);
   return (
     <>
       {password.length > 0 && remaining > 0 && (

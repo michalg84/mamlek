@@ -27,6 +27,14 @@ export function passwordLength(password: string): number {
   return count;
 }
 
+/**
+ * The length the minimum is checked against: NFC-normalised and without leading and trailing whitespace. The forms use
+ * it for the "still missing" counter too, so the counter and the verdict on submit always agree.
+ */
+export function effectivePasswordLength(password: string): number {
+  return passwordLength(password.normalize("NFC").trim());
+}
+
 /** The length in UTF-8 bytes (a Polish letter with a diacritic takes two). */
 export function passwordBytes(password: string): number {
   return new TextEncoder().encode(password).length;
@@ -38,7 +46,7 @@ export function passwordBytes(password: string): number {
  * such as `password123` with spaces must not get it past the minimum and past the list, which holds no entry that short.
  */
 export function passwordLengthProblem(password: string): PasswordLengthProblem | null {
-  if (passwordLength(password.normalize("NFC").trim()) < MIN_PASSWORD_LENGTH) {
+  if (effectivePasswordLength(password) < MIN_PASSWORD_LENGTH) {
     return "password_too_short";
   }
   if (passwordBytes(password) > MAX_PASSWORD_BYTES) {

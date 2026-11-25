@@ -297,6 +297,10 @@ Sesja wygasa po 30 dniach bez użycia i po 90 dniach od zalogowania, także sesj
 
 **Contract**: `createServerClient(..., { cookieOptions: { maxAge: SESSION_IDLE_DAYS * 86400 }, cookies })`. W middleware po udanym `getUser()`: `getSession()` → dekodowanie payloadu `access_token` (base64url, bez weryfikacji — `getUser()` właśnie zweryfikowało ten token; bez `getClaims()`, które przy kluczu symetrycznym woła `getUser()` drugi raz) → `authTimeFromClaims` → `sessionExpired`; gdy wygasła: `console.error` z powodem tylko dla `null` (brak czasu to anomalia), `signOut({ scope: "local" })`, `locals.user = null`, a strona chroniona przekierowuje na `/auth/signin?error=session_expired` (API dostaje zwykłe 401 z tras). Sprawdzenie przed bramką znacznika z fazy 3.
 
+**Addendum (impl-review fazy 4, F1)**: `@supabase/ssr` ignoruje `cookieOptions.maxAge` (wymusza 400 dni), więc limit bezczynności jest nakładany w `setAll` w `src/lib/supabase.ts` przez `sessionCookieMaxAge` (`src/lib/session-age.ts`); sprawdzone: `Max-Age=2592000`. Opis w `change.md` Notes (Phase 4).
+
+**Addendum (impl-review fazy 4, F2)**: ścieżka wygaśnięcia w middleware (dekodowanie, `signOut`, `session_expired`, pominięcie bramki hasła) ma dowód ręczny (4.7, stała obniżona do minuty), bez testu automatycznego: middleware importuje `astro:middleware`, więc test wymagałby osobnego szwu i zegara. Przyjęte. Lokalny `test:api` dawał 1–3 razy na przebieg 500 z `wrangler dev` w nieuwierzytelnionych przypadkach `kit-access`, tak samo bez zmian fazy 4 (3 przebiegi na schowanych zmianach); CI `smoke` zielone.
+
 ### Success Criteria:
 
 #### Automated Verification:
