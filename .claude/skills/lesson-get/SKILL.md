@@ -50,4 +50,4 @@ It may take a minute (npx downloads the latest 10x-cli). Exit codes: `0` ok, `1`
 3. **`no model` line** → these are skills new to this project with no entry in `.claude/skill-models.json`. For each, propose a model and effort in a small table, using the existing entries as the pattern (thinking and decisions → `opus`/`high`; executing a ready plan → `sonnet`; mechanical file operations → `haiku`/`low`; one-off setup or audits → `{}`, the session model). Ask the user to approve; after approval add the entries to `.claude/skill-models.json` and run `node .claude/scripts/skill-models.mjs apply`.
 4. Next step: read the new block in `CLAUDE.md` (its Task Router table) and name the lesson's first skill to run. Suggest that next lesson step, not feature work.
 
-Do not commit. `CLAUDE.md` and possibly `.claude/skill-models.json` are tracked, so mention that `/ship` will pick them up.
+Do not commit. `CLAUDE.md` and possibly `.claude/skill-models.json` are tracked, so mention that `/ship-pr` will pick them up.

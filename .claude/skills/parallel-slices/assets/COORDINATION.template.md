@@ -28,7 +28,7 @@ Group started <DATE>. Coordinator: <COORD_PANE> in the main checkout.
 - Ports: see the table. Stop your own server by PID (`kill-port.mjs` knows only 4321-4323 and 8787).
 - Files: <FILE_MAP per slice>. Before editing a file outside your list, ask on this board.
 - `context/foundation/roadmap.md`: only your own slice entry. `roadmap:sync` runs from main after merge (coordinator only).
-- After another slice merges: `git merge origin/main` before `/ship`, keep both sides of a conflict.
+- After another slice merges: `git merge origin/main` before `/ship-pr`, keep both sides of a conflict.
 
 ## Coordinator notes
 
