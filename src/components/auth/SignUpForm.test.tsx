@@ -112,6 +112,14 @@ describe("SignUpForm", () => {
     expect(screen.getByLabelText("Hasło").getAttribute("aria-describedby")).toBe("password-hint");
   });
 
+  it("counts the password the way the rule does, without trailing spaces", () => {
+    render(<SignUpForm />);
+
+    type("Hasło", "kot pije ml "); // 11 characters and a trailing space, which the rule does not count
+
+    expect(screen.getByText("Jeszcze 1 znak")).toBeTruthy();
+  });
+
   it("shows no counter once the password has 12 characters, but keeps the example", () => {
     render(<SignUpForm />);
 

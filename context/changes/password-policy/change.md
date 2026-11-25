@@ -3,7 +3,7 @@ change_id: password-policy
 title: Password policy
 status: impl_reviewed
 created: 2026-11-24
-updated: 2026-11-24
+updated: 2026-11-25
 archived_at: null
 ---
 

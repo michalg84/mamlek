@@ -3,6 +3,7 @@ import {
   EXAMPLE_PASSPHRASE,
   MAX_PASSWORD_BYTES,
   MIN_PASSWORD_LENGTH,
+  effectivePasswordLength,
   passwordBytes,
   passwordLength,
   passwordLengthProblem,
@@ -28,6 +29,18 @@ describe("passwordLength", () => {
 
   it("counts a space as a character", () => {
     expect(passwordLength("   ")).toBe(3);
+  });
+});
+
+describe("effectivePasswordLength", () => {
+  it("leaves out leading and trailing whitespace, keeps the spaces between words", () => {
+    expect(effectivePasswordLength("  kot pije ml  ")).toBe(11);
+    expect(effectivePasswordLength("kot pije mleko")).toBe(14);
+    expect(effectivePasswordLength("            ")).toBe(0);
+  });
+
+  it("counts a decomposed Polish letter as one character, like the composed one", () => {
+    expect(effectivePasswordLength("ą")).toBe(1); // a + combining ogonek, NFC gives ą
   });
 });
 

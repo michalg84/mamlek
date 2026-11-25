@@ -160,6 +160,7 @@ describe("ChangePasswordForm", () => {
     ["kot pije", "Jeszcze 4 znaki"], // 8 characters
     ["s", "Jeszcze 11 znaków"],
     ["😀".repeat(10), "Jeszcze 2 znaki"], // 10 code points, 20 UTF-16 units
+    ["kot pije ml ", "Jeszcze 1 znak"], // a trailing space is not counted
   ])("hints the missing characters for the new password %j", (value, hint) => {
     render(<ChangePasswordForm />);
 
