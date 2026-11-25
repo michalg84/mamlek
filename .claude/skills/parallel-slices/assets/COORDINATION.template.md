@@ -24,7 +24,7 @@ Group started <DATE>. Coordinator: <COORD_PANE> in the main checkout.
 
 ## Shared resources
 
-- Local DB (<DB_URL>): <DB_STATE>. One session at a time, only with the coordinator's go: db reset, migrations, registry:import, test:db, test:api (max ~3 runs / 5 min across all slices), smoke, search:check, perf, ui:shots. Docker and Supabase are started/stopped by the coordinator only.
+- Local DB (<DB_URL>): <DB_STATE>. One session at a time, only with the coordinator's go: db reset, migrations, registry:import, test:db, test:api (max 1 run / 5 min across all slices), smoke, search:check, perf, ui:shots. Docker and Supabase are started/stopped by the coordinator only.
 - Ports: see the table. Stop your own server by PID (`kill-port.mjs` knows only 4321-4323 and 8787).
 - Files: <FILE_MAP per slice>. Before editing a file outside your list, ask on this board.
 - `context/foundation/roadmap.md`: only your own slice entry. `roadmap:sync` runs from main after merge (coordinator only).
