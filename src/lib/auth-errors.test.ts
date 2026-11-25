@@ -10,6 +10,8 @@ describe("authErrorCode", () => {
       "invalid_credentials",
     );
     expect(authErrorCode({ code: "user_already_exists" })).toBe("user_already_exists");
+    expect(authErrorCode({ code: "same_password" })).toBe("same_password");
+    expect(authErrorCode({ code: "weak_password" })).toBe("weak_password");
   });
 
   it("turns an unknown code, a missing code and no error into unknown", () => {
@@ -36,6 +38,42 @@ describe("authErrorMessage", () => {
       "Nie udało się sprawdzić sesji — serwis jest chwilowo niedostępny. Zaloguj się ponownie za chwilę.",
     );
     expect(authErrorMessage("user_already_exists")).toBe(authErrorMessage("email_exists"));
+  });
+
+  it("has a Polish message for every code of the password policy", () => {
+    // Texts copied by hand from the plan; the numbers 12 and 72 are the rule, not read from the constants.
+    expect(authErrorMessage("password_too_short")).toBe(
+      "Hasło musi mieć co najmniej 12 znaków. Może to być kilka słów ze spacjami.",
+    );
+    expect(authErrorMessage("password_too_long")).toBe(
+      "Hasło jest za długie (limit 72 bajtów; polskie litery zajmują po 2). Skróć je.",
+    );
+    expect(authErrorMessage("password_common")).toBe(
+      "To hasło jest zbyt popularne albo przypomina Twój adres e-mail. Spróbuj kilku własnych słów, w stylu „zielony rower pod oknem” (ale nie tych samych).",
+    );
+    expect(authErrorMessage("weak_password")).toBe(
+      "Hasło jest za słabe. Użyj co najmniej 12 znaków, najlepiej kilku słów.",
+    );
+    expect(authErrorMessage("password_mismatch")).toBe("Hasła nie są takie same.");
+    expect(authErrorMessage("current_password_invalid")).toBe("Obecne hasło jest nieprawidłowe.");
+    expect(authErrorMessage("same_password")).toBe("Nowe hasło musi się różnić od obecnego.");
+    expect(authErrorMessage("password_check_failed")).toBe("Nie udało się sprawdzić hasła, zaloguj się ponownie.");
+    expect(authErrorMessage("session_expired")).toBe("Sesja wygasła, zaloguj się ponownie.");
+  });
+
+  it("keeps the new codes out of the generic message", () => {
+    for (const code of [
+      "password_too_short",
+      "password_too_long",
+      "password_common",
+      "password_mismatch",
+      "current_password_invalid",
+      "same_password",
+      "password_check_failed",
+      "session_expired",
+    ]) {
+      expect(authErrorMessage(code)).not.toBe(GENERIC);
+    }
   });
 
   it("shows the generic message instead of any other text, including hand-written text", () => {

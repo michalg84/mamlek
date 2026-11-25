@@ -1,0 +1,50 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AuthShell from "@/components/auth/AuthShell.astro";
+import ChangePasswordForm from "@/components/auth/ChangePasswordForm";
+import { buttonVariants } from "@/components/ui/button";
+import { authErrorMessage } from "@/lib/auth-errors";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
+import { cn } from "@/lib/utils";
+
+// The marker decides, not the `?wymagana=1` of the link: a marked user can open this page without it, and the top bar
+// would lead back here anyway.
+const forced = Astro.locals.user?.user_metadata.password_change_required === true;
+const changed = !forced && Astro.url.searchParams.get("zmieniono") === "1";
+// Only a known code becomes a message; any other text in the link shows the generic one, never itself.
+const error = authErrorMessage(Astro.url.searchParams.get("error"));
+const title = forced ? "Ustaw nowe hasło" : "Zmień hasło";
+const linkClass = cn(buttonVariants({ variant: "link" }), "h-auto px-1 py-2");
+---
+
+<Layout title={title}>
+  <AuthShell title={title} topbar={!forced}>
+    {forced && (
+      <p role="status" class="bg-accent text-accent-foreground mb-4 rounded-md px-3 py-2 text-sm">
+        Twoje hasło nie spełnia nowych zasad: co najmniej {MIN_PASSWORD_LENGTH} znaków i nie z listy popularnych haseł.
+        Ustaw nowe, zanim przejdziesz dalej.
+      </p>
+    )}
+    {changed ? (
+      <div class="space-y-4">
+        <p role="status" class="bg-accent text-accent-foreground rounded-md px-3 py-2 text-sm font-medium">
+          Hasło zostało zmienione.
+        </p>
+        <a href="/szukaj" class:list={[buttonVariants(), "min-h-11 w-full"]}>
+          Wróć do wyszukiwania
+        </a>
+      </div>
+    ) : (
+      <ChangePasswordForm serverError={error} client:load />
+    )}
+    {forced && (
+      <Fragment slot="footer">
+        <form method="POST" action="/api/auth/signout">
+          <button type="submit" class:list={[linkClass]}>
+            Wyloguj się
+          </button>
+        </form>
+      </Fragment>
+    )}
+  </AuthShell>
+</Layout>

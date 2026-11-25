@@ -76,7 +76,8 @@ export function sendJson(path: string, body: unknown, jar?: Jar, method = "POST"
   });
 }
 
-const PASSWORD = "Api-Test-Passw0rd!";
+/** The password every account of `signUpAndSignIn` gets; it passes the password rule. */
+export const ACCOUNT_PASSWORD = "Api-Test-Passw0rd!";
 
 /** Creates an account and signs it in; the error says so when the local sign-up rate limit refused it. */
 export async function signUpAndSignIn(label: string): Promise<{ email: string; jar: Jar }> {
@@ -85,7 +86,7 @@ export async function signUpAndSignIn(label: string): Promise<{ email: string; j
   const form = (path: string) =>
     send(path, {
       method: "POST",
-      body: new URLSearchParams({ email, password: PASSWORD }).toString(),
+      body: new URLSearchParams({ email, password: ACCOUNT_PASSWORD }).toString(),
       contentType: "application/x-www-form-urlencoded",
       jar,
     });
@@ -389,6 +390,32 @@ export async function kitRowsById(ids: number[]): Promise<KitRow[]> {
 export async function userIdOf(email: string): Promise<string> {
   const [row] = await query<{ id: string }>("select id::text from auth.users where email = $1", [email]);
   return row.id;
+}
+
+/** How many accounts have this e-mail (0 or 1): the proof that a refused sign-up created nothing. */
+export async function accountCount(email: string): Promise<number> {
+  const [row] = await query<{ n: number }>("select count(*)::int as n from auth.users where email = $1", [email]);
+  return row.n;
+}
+
+/**
+ * Gives an account made by `signUpAndSignIn` a password that the sign-up now refuses (a short one, or one on the list),
+ * the way an old account looks. The only write of the API tests outside the app: sign-up cannot make such an account,
+ * so the hash is set in the database. Refuses any other address, so a real account can never be touched.
+ */
+export async function setWeakPassword(email: string, password: string): Promise<void> {
+  if (!/^api-[a-z0-9-]+@example\.com$/.test(email)) {
+    throw new Error(`setWeakPassword changes only accounts of the API tests (got ${email})`);
+  }
+  // pgcrypto sits in the `extensions` schema on Supabase; bcrypt is what the auth server verifies.
+  const rows = await query<{ id: string }>(
+    `update auth.users set encrypted_password = extensions.crypt($2, extensions.gen_salt('bf'))
+      where email = $1 returning id::text`,
+    [email, password],
+  );
+  if (rows.length !== 1) {
+    throw new Error(`setWeakPassword found ${rows.length} accounts for ${email}, expected 1`);
+  }
 }
 
 // --- Checks ------------------------------------------------------------------------------------------------------

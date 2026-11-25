@@ -79,6 +79,8 @@ Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Sett
 
 The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off. `perf`, `ui:shots` and the E2E tests need a one-time `npx playwright install chromium`; the details of every script are in [`AGENTS.md`](AGENTS.md).
 
+The E2E account's `E2E_PASSWORD` (in the gitignored `.env`) must meet the password rule: at least 12 characters, not a common password, not the e-mail address. A weaker one is sent to `/konto/haslo` after sign-in and `tests/e2e/auth.setup.ts` fails. After merging the password-policy change, set the production Supabase project by hand too (Authentication → Policies/Providers: minimum password length 12, password requirements empty; check `secure_password_change`); see the rollout note in [`AGENTS.md`](AGENTS.md).
+
 A husky pre-commit hook runs lint-staged: `eslint --fix`, `ui:scan` (guarded views only) and `vitest related` (the unit, component and registry tests related to those files) on staged `ts`/`tsx`/`astro` files, `eslint --fix` plus the related registry parser tests on staged `mjs` files, the registry parser tests on staged XML fixtures, and `prettier --write` on `json`/`css`/`md` files.
 
 ## CI

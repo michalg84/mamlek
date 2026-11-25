@@ -39,27 +39,27 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status   |
-| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | -------- |
-| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done     |
-| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done     |
-| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done     |
-| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done     |
-| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done     |
-| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done     |
-| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | done     |
-| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done     |
-| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | done     |
-| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done     |
-| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done     |
-| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done     |
-| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | done     |
-| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done     |
-| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done     |
-| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | done     |
-| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done     |
-| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | done     |
-| S-18 | password-policy               | mieć hasło min. 10 znaków z literami, cyfrą i znakiem specjalnym, także na istniejącym koncie                              | S-15             | FR-013, NFR (dostęp), Access Control | proposed |
+| ID   | Change ID                     | Outcome (user can …)                                                                                                       | Prerequisites    | PRD refs                             | Status      |
+| ---- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------ | ----------- |
+| F-01 | registry-copy-load            | (foundation) kopia Rejestru Produktów Leczniczych jest wczytana do bazy powtarzalnym importem                              | —                | FR-001, NFR (świeżość danych)        | done        |
+| S-01 | registry-search-suggestions   | znaleźć lek w rejestrze po pierwszych literach, z nazwą, mocą i postacią w podpowiedzi                                     | F-01             | FR-002, US-01, NFR (czas odpowiedzi) | done        |
+| S-02 | add-medicine-to-kit           | dodać lek z rejestru do apteczki domu, z opcjonalną datą ważności i ilością                                                | S-01             | FR-003, FR-013, US-01, NFR (dostęp)  | done        |
+| S-03 | medicine-check                | sprawdzić lek przeciwko apteczce i zobaczyć: masz / masz lek z tą samą substancją / nie masz                               | S-01, S-02       | FR-010, FR-011, FR-012, US-01        | done        |
+| S-04 | csv-kit-import                | wprowadzić apteczkę z CSV przez ekran zatwierdzenia, na którym każdy wiersz ma rekord rejestru                             | S-01, S-02       | FR-007, FR-008, FR-009, US-02        | done        |
+| S-05 | kit-browse-edit               | przeglądać apteczkę, zmieniać i usuwać pozycje, poprawiać ilość wprost na liście                                           | S-02             | FR-005                               | done        |
+| S-06 | substance-match-level         | wybrać poziom dopasowania substancji czynnych dla leków złożonych i widzieć go przy wyszukiwaniu                           | S-03, S-13, S-14 | FR-016, US-01                        | done        |
+| S-07 | daily-registry-refresh        | zobaczyć na `/szukaj` datę stanu rejestru, który odświeża się sam codziennie                                               | F-01             | FR-001, NFR (świeżość danych)        | done        |
+| S-08 | expiry-warning                | zobaczyć ostrzeżenie o zbliżającym się końcu ważności na liście apteczki i przy wyniku sprawdzenia                         | S-03, S-05       | FR-014                               | done        |
+| S-09 | registry-search-performance   | zacząć wyszukiwać lek na słabym telefonie bez długiego czekania i bez zacinania przy pisaniu                               | S-01             | FR-002, NFR (czas odpowiedzi)        | done        |
+| S-10 | kit-add-form-reset-on-edit    | poprawić wpisaną nazwę w formularzu dodawania bez ryzyka dodania poprzednio wybranego leku                                 | S-02             | FR-003                               | done        |
+| S-11 | search-numeric-strength-order | widzieć warianty tej samej nazwy w podpowiedziach w kolejności mocy liczbowej (500 mg przed 1000 mg)                       | S-01             | FR-002                               | done        |
+| S-12 | kit-quantity-semantics        | podać ilość w tabletkach także dla opakowań z liczbą jednostek (butelka, blister) i widzieć ją jednoznacznie               | S-02, S-04       | FR-003, FR-005, FR-007               | done        |
+| S-13 | withdrawn-medicine-in-kit     | znaleźć w podpowiedziach lek wycofany z rejestru, dodać go do apteczki, zaimportować i sprawdzić, z oznaczeniem „wycofany” | S-02, S-03, S-04 | FR-001, FR-002, FR-003, FR-009       | done        |
+| S-14 | variant-key-btrim             | dostać „Masz ten lek” także wtedy, gdy rejestr zapisał moc lub postać tego samego leku ze spacją na końcu                  | S-03, S-04       | FR-010, FR-011                       | done        |
+| S-15 | auth-screens-ui               | zalogować się i założyć konto na ekranach po polsku, w tym samym wyglądzie co reszta aplikacji                             | —                | NFR (dostęp), Access Control         | done        |
+| S-16 | registry-import-keepalive     | (po M-1) polegać na tym, że dzienny import rejestru nie zatrzyma się po cichu po 60 dniach bez aktywności w repozytorium   | S-07             | FR-001, NFR (świeżość danych)        | done        |
+| S-17 | substance-medicine-links      | (po M-1) kliknąć substancję czynną, zobaczyć leki z nią, przejść do leku i dodać go do apteczki                            | S-03, S-05, S-06 | FR-002, FR-003, FR-005, FR-011       | done        |
+| S-18 | password-policy               | mieć hasło min. 12 znaków spoza listy popularnych haseł, także na istniejącym koncie, i móc je zmienić                     | S-15             | FR-013, NFR (dostęp), Access Control | in-progress |
 
 ## Streams
 
@@ -338,18 +338,18 @@ Foundations poniżej zakładają, że to istnieje, i NIE tworzą tego ponownie.
 
 ### S-18: Mocniejsze hasło przy rejestracji i na istniejących kontach
 
-- **Outcome:** użytkownik zakłada konto z hasłem o co najmniej 10 znakach, z małą i wielką literą, cyfrą i znakiem specjalnym, a na istniejącym koncie z hasłem słabszym od tej reguły po zalogowaniu musi ustawić nowe hasło spełniające regułę, zanim wejdzie do aplikacji; formularz po polsku pokazuje, których wymagań brakuje.
+- **Outcome:** użytkownik zakłada konto z hasłem o co najmniej 12 znakach, spoza listy popularnych haseł i innym niż adres e-mail (bez wymogów składu, zgodnie z NIST SP 800-63B-4 i OWASP ASVS 5.0), a na istniejącym koncie z hasłem słabszym od tej reguły po zalogowaniu musi ustawić nowe hasło, zanim wejdzie do aplikacji; hasło może też zmienić sam, a sesja wygasa po 30 dniach bez użycia i 90 dniach od zalogowania; formularz po polsku mówi, dlaczego hasło odrzucono. Decyzja autora z 2026-11-24 zastępuje „10 znaków + 4 klasy” (plan: `context/changes/password-policy/plan.md`).
 - **Change ID:** password-policy
 - **PRD refs:** FR-013, NFR (dostęp), Access Control
 - **Prerequisites:** S-15
 - **Parallel with:** każdy wycinek (nie dotyka ekranu wyszukiwania ani apteczki)
 - **Blockers:** —
-- **Unknowns:**
-  - Jak wykryć konto ze słabym hasłem: Supabase nie przechowuje hasła w postaci jawnej, więc regułę da się sprawdzić tylko w chwili logowania, na haśle z formularza. Wymuszenie przy logowaniu i blokada reszty aplikacji do czasu zmiany (middleware + znacznik w metadanych użytkownika), czy samo przekierowanie. — Owner: autor. Block: no.
-  - Wymuszona zmiana hasła wymaga ekranu zmiany hasła w aplikacji, a PRD v3 ma „Zmiana i reset hasła w aplikacji” w Non-Goals. Zakres: tylko wymuszona zmiana po logowaniu (bez „zapomniałem hasła”); PRD (Non-Goals, Access Control) trzeba zaktualizować razem z tą zmianą. — Owner: autor. Block: no.
-  - Czy reguła obejmuje też ręczny reset hasła przez autora w panelu Supabase, czy tylko ścieżki w aplikacji. — Owner: autor. Block: no.
-- **Risk:** Decyzja autora z 2026-11-19: 6 znaków to za mało, wymagane co najmniej 10 znaków oraz małe i wielkie litery, cyfry i znak specjalny, także dla istniejących kont. Reguła stoi w dwóch miejscach, które muszą się zgadzać: formularz rejestracji (`MIN_PASSWORD_LENGTH = 6` w `src/components/auth/SignUpForm.tsx`, komunikaty po polsku w `src/lib/auth-errors.ts`) i ustawienie Supabase (`minimum_password_length` i `password_requirements` w `supabase/config.toml` lokalnie; na produkcji w panelu projektu, ręcznie jak `db push`, więc kolejność: merge, potem ustawienie panelu). Konta testowe w `npm run smoke`, `npm run test:api`, `npm run perf`, `npm run ui:shots` i E2E (`tests/e2e/auth.setup.ts`) zakładają hasła według starej reguły — trzeba je zmienić razem z regułą, inaczej CI się zawali. Wymuszona zmiana dotyka też kont testowych autora na produkcji. W M-1, bo dotyczy progu wejścia do aplikacji.
-- **Status:** proposed
+- **Unknowns:** (rozstrzygnięte w planie `context/changes/password-policy/plan.md`)
+  - Jak wykryć konto ze słabym hasłem: reguła sprawdzana przy logowaniu na haśle z formularza; wynik zapisuje znacznik `password_change_required` w `user_metadata`, a middleware blokuje resztę aplikacji do czasu zmiany. Znacznik użytkownik może zdjąć sam (przyjęta luka, opisana w PRD i AGENTS.md).
+  - Zakres zmiany hasła: wymuszona zmiana po logowaniu oraz dobrowolna z menu (`/konto/haslo`, `POST /api/auth/password`); bez „zapomniałem hasła” (zostaje w Non-Goals PRD, zaktualizowanym).
+  - Hasło ustawione ręcznie w panelu Supabase: poza regułą, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
+- **Risk:** Reguła stoi w dwóch miejscach, które muszą się zgadzać: aplikacja (`src/lib/password-policy.ts`, serwerowe `password-check.ts` z listą) i ustawienie Supabase (`minimum_password_length = 12` w `supabase/config.toml` lokalnie; na produkcji w panelu projektu, ręcznie jak `db push`, więc kolejność: merge, potem panel). Konta testowe w `npm run smoke`, `npm run test:api`, `npm run perf`, `npm run ui:shots` i E2E (`tests/e2e/auth.setup.ts`) muszą mieć hasła zgodne z regułą. Wymuszona zmiana dotyka też kont testowych autora na produkcji. W M-1, bo dotyczy progu wejścia do aplikacji.
+- **Status:** in-progress
 
 ## Backlog Handoff
 

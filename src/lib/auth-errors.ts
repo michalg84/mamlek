@@ -1,4 +1,5 @@
 import { isAuthRetryableFetchError, isAuthSessionMissingError } from "@supabase/supabase-js";
+import { EXAMPLE_PASSPHRASE, MAX_PASSWORD_BYTES, MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 /**
  * Error codes the auth routes may put in `?error=`. The page turns a code into a Polish message and never shows the
@@ -10,7 +11,15 @@ const MESSAGES = {
   email_not_confirmed: "Najpierw potwierdź adres e-mail linkiem z wiadomości, którą wysłaliśmy.",
   user_already_exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
   email_exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
-  weak_password: "Hasło jest za słabe. Użyj dłuższego hasła.",
+  weak_password: `Hasło jest za słabe. Użyj co najmniej ${MIN_PASSWORD_LENGTH} znaków, najlepiej kilku słów.`,
+  password_too_short: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków. Może to być kilka słów ze spacjami.`,
+  password_too_long: `Hasło jest za długie (limit ${MAX_PASSWORD_BYTES} bajtów; polskie litery zajmują po 2). Skróć je.`,
+  password_common: `To hasło jest zbyt popularne albo przypomina Twój adres e-mail. Spróbuj kilku własnych słów, w stylu „${EXAMPLE_PASSPHRASE}” (ale nie tych samych).`,
+  password_mismatch: "Hasła nie są takie same.",
+  current_password_invalid: "Obecne hasło jest nieprawidłowe.",
+  same_password: "Nowe hasło musi się różnić od obecnego.",
+  password_check_failed: "Nie udało się sprawdzić hasła, zaloguj się ponownie.",
+  session_expired: "Sesja wygasła, zaloguj się ponownie.",
   email_address_invalid: "Ten adres e-mail jest nieprawidłowy.",
   validation_failed: "Sprawdź adres e-mail i hasło.",
   signup_disabled: "Zakładanie kont jest teraz wyłączone.",

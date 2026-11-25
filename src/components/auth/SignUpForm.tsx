@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { FormField } from "@/components/auth/FormField";
+import { NewPasswordHint } from "@/components/auth/NewPasswordHint";
 import { PasswordToggle } from "@/components/auth/PasswordToggle";
 import { SubmitButton } from "@/components/auth/SubmitButton";
 import { useSubmitting } from "@/components/hooks/useSubmitting";
 import { ServerError } from "@/components/auth/ServerError";
-
-const MIN_PASSWORD_LENGTH = 6;
-
-/** Polish noun form after a count: 1 znak, 2-4 znaki, 5 and more znaków. */
-function charactersWord(count: number) {
-  if (count === 1) return "znak";
-  if (count >= 2 && count <= 4) return "znaki";
-  return "znaków";
-}
+import { authErrorMessage } from "@/lib/auth-errors";
+import { MIN_PASSWORD_LENGTH, passwordLengthProblem } from "@/lib/password-policy";
 
 interface Props {
   serverError?: string | null;
@@ -39,8 +33,11 @@ export default function SignUpForm({ serverError }: Props) {
 
     if (!password) {
       next.password = "Podaj hasło";
-    } else if (password.length < MIN_PASSWORD_LENGTH) {
-      next.password = `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków`;
+    } else {
+      const problem = passwordLengthProblem(password);
+      if (problem) {
+        next.password = authErrorMessage(problem) ?? undefined;
+      }
     }
 
     if (!confirmPassword) {
@@ -64,14 +61,6 @@ export default function SignUpForm({ serverError }: Props) {
     }
     setSubmitting(true);
   }
-
-  const remaining = MIN_PASSWORD_LENGTH - password.length;
-  const passwordHint =
-    !errors.password && password.length > 0 && remaining > 0 ? (
-      <p className="text-muted-foreground mt-1 text-sm">
-        Jeszcze {remaining} {charactersWord(remaining)}
-      </p>
-    ) : undefined;
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-4" onSubmit={handleSubmit} noValidate>
@@ -97,9 +86,9 @@ export default function SignUpForm({ serverError }: Props) {
           setPassword(v);
           clearError("password");
         }}
-        placeholder="Co najmniej 6 znaków"
+        placeholder={`Co najmniej ${MIN_PASSWORD_LENGTH} znaków`}
         error={errors.password}
-        hint={passwordHint}
+        hint={<NewPasswordHint password={password} />}
         endContent={
           <PasswordToggle
             visible={showPassword}

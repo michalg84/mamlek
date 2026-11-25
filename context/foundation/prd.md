@@ -311,8 +311,19 @@ do testów, więc są na niej jego konta testowe; osobnego środowiska deweloper
 nie ma. Jeśli nadużycia (np. masowe rejestracje botów) zaczną szkodzić aplikacji,
 rejestrację da się wyłączyć ustawieniem projektu Supabase, bez zmiany kodu. Lokalny
 Supabase ma otwartą rejestrację, bo `npm run smoke` i `npm run test:api` zakładają
-konta testowe. Zmiany ani resetu hasła w aplikacji nie ma (patrz Non-Goals). Co
-trzeba dołożyć przed szerszym udostępnieniem innym — Open Question 6.
+konta testowe. Co trzeba dołożyć przed szerszym udostępnieniem innym — Open
+Question 6.
+
+Hasło (decyzja autora 2026-11-24, zgodnie z NIST SP 800-63B-4 i OWASP ASVS 5.0):
+co najmniej 12 znaków, spoza listy popularnych haseł i inne niż adres e-mail; bez
+wymogów składu (wielkie litery, cyfry, znaki specjalne). Regułę stosuje rejestracja,
+zmiana hasła i logowanie: konto z hasłem słabszym od reguły (także założone przed
+jej wprowadzeniem) po zalogowaniu musi ustawić nowe hasło na ekranie `/konto/haslo`,
+zanim wejdzie do reszty aplikacji. To wymuszenie działa w aplikacji (znacznik
+w metadanych użytkownika, który użytkownik może zdjąć sam, więc nie jest gwarancją).
+Zalogowany może też zmienić hasło z menu. Sesja wygasa po 30 dniach bez użycia
+i po 90 dniach od zalogowania. Hasła ustawionego ręcznie w panelu Supabase reguła nie
+obejmuje, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
 
 ## Non-Goals
 
@@ -349,8 +360,9 @@ trzeba dołożyć przed szerszym udostępnieniem innym — Open Question 6.
   - Kierunki: osobna kategoria „spoza rejestru” z wyraźnym oznaczeniem, która nigdy
     nie daje zielonego „Masz ten lek”; rejestr suplementów GIS (sprawdzić, czy dane
     są dostępne do pobrania).
-- Zmiana i reset hasła w aplikacji (v3). Dziś zapomniane hasło resetuje autor
+- Reset hasła (zapomniane hasło) w aplikacji. Zapomniane hasło resetuje autor
   w panelu Supabase; przy otwartej rejestracji wraca to jako Open Question 6.
+  Zmiana znanego hasła w aplikacji jest w zakresie (Access Control).
 - Koszyk do konsultacji — zapamiętanie sprawdzonych leków jako lista lub raport
   do pokazania farmaceucie, zamiast wyszukiwania każdego osobno przy okienku.
   Pomysł autora z rundy wyzwań; pokrywa się częściowo z FR-015.
@@ -391,7 +403,8 @@ trzeba dołożyć przed szerszym udostępnieniem innym — Open Question 6.
    - potwierdzanie adresu e-mail na produkcji (w projekcie w chmurze domyślnie
      włączone; sprawdzić);
    - lista leków w domu to dane o zdrowiu (RODO): informacja o prywatności
-     i usunięcie konta przez użytkownika; do tego reset hasła bez udziału autora;
+     i usunięcie konta przez użytkownika; do tego reset zapomnianego hasła bez udziału
+     autora (zmiana znanego hasła jest już w aplikacji);
    - ochrona przed botami (np. CAPTCHA w Supabase Auth), gdyby pojawiły się masowe
      rejestracje.
      Owner: autor. Blokuje: nie.
