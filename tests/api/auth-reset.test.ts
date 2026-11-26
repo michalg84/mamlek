@@ -1,9 +1,9 @@
 // The reset of a forgotten password, as a black box over HTTP on a running app and the local Supabase: the request for
 // a link tells nothing about the account, the link from the mail (read from Mailpit) is used up only when the password
 // can be set, the recovery session opens nothing but the reset, and the new password signs the user in and ends the
-// other sessions. The two decisions of the app are covered by the unit tests (src/lib/password-reset.test.ts). Two
-// accounts per run: 8 sign-ups and sign-ins of the 60 per 5 minutes of the local limit, at most 4 reset mails and
-// 2 notifications of the 100 e-mails per hour.
+// other sessions. The pages are read as served, and opening them uses nothing up. The two decisions of the app are
+// covered by the unit tests (src/lib/password-reset.test.ts). Two accounts per run: 8 sign-ups and sign-ins of the 60
+// per 5 minutes of the local limit, at most 4 reset mails and 2 notifications of the 100 e-mails per hour.
 import { setTimeout as delay } from "node:timers/promises";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
@@ -28,6 +28,13 @@ const RESET_SUBJECT = "Ustaw nowe hasło w MamLek";
 const CHANGED_SUBJECT = "Twoje hasło w MamLek zostało zmienione";
 const RECOVERY_COOKIE = /^mamlek-recovery(\.\d+)?$/;
 const SESSION_COOKIE = /^sb-.+-auth-token(\.\d+)?$/;
+const REQUEST_FORM = 'action="/api/auth/forgot-password"';
+const RESET_FORM = 'action="/api/auth/reset-password"';
+const NEUTRAL_TEXT =
+  "Jeśli konto z tym adresem istnieje, wysłaliśmy na nie link do ustawienia nowego hasła. Link jest ważny godzinę.";
+const EXPIRED_TEXT = "Link do ustawienia hasła wygasł lub został już użyty. Poproś o nowy.";
+/** The message of `validation_failed` on the sign-in page, wrong on both reset pages. */
+const SIGN_IN_VALIDATION_TEXT = "Sprawdź adres e-mail i hasło.";
 
 function post(path: string, fields: Record<string, string>, jar?: Jar, origin?: string) {
   return send(path, {
@@ -45,6 +52,23 @@ function signIn(email: string, password: string, jar?: Jar) {
 
 function forgot(email: string, jar?: Jar) {
   return post("/api/auth/forgot-password", { email }, jar);
+}
+
+/** The HTML of a page with runs of whitespace collapsed (the source of a page wraps long sentences). */
+function flat(reply: Reply): string {
+  return reply.body.replace(/\s+/g, " ");
+}
+
+/** The value of the hidden token field of the reset form, `null` when the page has no such field. */
+function tokenField(reply: Reply): string | null {
+  const input = /<input[^>]*\sname="token_hash"[^>]*>/.exec(reply.body)?.[0];
+  return input ? (/\svalue="([^"]*)"/.exec(input)?.[1] ?? "") : null;
+}
+
+/** The headers of the page whose URL may hold the token. */
+function expectPrivate(reply: Reply) {
+  expect(reply.headers.get("referrer-policy")).toBe("strict-origin");
+  expect(reply.headers.get("cache-control")).toBe("no-store");
 }
 
 /** The form of the reset page; without `token` it is the retry that relies on the recovery cookie. */
@@ -112,8 +136,44 @@ describe("password reset", () => {
     expect(await mailsTo(nobody)).toEqual([]);
   });
 
-  it("keeps the link in the URL and unused after a mismatched, short or common password", async () => {
+  it("leads from the sign-in page to the request form, and shows the neutral screen after a request", async () => {
+    const signInPage = await send("/auth/signin");
+    // `[^<]*` and not `[^>]*`: the classes of a button hold a ">" (`has-[>svg]`).
+    expect(flat(signInPage)).toMatch(/<a href="\/auth\/forgot-password"[^<]*Nie pamiętasz hasła\? ?<\/a>/);
+
+    const form = await send("/auth/forgot-password");
+    expect(form.status).toBe(200);
+    expect(form.body).toContain(REQUEST_FORM);
+
+    const sent = await send(SENT_URL);
+    expect(sent.status).toBe(200);
+    expect(flat(sent)).toContain("Sprawdź skrzynkę");
+    expect(flat(sent)).toContain(NEUTRAL_TEXT);
+    expect(sent.body).not.toContain(REQUEST_FORM);
+
+    const refused = await send("/auth/forgot-password?error=validation_failed");
+    expect(refused.body).toContain("Podaj adres e-mail i spróbuj ponownie.");
+    expect(refused.body).not.toContain(SIGN_IN_VALIDATION_TEXT);
+  });
+
+  it("shows the form for the link from the mail, without using the link up", async () => {
     token = await requestToken(email);
+
+    const page = await send(`/auth/reset-password?token_hash=${token}`, { jar: browser });
+
+    expect(page.status).toBe(200);
+    expect(page.body).toContain(RESET_FORM);
+    expect(tokenField(page)).toBe(token);
+    expectPrivate(page);
+    // No recovery session was opened; the tests below prove that the token still works.
+    expect(page.setCookies).toEqual([]);
+
+    const refused = await send(`/auth/reset-password?error=validation_failed&token_hash=${token}`);
+    expect(refused.body).toContain("Wpisz nowe hasło w obu polach i spróbuj ponownie.");
+    expect(refused.body).not.toContain(SIGN_IN_VALIDATION_TEXT);
+  });
+
+  it("keeps the link in the URL and unused after a mismatched, short or common password", async () => {
     const back = (error: string) => `/auth/reset-password?error=${error}&token_hash=${token}`;
 
     const mismatch = await reset(browser, GOOD, { token, confirm: "kot pije herbatę" });
@@ -147,6 +207,35 @@ describe("password reset", () => {
 
     expect(page.status).toBe(302);
     expect(page.location).toBe("/auth/signin");
+  });
+
+  it("shows the form of the account to the recovery cookie, with the error and no token field", async () => {
+    const page = await send("/auth/reset-password?error=password_common", { jar: new Map(browser) });
+
+    expect(page.status).toBe(200);
+    expect(page.body).toContain(RESET_FORM);
+    expect(/Nowe hasło dla konta\s*<span[^>]*>([^<]*)<\/span>/.exec(page.body)?.[1]).toBe(email);
+    expect(tokenField(page)).toBeNull();
+    expect(page.body).toContain("To hasło jest zbyt popularne");
+    expectPrivate(page);
+  });
+
+  it("shows a refused link as invalid, with the way to ask for a new one", async () => {
+    const visits: { path: string; jar?: Jar }[] = [
+      // A valid recovery cookie of an earlier link does not bring the form back.
+      { path: EXPIRED_URL, jar: new Map(browser) },
+      { path: "/auth/reset-password" },
+      { path: "/auth/reset-password?token_hash=" }, // an empty token counts as none
+    ];
+    for (const { path, jar } of visits) {
+      const page = await send(path, { jar });
+
+      expect(page.status, path).toBe(200);
+      expect(page.body, path).toContain(EXPIRED_TEXT);
+      expect(page.body, path).toContain('href="/auth/forgot-password"');
+      expect(page.body, path).not.toContain(RESET_FORM);
+      expectPrivate(page);
+    }
   });
 
   it("refuses a used link, even next to a valid recovery cookie, and a request with neither", async () => {
@@ -213,6 +302,14 @@ describe("password reset of an account with a forced password change", () => {
 
     // Both endpoints answer the marked session itself, which the middleware keeps away from the rest of the API.
     const token = await requestToken(email, jar);
+    // So do both pages, with a link or without one: no redirect to the change screen.
+    const requestPage = await send("/auth/forgot-password", { jar });
+    expect(requestPage.status).toBe(200);
+    expect(requestPage.body).toContain(REQUEST_FORM);
+    const linkPage = await send(`/auth/reset-password?token_hash=${token}`, { jar });
+    expect(linkPage.status).toBe(200);
+    expect(tokenField(linkPage)).toBe(token);
+    expect((await send("/auth/reset-password", { jar })).status).toBe(200);
     const reply = await reset(jar, GOOD, { token });
 
     expect(reply.status).toBe(302);

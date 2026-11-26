@@ -49,6 +49,7 @@ export interface Reply {
   status: number;
   location: string;
   body: string;
+  headers: Headers;
   /** The `Set-Cookie` headers of the response, one per cookie, with their attributes. */
   setCookies: string[];
 }
@@ -71,6 +72,7 @@ export async function send(path: string, options: SendOptions = {}): Promise<Rep
     status: response.status,
     location: response.headers.get("location") ?? "",
     body: await response.text(),
+    headers: response.headers,
     setCookies: response.headers.getSetCookie(),
   };
 }

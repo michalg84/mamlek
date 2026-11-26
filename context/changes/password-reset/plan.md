@@ -408,28 +408,28 @@ Brak migracji bazy i zmian w istniejących kontach. Zmienia się konfiguracja lo
 
 #### Automated
 
-- [x] 2.1 `npm test` przechodzi, w tym `password-reset.test.ts` i uzupełniony `auth-errors.test.ts`
-- [x] 2.2 `npm run lint` i `npx astro check` bez błędów
-- [x] 2.3 `npm run build` przechodzi
-- [x] 2.4 `npm run test:api` przechodzi razem z `tests/api/auth-reset.test.ts`
-- [x] 2.5 `npm run smoke` przechodzi
+- [x] 2.1 `npm test` przechodzi, w tym `password-reset.test.ts` i uzupełniony `auth-errors.test.ts` — 756198a
+- [x] 2.2 `npm run lint` i `npx astro check` bez błędów — 756198a
+- [x] 2.3 `npm run build` przechodzi — 756198a
+- [x] 2.4 `npm run test:api` przechodzi razem z `tests/api/auth-reset.test.ts` — 756198a
+- [x] 2.5 `npm run smoke` przechodzi — 756198a
 
 ### Phase 3: Widoki
 
 #### Automated
 
-- [ ] 3.1 `npm test` przechodzi z testami obu nowych formularzy
-- [ ] 3.2 `npm run ui:scan` przechodzi z nowymi widokami na liście
-- [ ] 3.3 `npm run lint`, `npx astro check` i `npm run build` przechodzą
-- [ ] 3.4 `npm run test:api` przechodzi z przypadkami stron
+- [x] 3.1 `npm test` przechodzi z testami obu nowych formularzy
+- [x] 3.2 `npm run ui:scan` przechodzi z nowymi widokami na liście
+- [x] 3.3 `npm run lint`, `npx astro check` i `npm run build` przechodzą
+- [x] 3.4 `npm run test:api` przechodzi z przypadkami stron
 
 #### Manual
 
-- [ ] 3.5 Z http://localhost:4321/auth/signin link prowadzi do formularza, a „Sprawdź skrzynkę” wygląda tak samo dla adresu z kontem i bez
-- [ ] 3.6 Link z maila (http://127.0.0.1:54324) otwiera formularz, a po zapisaniu hasła jesteś zalogowany na http://localhost:4321/szukaj
-- [ ] 3.7 Zużyty link po wysłaniu formularza pokazuje „link wygasł” i prowadzi do prośby o nowy
-- [ ] 3.8 Po błędzie po zużyciu linku (nowe hasło takie jak stare) zostajesz na formularzu i druga próba się udaje
-- [ ] 3.9 Nowe ekrany są czytelne przy szerokości 390 px i dają się obsłużyć klawiaturą
+- [x] 3.5 Z http://localhost:4321/auth/signin link prowadzi do formularza, a „Sprawdź skrzynkę” wygląda tak samo dla adresu z kontem i bez
+- [x] 3.6 Link z maila (http://127.0.0.1:54324) otwiera formularz, a po zapisaniu hasła jesteś zalogowany na http://localhost:4321/szukaj
+- [x] 3.7 Zużyty link po wysłaniu formularza pokazuje „link wygasł” i prowadzi do prośby o nowy
+- [x] 3.8 Po błędzie po zużyciu linku (nowe hasło takie jak stare) zostajesz na formularzu i druga próba się udaje
+- [x] 3.9 Nowe ekrany są czytelne przy szerokości 390 px i dają się obsłużyć klawiaturą
 
 ### Phase 4: Dokumentacja i wdrożenie
 

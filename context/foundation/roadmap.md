@@ -92,6 +92,7 @@ Brak. Zmiana `kit_items` pod pozycje spoza rejestru należy do S-21. Własny SMT
   - Zmiana PRD: zdjąć „Reset hasła” z Non-Goals, dopisać wymaganie (np. FR-017) i opis w Access Control, uzupełnić Open Question 6 — w fazie dokumentacji tego wycinka, jak w S-18. — Owner: autor. Block: no.
   - Jak reset współgra z regułą z S-18: link prowadzi do ekranu z tym samym sprawdzeniem hasła i znacznikiem `password_change_required`; czy reset kończy też inne sesje konta; jak wygląda limit prób (`[auth.rate_limit]`) i komunikat po polsku. — Owner: autor. Block: no.
   - Ustawienia produkcji ręcznie w panelu: `site_url`, adresy przekierowań, szablon e-maila po polsku. — Owner: autor. Block: no.
+  - Awaria Auth: przy zatrzymanym lokalnym Auth `/auth/reset-password` z sesją odzyskiwania pokazał „Chwilowo niedostępne” dopiero po 60 s (test ręczny fazy 3, 2026-11-26), choć lokalna bramka zapytana bezpośrednio oddała 503 po ok. 5 s; przyczyna i zachowanie na produkcji niesprawdzone, aplikacja nie ma własnego limitu czasu na zapytania do Auth. — Owner: autor. Block: no.
 - **Risk:** Stoi pierwszy, bo odblokowuje użytkownika, a nie wymaga nowej infrastruktury poza ustawieniem poczty. Ryzyka: wyliczanie kont (odpowiedź musi być taka sama dla istniejącego i nieistniejącego adresu), nadużycie jako wysyłka spamu na cudzy adres (limity), link wielokrotnego użytku lub długo ważny (`otp_expiry`). Dotyka ekranów logowania i `/konto/haslo`, więc nie równolegle z innymi zmianami tych plików.
 - **Status:** in-progress
 
