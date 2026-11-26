@@ -51,31 +51,33 @@ Both variables are optional. Without them the app still runs, auth is disabled, 
 
 The local Supabase config (`supabase/config.toml`) has email confirmation turned off, so new accounts can sign in straight away. Supabase Studio runs at http://localhost:54323. Stop the stack with `npx supabase stop`.
 
+The local stack delivers no e-mail: the password reset message and the "password changed" notification land in Mailpit at http://127.0.0.1:54324. The reset link in them points at `site_url` from `supabase/config.toml` (`http://localhost:4321`). After pulling a change to `supabase/config.toml` or `supabase/templates/`, restart the stack (`npx supabase stop`, then `npx supabase start`; the data stays). `npm run test:api` reads those messages, so it needs Mailpit running (`MAILPIT_URL`, default `http://127.0.0.1:54324`).
+
 ### Using a cloud Supabase project
 
-Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Settings → API** in the Supabase dashboard, in both `.env` and `.dev.vars`. Cloud projects require email confirmation by default. You can turn it off under **Authentication → Email → Confirm email**.
+Set `SUPABASE_URL` (Project URL) and `SUPABASE_KEY` (the `anon` key) from **Settings → API** in the Supabase dashboard, in both `.env` and `.dev.vars`. Cloud projects require email confirmation by default. You can turn it off under **Authentication → Email → Confirm email**. Password reset needs more setup in a cloud project, see [Password reset in production](#password-reset-in-production).
 
 ## Scripts
 
-| Command                   | What it does                                                                                                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`             | Dev server on the Cloudflare workerd runtime                                                                                                                                          |
-| `npm run build`           | Production build                                                                                                                                                                      |
-| `npm run preview`         | Serve the production build                                                                                                                                                            |
-| `npm run lint`            | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                                                                                               |
-| `npm run format`          | Prettier                                                                                                                                                                              |
-| `npx astro check`         | Type-check `.astro` and `.ts` files                                                                                                                                                   |
-| `npm run smoke`           | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`)                                                                                           |
-| `npm test`                | Unit, component and registry parser tests (Vitest; `npm run test:watch` to watch), no database needed                                                                                 |
-| `npm run test:db`         | Rule tests of `medicine_check`, kit isolation (RLS, `anon`) and the registry importer (own scratch database) against a local Supabase (`DATABASE_URL`, needs `npx supabase db reset`) |
-| `npm run test:api`        | Black-box tests of `/api/kit*` on a running server (`API_BASE_URL` + local `DATABASE_URL`, needs the registry fixtures imported)                                                      |
-| `npm run roadmap:sync`    | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope)                                                                   |
-| `npm run registry:import` | Imports the Polish medicines registry (RPL XML export) into `DATABASE_URL` (`-- --file <path>` for a local file, `-- --dry-run` to parse only)                                        |
-| `npm run search:check`    | Compares search results for a fixed list of queries with a golden file (`-- --save` to record it; needs the full registry imported locally)                                           |
-| `npm run perf`            | Repeatable `/szukaj` timing on throttled profiles against a running server (Playwright)                                                                                               |
-| `npm run ui:scan`         | Scans the cleaned views for hardcoded colours, palette classes and arbitrary sizes                                                                                                    |
-| `npm run ui:shots`        | Screenshots of the `/szukaj` states at desktop and phone width (Playwright, local server)                                                                                             |
-| `npx playwright test`     | Browser (E2E) tests in `tests/e2e/`, local only, not in CI (setup in [`context/foundation/test-stack.md`](context/foundation/test-stack.md))                                          |
+| Command                   | What it does                                                                                                                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`             | Dev server on the Cloudflare workerd runtime                                                                                                                                           |
+| `npm run build`           | Production build                                                                                                                                                                       |
+| `npm run preview`         | Serve the production build                                                                                                                                                             |
+| `npm run lint`            | ESLint with type-checked rules (`lint:fix` to auto-fix)                                                                                                                                |
+| `npm run format`          | Prettier                                                                                                                                                                               |
+| `npx astro check`         | Type-check `.astro` and `.ts` files                                                                                                                                                    |
+| `npm run smoke`           | Auth-flow smoke test against a running server (`BASE_URL`, default `http://localhost:4321`)                                                                                            |
+| `npm test`                | Unit, component and registry parser tests (Vitest; `npm run test:watch` to watch), no database needed                                                                                  |
+| `npm run test:db`         | Rule tests of `medicine_check`, kit isolation (RLS, `anon`) and the registry importer (own scratch database) against a local Supabase (`DATABASE_URL`, needs `npx supabase db reset`)  |
+| `npm run test:api`        | Black-box HTTP tests of `/api/kit*` and the password flows (sign-up, change, reset) on a running server (`API_BASE_URL`, local `DATABASE_URL` and Mailpit, registry fixtures imported) |
+| `npm run roadmap:sync`    | One-way sync of the roadmap to GitHub Issues + Project (`-- --dry-run` to preview; needs `gh` with `project` scope)                                                                    |
+| `npm run registry:import` | Imports the Polish medicines registry (RPL XML export) into `DATABASE_URL` (`-- --file <path>` for a local file, `-- --dry-run` to parse only)                                         |
+| `npm run search:check`    | Compares search results for a fixed list of queries with a golden file (`-- --save` to record it; needs the full registry imported locally)                                            |
+| `npm run perf`            | Repeatable `/szukaj` timing on throttled profiles against a running server (Playwright)                                                                                                |
+| `npm run ui:scan`         | Scans the cleaned views for hardcoded colours, palette classes and arbitrary sizes                                                                                                     |
+| `npm run ui:shots`        | Screenshots of the `/szukaj` states at desktop and phone width (Playwright, local server)                                                                                              |
+| `npx playwright test`     | Browser (E2E) tests in `tests/e2e/`, local only, not in CI (setup in [`context/foundation/test-stack.md`](context/foundation/test-stack.md))                                           |
 
 The smoke test signs up a throwaway user and signs in right away, so it needs email confirmation turned off. `perf`, `ui:shots` and the E2E tests need a one-time `npx playwright install chromium`; the details of every script are in [`AGENTS.md`](AGENTS.md).
 
@@ -88,7 +90,7 @@ A husky pre-commit hook runs lint-staged: `eslint --fix`, `ui:scan` (guarded vie
 `.github/workflows/ci.yml` runs on every push and pull request to `main`:
 
 - **ci**: `astro sync`, lint, `ui:scan`, `astro check`, unit, component and registry parser tests (Vitest), build. The build uses the `SUPABASE_URL` and `SUPABASE_KEY` repository secrets.
-- **smoke**: starts a local Supabase (which applies the migrations), imports the registry fixtures (`scripts/fixtures/rpl-sample-v1.xml` twice, then `rpl-sample-v2.xml`) and verifies the result with `node scripts/registry-import-check.mjs` and the `medicine_check` rule, kit isolation and registry importer tests (`npm run test:db`), then builds the app and runs `npm run smoke` and the kit API tests (`npm run test:api`) against `npm run preview`.
+- **smoke**: starts a local Supabase (which applies the migrations), imports the registry fixtures (`scripts/fixtures/rpl-sample-v1.xml` twice, then `rpl-sample-v2.xml`) and verifies the result with `node scripts/registry-import-check.mjs` and the `medicine_check` rule, kit isolation and registry importer tests (`npm run test:db`), then builds the app and runs `npm run smoke` and the API tests (`npm run test:api`, which reads e-mails from the local Mailpit) against `npm run preview`.
 
 Both jobs are required checks: the ruleset in `.github/rulesets/main.json` protects `main` (PR required, merge commits only, `ci` and `smoke` green, no bypass, no force-push or deletion). Renaming either job requires updating the ruleset.
 
@@ -122,6 +124,22 @@ npx wrangler deploy
 ```
 
 This needs a Cloudflare account and `wrangler` auth. `SUPABASE_URL` and `SUPABASE_KEY` are set as Worker secrets (`wrangler secret put`) and persist across deploys regardless of whether they're triggered by CI or manually.
+
+### Password reset in production
+
+**Configure the Supabase dashboard before merging** the password reset change: a merge deploys the code at once, and the default reset template links to `{{ .ConfirmationURL }}`, which lands on `/` and loses its parameters. Nothing here is applied from `supabase/config.toml`; set it by hand. Open the pull request without auto-merge, wait for green `ci` and `smoke`, configure the project, then merge.
+
+1. **Custom SMTP** (**Authentication → Emails → SMTP Settings**). The built-in service sends only to members of the Supabase organization, 2 messages per hour. Most SMTP providers need a domain you own to send from. Keep the SMTP credentials out of the repository.
+2. **Rate limits** (**Authentication → Rate Limits**): with custom SMTP the e-mail limit starts at 30 messages per hour; raise it if needed.
+3. **Site URL** (**Authentication → URL Configuration**): the public address of the app, **without a trailing slash**. The reset link is built as `{{ .SiteURL }}/auth/reset-password?token_hash=…`, so a slash would produce `//auth/…`.
+4. **Reset password template** (**Authentication → Emails → Email Templates**): subject `Ustaw nowe hasło w MamLek`, body copied from `supabase/templates/recovery.html`.
+5. **Password changed notification** (**Authentication → Emails**, security notifications): turn it on, subject `Twoje hasło w MamLek zostało zmienione`, body copied from `supabase/templates/password_changed_notification.html`.
+6. **Email OTP Expiration** (**Authentication → Sign In / Providers → Email**): 3600 seconds. The e-mail and the app promise a link valid for one hour.
+7. **Password settings**: `Secure password change` (reauthentication for sessions older than 24 hours) may stay as it is, because the reset and `/konto/haslo` both change the password on a session created moments earlier. Keep `Require current password` off: the app does not send the current password to Supabase with the change.
+
+Then reset the password of your own account on the deployed app: the message arrives (not in spam), the link signs you in after saving, and the notification follows.
+
+Rollback: revert the merge and restore the default reset template.
 
 ## Working with AI agents
 

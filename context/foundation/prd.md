@@ -3,7 +3,7 @@ project: "MamLek"
 version: 3
 status: active
 created: 2026-09-24
-updated: 2026-11-16 # v3: reguły z audytu zgodności (context/audits/prd-conformance/2026-11-16.md); v2 w archive/2026-11-16-prd.md; tego samego dnia autor zmienił decyzję o rejestracji: zostaje otwarta
+updated: 2026-11-26 # v3: reguły z audytu zgodności (context/audits/prd-conformance/2026-11-16.md); v2 w archive/2026-11-16-prd.md; tego samego dnia autor zmienił decyzję o rejestracji: zostaje otwarta; 2026-11-26: reset zapomnianego hasła w zakresie (FR-017, S-19)
 context_type: greenfield
 product_type: web-app
 target_scale:
@@ -190,6 +190,8 @@ odnosiły się do tych samych identyfikatorów.
 
 - FR-013: Użytkownik może zalogować się na konto domu. Priority: must-have
   > Socrates: Rozważone kontrargumenty — logowanie to próg przy okienku w aptece, dzielone hasło jest kłopotliwe, dla dwóch osób ekran logowania jest zbędny. Rozstrzygnięcie autora: zostaje bez zmian. Osobne konta przy jednej apteczce wymagałyby mechanizmu parowania kont — podzielenie się hasłem jest prostsze. Kto nie używa menedżera haseł, ten i tak nie użyje tej aplikacji. Sesję zaczyna się przed wejściem do gabinetu albo w drodze do apteki, więc logowanie nie koliduje z bezpiecznikiem „odpowiedź w sekundy".
+- FR-017: Użytkownik, który zapomniał hasła, może poprosić o link na adres e-mail konta, ustawić przez niego nowe hasło i od razu wejść do aplikacji. Odpowiedź na prośbę o link jest taka sama dla adresu z kontem i bez konta. Priority: must-have
+  > Doprecyzowanie (password-reset, 2026-11-26): wymaganie dopisane po MVP (S-19), więc nie przechodziło osobnego wyzwania. Link jest jednorazowy i ważny godzinę, nowa prośba unieważnia starszy; samo otwarcie go nie zużywa, dopiero wysłanie formularza. Nowe hasło podlega regule z Access Control; hasło niezgodne z nią nie zużywa linku, jeśli da się to sprawdzić przed jego zużyciem, a gdy zapis nie uda się później, formularz pozwala spróbować ponownie przez 15 minut. Przed zapisaniem hasła link nie daje dostępu do apteczki ani wyszukiwarki. Po zapisaniu użytkownik jest zalogowany, pozostałe sesje konta są zakończone, a na skrzynkę przychodzi powiadomienie o zmianie hasła. Neutralna odpowiedź dotyczy treści: błąd widać tylko wtedy, gdy serwer logowania jest nieosiągalny albo przekroczony limit żądań; czasu odpowiedzi aplikacja nie wyrównuje.
 
 ### Poza przepływem głównym
 
@@ -325,6 +327,12 @@ Zalogowany może też zmienić hasło z menu. Sesja wygasa po 30 dniach bez uży
 i po 90 dniach od zalogowania. Hasła ustawionego ręcznie w panelu Supabase reguła nie
 obejmuje, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
 
+Zapomniane hasło (S-19, 2026-11-26): link „Nie pamiętasz hasła?” na ekranie
+logowania prowadzi do ustawienia nowego hasła przez e-mail (FR-017), także dla konta
+z wymuszoną zmianą hasła. Dostęp do skrzynki e-mail konta wystarcza więc do przejęcia
+konta — przy koncie dzielonym przez domowników liczy się, kto ma dostęp do tej
+skrzynki.
+
 ## Non-Goals
 
 - Ostrzeganie o interakcjach leków i przeciwwskazaniach. Aplikacja nie wchodzi
@@ -360,9 +368,6 @@ obejmuje, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
   - Kierunki: osobna kategoria „spoza rejestru” z wyraźnym oznaczeniem, która nigdy
     nie daje zielonego „Masz ten lek”; rejestr suplementów GIS (sprawdzić, czy dane
     są dostępne do pobrania).
-- Reset hasła (zapomniane hasło) w aplikacji. Zapomniane hasło resetuje autor
-  w panelu Supabase; przy otwartej rejestracji wraca to jako Open Question 6.
-  Zmiana znanego hasła w aplikacji jest w zakresie (Access Control).
 - Koszyk do konsultacji — zapamiętanie sprawdzonych leków jako lista lub raport
   do pokazania farmaceucie, zamiast wyszukiwania każdego osobno przy okienku.
   Pomysł autora z rundy wyzwań; pokrywa się częściowo z FR-015.
@@ -377,7 +382,8 @@ obejmuje, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
    zamiennika?** — konkurencja nie została sprawdzona. Owner: autor. Blokuje: nie.
 2. ~~**Jaką metodą loguje się użytkownik do konta domu?**~~ — rozstrzygnięte w v3
    (2026-11-16): e-mail + hasło, rejestracja otwarta (każdy dom zakłada konto
-   sam), reset hasła poza zakresem — patrz Access Control i Non-Goals.
+   sam), ~~reset hasła poza zakresem~~ — patrz Access Control. Nota z 2026-11-26:
+   reset zapomnianego hasła wszedł do zakresu (FR-017, S-19).
 3. **Ile dni przed końcem ważności aplikacja ostrzega?** — okres do ustalenia.
    Owner: autor. Blokuje: nie.
 4. **Który poziom dopasowania substancji czynnych jest domyślny?** — bezpiecznik
@@ -397,14 +403,17 @@ obejmuje, ale takie konto złapie wymuszona zmiana przy następnym logowaniu.
 6. **Co dołożyć, zanim aplikacja trafi szerzej do innych użytkowników?** — rejestracja
    jest otwarta (Access Control), ale do rozważenia później, przy szerszym
    udostępnieniu (autor, 2026-11-16):
-   - własny serwer SMTP — wbudowana poczta Supabase wysyła tylko kilka e-maili na
+   - ~~własny serwer SMTP — wbudowana poczta Supabase wysyła tylko kilka e-maili na
      godzinę, więc przy kilku rejestracjach naraz część osób nie dostanie linku
-     potwierdzającego;
+     potwierdzającego;~~ weszło do S-19 (2026-11-26): wbudowana poczta wysyła tylko
+     do członków zespołu projektu, więc reset hasła (FR-017) wymaga własnego SMTP,
+     konfigurowanego przed wdrożeniem (README);
    - potwierdzanie adresu e-mail na produkcji (w projekcie w chmurze domyślnie
      włączone; sprawdzić);
    - lista leków w domu to dane o zdrowiu (RODO): informacja o prywatności
-     i usunięcie konta przez użytkownika; do tego reset zapomnianego hasła bez udziału
-     autora (zmiana znanego hasła jest już w aplikacji);
+     i usunięcie konta przez użytkownika; ~~do tego reset zapomnianego hasła bez
+     udziału autora~~ (w zakresie od 2026-11-26: FR-017; zmiana znanego hasła też jest
+     w aplikacji);
    - ochrona przed botami (np. CAPTCHA w Supabase Auth), gdyby pojawiły się masowe
      rejestracje.
      Owner: autor. Blokuje: nie.

@@ -418,25 +418,25 @@ Brak migracji bazy i zmian w istniejących kontach. Zmienia się konfiguracja lo
 
 #### Automated
 
-- [x] 3.1 `npm test` przechodzi z testami obu nowych formularzy
-- [x] 3.2 `npm run ui:scan` przechodzi z nowymi widokami na liście
-- [x] 3.3 `npm run lint`, `npx astro check` i `npm run build` przechodzą
-- [x] 3.4 `npm run test:api` przechodzi z przypadkami stron
+- [x] 3.1 `npm test` przechodzi z testami obu nowych formularzy — ae362d5
+- [x] 3.2 `npm run ui:scan` przechodzi z nowymi widokami na liście — ae362d5
+- [x] 3.3 `npm run lint`, `npx astro check` i `npm run build` przechodzą — ae362d5
+- [x] 3.4 `npm run test:api` przechodzi z przypadkami stron — ae362d5
 
 #### Manual
 
-- [x] 3.5 Z http://localhost:4321/auth/signin link prowadzi do formularza, a „Sprawdź skrzynkę” wygląda tak samo dla adresu z kontem i bez
-- [x] 3.6 Link z maila (http://127.0.0.1:54324) otwiera formularz, a po zapisaniu hasła jesteś zalogowany na http://localhost:4321/szukaj
-- [x] 3.7 Zużyty link po wysłaniu formularza pokazuje „link wygasł” i prowadzi do prośby o nowy
-- [x] 3.8 Po błędzie po zużyciu linku (nowe hasło takie jak stare) zostajesz na formularzu i druga próba się udaje
-- [x] 3.9 Nowe ekrany są czytelne przy szerokości 390 px i dają się obsłużyć klawiaturą
+- [x] 3.5 Z http://localhost:4321/auth/signin link prowadzi do formularza, a „Sprawdź skrzynkę” wygląda tak samo dla adresu z kontem i bez — ae362d5
+- [x] 3.6 Link z maila (http://127.0.0.1:54324) otwiera formularz, a po zapisaniu hasła jesteś zalogowany na http://localhost:4321/szukaj — ae362d5
+- [x] 3.7 Zużyty link po wysłaniu formularza pokazuje „link wygasł” i prowadzi do prośby o nowy — ae362d5
+- [x] 3.8 Po błędzie po zużyciu linku (nowe hasło takie jak stare) zostajesz na formularzu i druga próba się udaje — ae362d5
+- [x] 3.9 Nowe ekrany są czytelne przy szerokości 390 px i dają się obsłużyć klawiaturą — ae362d5
 
 ### Phase 4: Dokumentacja i wdrożenie
 
 #### Automated
 
-- [ ] 4.1 PRD nie ma resetu hasła w Non-Goals i ma FR-017
-- [ ] 4.2 README i AGENTS.md opisują konfigurację panelu przed merge; `npx prettier --check` dla zmienionych plików przechodzi
+- [x] 4.1 PRD nie ma resetu hasła w Non-Goals i ma FR-017
+- [x] 4.2 README i AGENTS.md opisują konfigurację panelu przed merge; `npx prettier --check` dla zmienionych plików przechodzi
 - [ ] 4.3 Checki `ci` i `smoke` na PR są zielone
 
 #### Manual
