@@ -13,6 +13,11 @@ const error = authErrorMessage(Astro.url.searchParams.get("error"));
 <Layout title="Zaloguj się">
   <AuthShell title="Zaloguj się">
     <SignInForm serverError={error} client:load />
+    <div class="mt-2 text-center">
+      <a href="/auth/forgot-password" class:list={[cn(buttonVariants({ variant: "link" }), "h-auto px-1 py-2")]}>
+        Nie pamiętasz hasła?
+      </a>
+    </div>
     <Fragment slot="footer">
       <span class="text-muted-foreground text-sm">Nie masz konta?</span>
       <a href="/auth/signup" class:list={[cn(buttonVariants({ variant: "link" }), "h-auto px-1 py-2")]}>

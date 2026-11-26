@@ -43,12 +43,12 @@ Domowa apteczka w gospodarstwie z trójką dzieci jest szufladą, której zawart
 
 ## At a glance
 
-| ID   | Change ID                | Outcome (user can …)                                                                                 | Prerequisites | PRD refs                                         | Status   |
-| ---- | ------------------------ | ---------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ | -------- |
-| S-19 | password-reset           | odzyskać konto po zapomnieniu hasła przez link w e-mailu i ustawić nowe hasło zgodne z regułą z S-18 | —             | MS-01, FR-013, Access Control, Open Question 6   | ready    |
-| S-21 | off-registry-items       | dodać do apteczki rzecz spoza rejestru (ręcznie lub z CSV) i widzieć ją na liście z oznaczeniem      | —             | MS-03, FR-003, FR-005, FR-009, FR-011, Non-Goals | ready    |
-| S-22 | off-registry-suggestions | dostać wcześniej wpisaną pozycję spoza rejestru jako podpowiedź, z wielkością opakowania             | S-21          | MS-04                                            | proposed |
-| S-20 | account-deletion         | usunąć swoje konto razem z apteczką po ponownym podaniu hasła                                        | —             | MS-02, Access Control, Open Question 6           | ready    |
+| ID   | Change ID                | Outcome (user can …)                                                                                 | Prerequisites | PRD refs                                         | Status      |
+| ---- | ------------------------ | ---------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ | ----------- |
+| S-19 | password-reset           | odzyskać konto po zapomnieniu hasła przez link w e-mailu i ustawić nowe hasło zgodne z regułą z S-18 | —             | MS-01, FR-013, Access Control, Open Question 6   | in-progress |
+| S-21 | off-registry-items       | dodać do apteczki rzecz spoza rejestru (ręcznie lub z CSV) i widzieć ją na liście z oznaczeniem      | —             | MS-03, FR-003, FR-005, FR-009, FR-011, Non-Goals | ready       |
+| S-22 | off-registry-suggestions | dostać wcześniej wpisaną pozycję spoza rejestru jako podpowiedź, z wielkością opakowania             | S-21          | MS-04                                            | proposed    |
+| S-20 | account-deletion         | usunąć swoje konto razem z apteczką po ponownym podaniu hasła                                        | —             | MS-02, Access Control, Open Question 6           | ready       |
 
 ## Streams
 
@@ -92,8 +92,9 @@ Brak. Zmiana `kit_items` pod pozycje spoza rejestru należy do S-21. Własny SMT
   - Zmiana PRD: zdjąć „Reset hasła” z Non-Goals, dopisać wymaganie (np. FR-017) i opis w Access Control, uzupełnić Open Question 6 — w fazie dokumentacji tego wycinka, jak w S-18. — Owner: autor. Block: no.
   - Jak reset współgra z regułą z S-18: link prowadzi do ekranu z tym samym sprawdzeniem hasła i znacznikiem `password_change_required`; czy reset kończy też inne sesje konta; jak wygląda limit prób (`[auth.rate_limit]`) i komunikat po polsku. — Owner: autor. Block: no.
   - Ustawienia produkcji ręcznie w panelu: `site_url`, adresy przekierowań, szablon e-maila po polsku. — Owner: autor. Block: no.
+  - Awaria Auth: przy zatrzymanym lokalnym Auth `/auth/reset-password` z sesją odzyskiwania pokazał „Chwilowo niedostępne” dopiero po 60 s (test ręczny fazy 3, 2026-11-26), choć lokalna bramka zapytana bezpośrednio oddała 503 po ok. 5 s; przyczyna i zachowanie na produkcji niesprawdzone, aplikacja nie ma własnego limitu czasu na zapytania do Auth. — Owner: autor. Block: no.
 - **Risk:** Stoi pierwszy, bo odblokowuje użytkownika, a nie wymaga nowej infrastruktury poza ustawieniem poczty. Ryzyka: wyliczanie kont (odpowiedź musi być taka sama dla istniejącego i nieistniejącego adresu), nadużycie jako wysyłka spamu na cudzy adres (limity), link wielokrotnego użytku lub długo ważny (`otp_expiry`). Dotyka ekranów logowania i `/konto/haslo`, więc nie równolegle z innymi zmianami tych plików.
-- **Status:** ready
+- **Status:** in-progress
 
 ### S-21: Pozycje spoza rejestru w apteczce
 
@@ -192,6 +193,7 @@ Brak. Zmiana `kit_items` pod pozycje spoza rejestru należy do S-21. Własny SMT
 - **Zapis apteczki tylko przez aplikację (twarda granica w bazie)** — Why parked: opcjonalne zadanie po MVP; dziś limit ilości i zakres daty sprawdza tylko API (reguła „opakowanie nie jest wycofane" zniknęła w S-13: wycofane opakowanie jest dozwolone), więc zalogowany użytkownik mógłby własnym tokenem zapisać nieprawidłowe wartości we własnej apteczce (cudze dane są chronione RLS). Po S-05 doszły: reguła „to samo opakowanie w obrębie wariantu” też tylko w API, a dwa równoległe `PATCH` mogą zapisać ilość ponad rozmiar opakowania (audyt 2026-11-16). Opcje: odebrać roli `authenticated` INSERT/UPDATE/DELETE na `kit_items` i pisać przez funkcję w bazie albo klucz serwisowy; albo dołożyć CHECK-i w bazie. Źródło: impl-review `add-medicine-to-kit`, F2.
 - **Pomiar ekranu importu z otwartym polem wyszukiwania** — Why parked: każde pole podpowiedzi tworzy własnego workera z własnym indeksem listy (ok. 2 MB), a na `/apteczka/import` działa obok workera dopasowań; nie ma pomiaru, czy to problem (w trybie ręcznego szukania jest zwykle jeden wiersz naraz). Najpierw zmierzyć ekran importu z otwartym polem (ręcznie albo rozszerzonym `npm run perf`), a współdzielenie workera rozważać dopiero, gdy pomiar pokaże problem. Źródło: audyt 2026-11-16, F13.
 - **Drobne uwagi z przeglądu S-18 (`password-policy`)** — Why parked: świadomie niezałatane przy zamykaniu S-18 (2026-11-25), żadna nie blokuje działania: (1) middleware odpowiada na zablokowany formularz kodem 403 z JSON-em zamiast przekierowaniem na `/konto/haslo`; (2) błąd `signOut({ scope: "others" })` po zmianie hasła jest tylko logowany, bez komunikatu dla użytkownika; (3) jeśli zdjęcie znacznika `password_change_required` się nie powiedzie, konto trafia na tę samą stronę przy kolejnym logowaniu; (4) limit 90 dni sesji liczony z `amr` zaczyna się od nowa po zmianie hasła. Do podjęcia, gdy któraś zacznie przeszkadzać użytkownikom. Źródło: przegląd kodu S-18.
+- **Logo i identyfikacja wizualna aplikacji** — Why parked: aplikacja nie ma jeszcze logo; maile resetu i zmiany hasła (S-19) używają tymczasowego, niezatwierdzonego: biały krzyżyk na zaokrąglonym kwadracie w kolorze `--primary` (`#007a78`) i napis „MamLek”, złożone z tabel HTML bez obrazków, w `supabase/templates/`. Przy pracy nad wyglądem strony i logo podmienić je też w obu szablonach i w panelu produkcyjnego projektu Supabase. Kiedyś, bez terminu.
 
 ## Milestone History
 

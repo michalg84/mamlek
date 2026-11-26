@@ -12,6 +12,7 @@ describe("authErrorCode", () => {
     expect(authErrorCode({ code: "user_already_exists" })).toBe("user_already_exists");
     expect(authErrorCode({ code: "same_password" })).toBe("same_password");
     expect(authErrorCode({ code: "weak_password" })).toBe("weak_password");
+    expect(authErrorCode(new AuthApiError("Token has expired or is invalid", 403, "otp_expired"))).toBe("otp_expired");
   });
 
   it("turns an unknown code, a missing code and no error into unknown", () => {
@@ -61,6 +62,15 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage("session_expired")).toBe("Sesja wygasła, zaloguj się ponownie.");
   });
 
+  it("has a Polish message for the codes of the password reset", () => {
+    expect(authErrorMessage("otp_expired")).toBe(
+      "Link do ustawienia hasła wygasł lub został już użyty. Poproś o nowy.",
+    );
+    expect(authErrorMessage("password_changed_signin_failed")).toBe(
+      "Hasło zostało zmienione, ale nie udało się zalogować. Zaloguj się nowym hasłem.",
+    );
+  });
+
   it("keeps the new codes out of the generic message", () => {
     for (const code of [
       "password_too_short",
@@ -71,6 +81,8 @@ describe("authErrorMessage", () => {
       "same_password",
       "password_check_failed",
       "session_expired",
+      "otp_expired",
+      "password_changed_signin_failed",
     ]) {
       expect(authErrorMessage(code)).not.toBe(GENERIC);
     }

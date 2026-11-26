@@ -1,5 +1,7 @@
 // Helpers of the API tests: a session over cookies (its own copy of scripts/smoke.mjs, which stays dependency-free),
-// raw HTTP requests, boundary data picked from the local registry, and the checks every rejected request goes through.
+// raw HTTP requests, the mails of the local auth server, boundary data picked from the local registry, and the checks
+// every rejected request goes through.
+import { setTimeout as delay } from "node:timers/promises";
 import { packQuantity } from "@/lib/kit-format";
 import type { RegistryPackageUnit } from "@/types";
 import { connectLocal, LOCAL_HOSTS } from "../db/medicine-check-fixtures";
@@ -47,6 +49,9 @@ export interface Reply {
   status: number;
   location: string;
   body: string;
+  headers: Headers;
+  /** The `Set-Cookie` headers of the response, one per cookie, with their attributes. */
+  setCookies: string[];
 }
 
 export async function send(path: string, options: SendOptions = {}): Promise<Reply> {
@@ -63,7 +68,13 @@ export async function send(path: string, options: SendOptions = {}): Promise<Rep
     body: options.body === undefined ? undefined : new TextEncoder().encode(options.body),
   });
   storeCookies(response, jar);
-  return { status: response.status, location: response.headers.get("location") ?? "", body: await response.text() };
+  return {
+    status: response.status,
+    location: response.headers.get("location") ?? "",
+    body: await response.text(),
+    headers: response.headers,
+    setCookies: response.headers.getSetCookie(),
+  };
 }
 
 /** `POST` (or another `method`) with a JSON body (an object is stringified, a string is sent as is). */
@@ -91,7 +102,7 @@ export async function signUpAndSignIn(label: string): Promise<{ email: string; j
       jar,
     });
   const limit =
-    "the limit of 30 sign-ups and sign-ins per 5 minutes (supabase/config.toml; wait a few minutes or restart Supabase)";
+    "the limit of 60 sign-ups and sign-ins per 5 minutes (supabase/config.toml; wait a few minutes or restart Supabase)";
   // With e-mail confirmation on, sign-up succeeds without a session (it answers /auth/confirm-email) and sign-in is
   // refused ("Email not confirmed"); with it off, sign-up answers /szukaj.
   const confirmation = "e-mail confirmation being on (enable_confirmations in supabase/config.toml)";
@@ -115,6 +126,64 @@ export async function signUpAndSignIn(label: string): Promise<{ email: string; j
     throw new Error(`${email} is not in the local auth.users: the server at ${BASE_URL} does not use DATABASE_URL`);
   }
   return { email, jar };
+}
+
+// --- Mail --------------------------------------------------------------------------------------------------------
+
+// The web API of the mail catcher of the local Supabase (Mailpit, `[local_smtp]` in supabase/config.toml): nothing is
+// really sent, the mails of the auth server are read from here.
+const MAILPIT_URL = (process.env.MAILPIT_URL ?? "http://127.0.0.1:54324").replace(/\/$/, "");
+
+export interface Mail {
+  id: string;
+  subject: string;
+}
+
+async function mailpit<T>(path: string): Promise<T> {
+  if (!LOCAL_HOSTS.has(new URL(MAILPIT_URL).hostname)) {
+    throw new Error(`MAILPIT_URL must point to a local server (got ${MAILPIT_URL})`);
+  }
+  const response = await fetch(MAILPIT_URL + path);
+  if (!response.ok) {
+    throw new Error(`Mailpit at ${MAILPIT_URL} answered ${response.status} for ${path}`);
+  }
+  return (await response.json()) as T;
+}
+
+/** The mails sent to this address, newest first. */
+export async function mailsTo(address: string): Promise<Mail[]> {
+  const query = encodeURIComponent(`to:${address}`);
+  const found = await mailpit<{ messages: { ID: string; Subject: string }[] }>(`/api/v1/search?query=${query}`);
+  return found.messages.map(({ ID, Subject }) => ({ id: ID, subject: Subject }));
+}
+
+/** The newest mail to this address with this subject that is not among `seen`; waits up to 10 seconds for it. */
+export async function waitForMail(address: string, subject: string, seen: Mail[] = []): Promise<Mail> {
+  const known = new Set(seen.map(({ id }) => id));
+  const deadline = Date.now() + 10_000;
+  for (;;) {
+    const mail = (await mailsTo(address)).find((found) => found.subject === subject && !known.has(found.id));
+    if (mail) {
+      return mail;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`No new mail "${subject}" to ${address} in Mailpit at ${MAILPIT_URL}`);
+    }
+    await delay(200);
+  }
+}
+
+/**
+ * The path and query of the password reset link in a mail. Its host (the site URL of the auth server) is dropped: the
+ * tests call the app at BASE_URL.
+ */
+export async function resetLinkPath(mail: Mail): Promise<string> {
+  const { HTML } = await mailpit<{ HTML: string }>(`/api/v1/message/${mail.id}`);
+  const link = /href="[^"]*?(\/auth\/reset-password\?[^"]*)"/.exec(HTML);
+  if (!link) {
+    throw new Error(`The mail "${mail.subject}" has no password reset link`);
+  }
+  return link[1].replaceAll("&amp;", "&");
 }
 
 // --- Local database reads ----------------------------------------------------------------------------------------

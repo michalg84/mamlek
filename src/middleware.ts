@@ -6,9 +6,17 @@ import { createClient } from "@/lib/supabase";
 const PROTECTED_ROUTES = ["/szukaj", "/apteczka", "/konto"];
 
 // What a user whose password breaks the rule (marker `password_change_required` in `user_metadata`, set at sign-in)
-// may still reach: the change screen, its endpoint and the sign-out. Nothing else under `/api/auth/` (a marked user
-// signs out first to sign in again).
-const PASSWORD_CHANGE_PATHS = ["/konto/haslo", "/api/auth/password", "/api/auth/signout"];
+// may still reach: the change screen, its endpoint, the sign-out and the reset of a forgotten password (two pages and
+// their endpoints). Nothing else under `/api/auth/` (a marked user signs out first to sign in again).
+const PASSWORD_CHANGE_PATHS = [
+  "/konto/haslo",
+  "/api/auth/password",
+  "/api/auth/signout",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password",
+];
 const PASSWORD_CHANGE_URL = "/konto/haslo?wymagana=1";
 
 export const onRequest = defineMiddleware(async (context, next) => {

@@ -3,7 +3,7 @@
 // current password and the rule. The rule itself is covered by the unit tests; this proves the gate, the marker and the
 // endpoint together. Accounts come from sign-up with a good password; `setWeakPassword` then makes the password the
 // kind an old account has. Three accounts per run, and every sign-up, sign-in and re-check of the current password counts
-// against the 30 per 5 minutes of the local limit (19 in this file).
+// against the 60 per 5 minutes of the local limit (19 in this file).
 import { beforeAll, describe, expect, it } from "vitest";
 import { ACCOUNT_PASSWORD, send, setWeakPassword, signUpAndSignIn, type Jar } from "./helpers";
 

@@ -1,7 +1,7 @@
 // The password rule of the sign-up endpoint, as a black box over HTTP on a running app: a refused password gets the
 // code of its reason and creates no account, a good one gets in. The rule itself is covered by the unit tests
 // (src/lib/services/password-check.test.ts); this proves that the endpoint applies it before it calls Supabase.
-// Only the last sign-up reaches Supabase (the refused ones stop in the app), so a run costs one of the 30 sign-ups per
+// Only the last sign-up reaches Supabase (the refused ones stop in the app), so a run costs one of the 60 sign-ups per
 // 5 minutes of the local limit.
 import { describe, expect, it } from "vitest";
 import { accountCount, send } from "./helpers";

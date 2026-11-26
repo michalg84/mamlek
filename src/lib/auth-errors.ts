@@ -4,7 +4,7 @@ import { EXAMPLE_PASSPHRASE, MAX_PASSWORD_BYTES, MIN_PASSWORD_LENGTH } from "@/l
 /**
  * Error codes the auth routes may put in `?error=`. The page turns a code into a Polish message and never shows the
  * parameter itself, so a hand-written link cannot put its own text on the sign-in page. The Supabase codes are the
- * `AuthError.code` values of `@supabase/auth-js` that sign-in and sign-up can return.
+ * `AuthError.code` values of `@supabase/auth-js` that sign-in, sign-up and the password reset can return.
  */
 const MESSAGES = {
   invalid_credentials: "Nieprawidłowy e-mail lub hasło.",
@@ -28,6 +28,8 @@ const MESSAGES = {
   not_configured: "Logowanie nie jest skonfigurowane na tym serwerze.",
   session_check_failed:
     "Nie udało się sprawdzić sesji — serwis jest chwilowo niedostępny. Zaloguj się ponownie za chwilę.",
+  otp_expired: "Link do ustawienia hasła wygasł lub został już użyty. Poproś o nowy.",
+  password_changed_signin_failed: "Hasło zostało zmienione, ale nie udało się zalogować. Zaloguj się nowym hasłem.",
   unknown: "Coś poszło nie tak. Spróbuj ponownie za chwilę.",
 } as const;
 
