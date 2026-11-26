@@ -395,24 +395,24 @@ Brak migracji bazy i zmian w istniejących kontach. Zmienia się konfiguracja lo
 
 #### Automated
 
-- [x] 1.1 Lokalny stos startuje z nową konfiguracją po `npx supabase stop` i `npx supabase start` (dane zostają)
-- [x] 1.2 Mail resetu w Mailpit (wywołany przez `POST /auth/v1/recover` lokalnego API) ma polski temat i link `http://localhost:4321/auth/reset-password?token_hash=…`
-- [x] 1.3 Po zmianie hasła konta testowego Mailpit dostaje polskie powiadomienie
-- [x] 1.4 `npm run smoke` i `npm run test:api` przechodzą na działającym serwerze
+- [x] 1.1 Lokalny stos startuje z nową konfiguracją po `npx supabase stop` i `npx supabase start` (dane zostają) — 19ae3e3
+- [x] 1.2 Mail resetu w Mailpit (wywołany przez `POST /auth/v1/recover` lokalnego API) ma polski temat i link `http://localhost:4321/auth/reset-password?token_hash=…` — 19ae3e3
+- [x] 1.3 Po zmianie hasła konta testowego Mailpit dostaje polskie powiadomienie — 19ae3e3
+- [x] 1.4 `npm run smoke` i `npm run test:api` przechodzą na działającym serwerze — 19ae3e3
 
 #### Manual
 
-- [x] 1.5 Oba maile w Mailpit (http://127.0.0.1:54324) czytają się dobrze po polsku
+- [x] 1.5 Oba maile w Mailpit (http://127.0.0.1:54324) czytają się dobrze po polsku — 19ae3e3
 
 ### Phase 2: Serwer
 
 #### Automated
 
-- [ ] 2.1 `npm test` przechodzi, w tym `password-reset.test.ts` i uzupełniony `auth-errors.test.ts`
-- [ ] 2.2 `npm run lint` i `npx astro check` bez błędów
-- [ ] 2.3 `npm run build` przechodzi
-- [ ] 2.4 `npm run test:api` przechodzi razem z `tests/api/auth-reset.test.ts`
-- [ ] 2.5 `npm run smoke` przechodzi
+- [x] 2.1 `npm test` przechodzi, w tym `password-reset.test.ts` i uzupełniony `auth-errors.test.ts`
+- [x] 2.2 `npm run lint` i `npx astro check` bez błędów
+- [x] 2.3 `npm run build` przechodzi
+- [x] 2.4 `npm run test:api` przechodzi razem z `tests/api/auth-reset.test.ts`
+- [x] 2.5 `npm run smoke` przechodzi
 
 ### Phase 3: Widoki
 
