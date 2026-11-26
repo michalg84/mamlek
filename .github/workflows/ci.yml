@@ -45,7 +45,8 @@ jobs:
       - run: npm ci
       - name: Start local Supabase
         run: |
-          supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
+          # Mailpit stays on, so the API tests can read the mails that auth sends.
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           supabase status -o env | grep -E '^(API_URL|ANON_KEY|DB_URL)=' > supabase.env
       - name: Import registry fixtures (v1, v1, v2) and check the result
         run: |
